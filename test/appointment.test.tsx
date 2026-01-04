@@ -4,7 +4,7 @@ import * as assert from "node:assert/strict";
 import "./domSetup"
 
 import * as React from "react";
-import { act } from "react";
+import { act,  } from "react";
 import {createRoot} from "react-dom/client";
 
 import {Appointment} from "../src/appointment";
@@ -32,4 +32,5 @@ describe("DOM basics", () => {
 
     assert.equal(container.textContent, "Jordan");
   })
+
 })

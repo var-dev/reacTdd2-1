@@ -9,6 +9,18 @@ import {createRoot} from "react-dom/client";
 
 import { AppointmentsDayView} from "../src/appointment";
 
+const today = new Date();
+const twoAppointments = [
+  { 
+    startsAt: today.setHours(12, 0),
+    customer: { firstName: "Ashley" }
+  },
+  { 
+    startsAt: today.setHours(13, 0),
+    customer: { firstName: "Jordan" }
+  },
+  ];
+
 let container: HTMLDivElement
 const render = async (node: React.ReactNode) => {
   act(() => { createRoot(container).render(node) })
@@ -33,26 +45,27 @@ describe("DOM basics", () => {
     assert.ok(listElement ?? false)
   })
   it("renders li for 2 appointments", async () => {
-    const today = new Date();
-    const twoAppointments = [
-    { startsAt: today.setHours(12, 0) },
-    { startsAt: today.setHours(13, 0) },
-    ];
     render(<AppointmentsDayView appointments={twoAppointments}/>);
     const listChildren = document.querySelectorAll("ol>li") ;
 
     assert.strictEqual(listChildren.length, 2)
   })
   it("renders time for each appointment", async () => {
-    const today = new Date();
-    const twoAppointments = [
-    { startsAt: today.setHours(12, 0) },
-    { startsAt: today.setHours(13, 0) },
-    ];
     render(<AppointmentsDayView appointments={twoAppointments}/>);
     const listChildren = document.querySelectorAll("ol>li") ;
 
     assert.strictEqual(listChildren[0].textContent, "12:00")
     assert.strictEqual(listChildren[1].textContent, "13:00")
+  })
+  it("initially shows no appointments today", async () => {
+    render(<AppointmentsDayView appointments={[]}/>);
+    const element = document.querySelector("div#appointmentsDayView");
+
+    assert.strictEqual(document.body.textContent, 'There are no appointments scheduled for today')
+  })
+  it("selects the first appointment by default", async () => {
+    render(<AppointmentsDayView appointments={twoAppointments}/>);
+
+    assert.match(document.body.textContent, /Ashley/)
   })
 })
