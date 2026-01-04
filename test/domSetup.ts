@@ -1,0 +1,10 @@
+import { JSDOM } from 'jsdom';
+
+// Provide a minimal global document at module load time so libraries
+// that bind to `document` at import time (like @testing-library/react)
+// have a valid global document to attach to.
+const dom = new JSDOM('<!doctype html><html><body></body></html>');
+(globalThis as any).window = dom.window; 
+(globalThis as any).document = dom.window.document; 
+(globalThis as any).HTMLElement = dom.window.HTMLElement; 
+(globalThis as any).Node = dom.window.Node;

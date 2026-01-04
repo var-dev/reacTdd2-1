@@ -1,0 +1,6 @@
+{
+  "watch": ["src","test"],
+  "ext": "tsx",
+  "exec": "npm test"
+}
+
