@@ -7,11 +7,12 @@ import * as React from "react";
 import { act,  } from "react";
 import {createRoot} from "react-dom/client";
 
-import {Appointment} from "../src/appointment";
-import type { Customer } from "../src/appointment";
+import {Appointment} from "../src/appointmentsDayView";
+import type { Customer } from "../src/appointmentsDayView";
+import { sampleAppointments } from "../src/sampleDataStatic";
 
 let container: HTMLDivElement
-const render = (node: React.ReactNode) => {
+const render = async (node: React.ReactNode) => {
   act(() => { createRoot(container).render(node) })
 }
 
@@ -19,6 +20,7 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.replaceChildren(container);
 })
+
 
 describe("DOM basics", () => {
   it("renders a div", async () => {
@@ -31,7 +33,16 @@ describe("DOM basics", () => {
     const customer: Customer = {firstName: "Jordan", lastName: "Doe", phoneNumber: "123-456-7890"};
     render(<Appointment customer={customer}/>);
 
-    assert.equal(container.textContent, "Jordan");
+    assert.match(container.textContent, /Jordan/, `Incorrect last name. Matched ${container.textContent}`);
+  })
+  it("renders Appointment with lastName, phoneNumber, etc", async () => {
+    render(<Appointment customer={sampleAppointments[1].customer }/>);
+
+    assert.match(container.textContent, /Smith/, `Incorrect last name. Matched ${container.textContent}`);
+    assert.match(container.textContent, /000000000001/, `Incorrect phone number. Matched ${container.textContent}`);
+    assert.match(container.textContent, /Larry/, `Incorrect stylist. Matched ${container.textContent}`);
+    assert.match(container.textContent, /trim/, `Incorrect service. Matched ${container.textContent}`);
+    assert.match(container.textContent, /notes ASD/, `Incorrect notes. Matched ${container.textContent}`);
   })
 
 })

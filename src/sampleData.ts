@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import type { Customer } from "./appointment.js";
+import type { Customer } from "./appointmentsDayView.js";
 
 declare global {
   interface Array<T> {

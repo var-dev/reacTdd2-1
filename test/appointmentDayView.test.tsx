@@ -7,8 +7,8 @@ import * as React from "react";
 import { act } from "react";
 import {createRoot} from "react-dom/client";
 
-import { AppointmentsDayView} from "../src/appointment";
-import type { AppointmentObj, Customer } from "../src/appointment";
+import { AppointmentsDayView} from "../src/appointmentsDayView";
+import type { AppointmentObj, Customer } from "../src/appointmentsDayView";
 
 const today = new Date();
 const twoAppointments = [
@@ -32,7 +32,7 @@ beforeEach(() => {
   document.body.replaceChildren(container);
 })
 
-describe("DOM basics", () => {
+describe("AppointmentsDayView", () => {
   it("renders AppointmentsDayView", async () => {
     render(<AppointmentsDayView appointments={[]}/>);
     const element = document.querySelector("div#appointmentsDayView");

@@ -4,6 +4,9 @@ export type Customer = {
     firstName?: string
     lastName?: string
     phoneNumber?: string
+    stylist?: string
+    service?: string
+    notes?: string
 }
 export type AppointmentObj = {
     startsAt: number
@@ -11,7 +14,36 @@ export type AppointmentObj = {
 }
 
 export function Appointment({customer}: {customer: Customer}){
-  return <div>{customer.firstName}</div>
+  return (
+    <table>
+      <tbody>
+        <tr>
+          <th>First name</th>
+          <td>{customer.firstName ?? ''}</td>
+        </tr>
+        <tr>
+          <th>Last name</th>
+          <td>{customer.lastName ?? ''}</td>
+        </tr>
+        <tr>
+          <th>Phone</th>
+          <td>{customer.phoneNumber ?? ''}</td>
+        </tr>
+        <tr>
+          <th>Stylist</th>
+          <td>{customer.stylist ?? ''}</td>
+        </tr>
+        <tr>
+          <th>Service</th>
+          <td>{customer.service ?? ''}</td>
+        </tr>
+        <tr>
+          <th>Notes</th>
+          <td>{customer.notes ?? ''}</td>
+        </tr>
+      </tbody>
+    </table>
+  )
 }
 
 const appointmentTimeOfDay = (startsAt:number)=>{

@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { AppointmentsDayView } from "./appointment.js";
+import { AppointmentsDayView } from "./appointmentsDayView.js";
 import { sampleAppointments } from "./sampleData.js";
 
 ReactDOM.createRoot(
