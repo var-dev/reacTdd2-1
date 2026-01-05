@@ -1,4 +1,16 @@
-export function Appointment({customer}: {customer: {firstName: string}}){
+import { useState } from "react"
+
+export type Customer = {
+    firstName?: string
+    lastName?: string
+    phoneNumber?: string
+}
+export type AppointmentObj = {
+    startsAt: number
+    customer: Customer
+}
+
+export function Appointment({customer}: {customer: Customer}){
   return <div>{customer.firstName}</div>
 }
 
@@ -7,18 +19,28 @@ const appointmentTimeOfDay = (startsAt:number)=>{
   return `${h}:${m}`
 }
 
-export function AppointmentsDayView({appointments}:any) {
+export function AppointmentsDayView({appointments}:{appointments: AppointmentObj[]}) {
+  const [selectedAppointment, setSelectedAppointment] = useState(0)
   return <div id="appointmentsDayView">
     <ol> 
-      {appointments.map((appointment:any) => (
+      {appointments.map((appointment: AppointmentObj, index) => (
         <li key={appointment.startsAt}>
-          {appointmentTimeOfDay(appointment.startsAt)}
+          <button 
+            type="button"
+            onClick={ handleClick(index)}
+            >
+            {appointmentTimeOfDay(appointment.startsAt)}
+          </button>
         </li>
       ))}
     </ol>
     {appointments.length === 0 
       ? (<p>There are no appointments scheduled for today</p>)
-      : (<Appointment {...appointments[0]} />)
+      : (<Appointment {...appointments[selectedAppointment]!} />)
     }
   </div>
+
+  function handleClick(index: number) {
+    return () => setSelectedAppointment(index)
+  }
 }

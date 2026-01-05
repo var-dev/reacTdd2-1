@@ -8,6 +8,7 @@ import { act,  } from "react";
 import {createRoot} from "react-dom/client";
 
 import {Appointment} from "../src/appointment";
+import type { Customer } from "../src/appointment";
 
 let container: HTMLDivElement
 const render = (node: React.ReactNode) => {
@@ -27,7 +28,7 @@ describe("DOM basics", () => {
   })
 
   it("renders Appointment with customer prop", async () => {
-    const customer = { firstName: "Jordan" };
+    const customer: Customer = {firstName: "Jordan", lastName: "Doe", phoneNumber: "123-456-7890"};
     render(<Appointment customer={customer}/>);
 
     assert.equal(container.textContent, "Jordan");

@@ -8,6 +8,7 @@ import { act } from "react";
 import {createRoot} from "react-dom/client";
 
 import { AppointmentsDayView} from "../src/appointment";
+import type { AppointmentObj, Customer } from "../src/appointment";
 
 const today = new Date();
 const twoAppointments = [
@@ -67,5 +68,20 @@ describe("DOM basics", () => {
     render(<AppointmentsDayView appointments={twoAppointments}/>);
 
     assert.match(document.body.textContent, /Ashley/)
+  })
+  it("has a button element in each li", async () => {
+    render(<AppointmentsDayView appointments={twoAppointments}/>);
+    const buttons = document.querySelectorAll<HTMLButtonElement>("li>button") ;
+
+    assert.strictEqual(buttons.length, 2)
+    assert.strictEqual(buttons[0].type, 'button', `Type is not button but ${buttons[0].type}`)
+  })
+
+  it("renders another appointment when selected", async () => {
+    render(<AppointmentsDayView appointments={twoAppointments}/>);
+    const button = document.querySelectorAll<HTMLButtonElement>("li>button")[1] ;
+    act(() => button.click());
+
+    assert.match(document.body.textContent, /Jordan/)
   })
 })
