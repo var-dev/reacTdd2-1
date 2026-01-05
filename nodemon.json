@@ -1,6 +1,6 @@
 {
   "watch": ["src","test"],
-  "ext": "tsx",
+  "ext": "ts tsx html css",
   "exec": "npm test"
 }
 
