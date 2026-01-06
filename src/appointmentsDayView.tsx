@@ -11,9 +11,12 @@ export type Customer = {
 export type AppointmentObj = {
     startsAt: number
     customer: Customer
+    stylist: string
+    service: string
+    notes: string
 }
 
-export function Appointment({customer}: {customer: Customer}){
+export function Appointment({customer, stylist, service, notes}: AppointmentObj){
   return (
     <table>
       <tbody>
@@ -31,15 +34,15 @@ export function Appointment({customer}: {customer: Customer}){
         </tr>
         <tr>
           <th>Stylist</th>
-          <td>{customer.stylist ?? ''}</td>
+          <td>{stylist ?? ''}</td>
         </tr>
         <tr>
           <th>Service</th>
-          <td>{customer.service ?? ''}</td>
+          <td>{service ?? ''}</td>
         </tr>
         <tr>
           <th>Notes</th>
-          <td>{customer.notes ?? ''}</td>
+          <td>{notes ?? ''}</td>
         </tr>
       </tbody>
     </table>

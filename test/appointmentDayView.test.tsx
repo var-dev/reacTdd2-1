@@ -11,14 +11,20 @@ import { AppointmentsDayView} from "../src/appointmentsDayView";
 import type { AppointmentObj, Customer } from "../src/appointmentsDayView";
 
 const today = new Date();
-const twoAppointments = [
+const twoAppointments: AppointmentObj[] = [
   { 
     startsAt: today.setHours(12, 0),
-    customer: { firstName: "Ashley" }
+    customer: { firstName: "Ashley" },
+    stylist: "Mary",
+    service: "cut",
+    notes: "notes QWE"
   },
   { 
     startsAt: today.setHours(13, 0),
-    customer: { firstName: "Jordan" }
+    customer: { firstName: "Jordan" },
+    stylist: "Larry",
+    service: "trim",
+    notes: "notes ASD"
   },
   ];
 
