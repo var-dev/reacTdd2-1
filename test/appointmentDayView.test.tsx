@@ -90,4 +90,11 @@ describe("AppointmentsDayView", () => {
 
     assert.match(document.body.textContent, /Jordan/)
   })
+  it("renders header with appointment time", async () => {
+    render(<AppointmentsDayView appointments={twoAppointments}/>);
+    const button = document.querySelectorAll<HTMLButtonElement>("li>button")[1] ;
+    act(() => button.click());
+
+    assert.match(document.body.textContent, /Today's appointment at \d\d:00/)
+  })
 })

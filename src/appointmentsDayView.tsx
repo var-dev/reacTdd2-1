@@ -16,9 +16,11 @@ export type AppointmentObj = {
     notes: string
 }
 
-export function Appointment({customer, stylist, service, notes}: AppointmentObj){
+export function Appointment({customer, stylist, service, notes, startsAt}: AppointmentObj){
   return (
-    <table>
+    <div>
+      <h2>Today's appointment at {appointmentTimeOfDay(startsAt)}</h2>
+      <table>
       <tbody>
         <tr>
           <th>First name</th>
@@ -46,6 +48,7 @@ export function Appointment({customer, stylist, service, notes}: AppointmentObj)
         </tr>
       </tbody>
     </table>
+  </div>
   )
 }
 

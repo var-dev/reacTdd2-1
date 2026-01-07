@@ -8,3 +8,5 @@ const dom = new JSDOM('<!doctype html><html><body></body></html>');
 (globalThis as any).document = dom.window.document; 
 (globalThis as any).HTMLElement = dom.window.HTMLElement; 
 (globalThis as any).Node = dom.window.Node;
+// Let React know this environment supports `act()` for tests
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
