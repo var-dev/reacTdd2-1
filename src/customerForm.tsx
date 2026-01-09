@@ -12,11 +12,9 @@ export const CustomerForm = ({customer, onSubmit}: CustomerFormProps) =>{
     }
   }
   
-  return <form onSubmit={
-      onSubmitHandler
-      }>
+  return <form onSubmit = {onSubmitHandler} aria-label="Customer form">
     <label htmlFor="firstName">First Name</label>
-    <input type="text" name="firstName" id="firstName" value={customer?.firstName} readOnly />
+    <input type="text" name="firstName" id="firstName" defaultValue={customer?.firstName} />
     <input type="submit" value="Add" />
   </form>
 }
