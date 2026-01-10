@@ -129,3 +129,17 @@ describe("first name field", () => {
   itSavesExistingValueWhenSubmitted('firstName', 'Jane');
   itSavesNewValueWhenSubmitted('First Name', 'firstName', 'Jamie');
 });
+
+describe("last name field", () => {
+  itRendersAsATextBox('Last Name');
+  itIncludesTheExistingValue('Last Name', 'Doe');
+  itSavesExistingValueWhenSubmitted('lastName', 'Doe');
+  itSavesNewValueWhenSubmitted('Last Name', 'lastName', 'Doh');
+});
+
+describe("phone number field", () => {
+  itRendersAsATextBox('Phone Number');
+  itIncludesTheExistingValue('Phone Number', '555-1234');
+  itSavesExistingValueWhenSubmitted('phoneNumber', '555-1234');
+  itSavesNewValueWhenSubmitted('Phone Number', 'phoneNumber', '555-1239');
+});
