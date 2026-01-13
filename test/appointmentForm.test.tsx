@@ -31,6 +31,7 @@ function findOption(selectBox: HTMLSelectElement, textContent: string) {
 };
 const blankAppointment: Appointment = {
   service: "Cut",
+  startsAt: 0
 };
 const testProps: AppointmentFormProps ={
   selectableServices: ["Cut", "Blow-dry"],
@@ -38,11 +39,11 @@ const testProps: AppointmentFormProps ={
   salonClosesAt: 19,
   availableTimeSlots: [],
   today: new Date(2018, 11, 1),
-  appointment: blankAppointment
+  appointment: blankAppointment,
 };
 describe('Appointment form', ()=>{
   it("renders appointment form", async () => {
-    render(<AppointmentForm appointment={blankAppointment}/>)
+    render(<AppointmentForm {...testProps}/> )
     const form = screen.getByLabelText('Appointment form') as HTMLFormElement;
 
     assert.ok(form, 'No form found with aria-label "Appointment form"');
@@ -69,7 +70,7 @@ describe('Appointment form', ()=>{
       assert.deepStrictEqual(labelsOfAllOptions(select), services, `Expected array ${JSON.stringify(services)}`)
     })
     it("pre selects value", () => {
-      const appointment: Appointment = { service: "Blow-dry" };
+      const appointment: Appointment = { service: "Blow-dry", startsAt: 0 };
       render(<AppointmentForm {...testProps} appointment={appointment}/>)
       const select = screen.getByLabelText('Service') as HTMLSelectElement;
       const option = findOption(select, appointment.service) as HTMLOptionElement
@@ -78,6 +79,16 @@ describe('Appointment form', ()=>{
     })
   })
   describe("time slot table", () => {
+    const oneDayInMs = 24 * 60 * 60 * 1000;
+    const today = new Date();
+    const tomorrow = new Date(
+      today.getTime() + oneDayInMs
+    );
+    const availableTimeSlots = [
+      { startsAt: today.setHours(9, 0, 0, 0) },
+      { startsAt: today.setHours(9, 30, 0, 0) },
+      { startsAt: tomorrow.setHours(9, 30, 0, 0) },
+    ];
     it("renders a table for time slots with an id", () => {
       render(<AppointmentForm {...testProps} />);
       const table = screen.getByLabelText('time slot table') as HTMLTableElement;
@@ -110,16 +121,6 @@ describe('Appointment form', ()=>{
       assert.deepEqual(dates[4].textContent, 'Tue 04', `Expected column heading "Tue 04"`);
     });
     it("renders radio buttons in the correct table cell positions", () => {
-      const oneDayInMs = 24 * 60 * 60 * 1000;
-      const today = new Date();
-      const tomorrow = new Date(
-        today.getTime() + oneDayInMs
-      );
-      const availableTimeSlots = [
-        { startsAt: today.setHours(9, 0, 0, 0) },
-        { startsAt: today.setHours(9, 30, 0, 0) },
-        { startsAt: tomorrow.setHours(9, 30, 0, 0) },
-      ];
       render(
         <AppointmentForm
           {...testProps}
@@ -152,6 +153,25 @@ describe('Appointment form', ()=>{
       const cells = within(tbodyRowGroup).queryAllByRole('radio') as HTMLInputElement[];
 
       assert.strictEqual(cells.length, 0)
+    });
+    it("renders radio buttons in the correct table cell positions", () => {
+      const appointment: Appointment = { service: "Cut", startsAt: availableTimeSlots[1].startsAt } ;
+      render(
+        <AppointmentForm
+          {...testProps}
+          availableTimeSlots={availableTimeSlots}
+          today={today}
+          appointment={appointment}
+        />);
+      
+      const table = screen.getByLabelText('time slot table') as HTMLTableElement;
+      const rowGroups = within(table).getAllByRole('rowgroup') as HTMLTableRowElement[];
+      const [theadRowGroup, tbodyRowGroup] = rowGroups
+      const radioButtonElements = within(tbodyRowGroup).getAllByRole('radio') as HTMLInputElement[];
+      const checkedRadioButtons = radioButtonElements.map(rb => rb.checked);
+      
+      assert.strictEqual(radioButtonElements.length, 3,'Should be 3 available time slots')
+      assert.deepStrictEqual(checkedRadioButtons, [false, true, false], `Expected array [false, true, false]`)
     });
   });
 })
