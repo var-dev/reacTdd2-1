@@ -7,7 +7,7 @@ import * as React from "react";
 import { render, screen, cleanup, within } from "@testing-library/react";
 
 import { AppointmentForm } from "../src/appointmentForm";
-import type { Service, Appointment } from "../src/appointmentForm";
+import type { Service, Appointment, AppointmentFormProps } from "../src/appointmentForm";
 
 beforeEach( () => {
   globalThis.document.body.innerHTML = '<p>Hello world</p>';
@@ -32,7 +32,14 @@ function findOption(selectBox: HTMLSelectElement, textContent: string) {
 const blankAppointment: Appointment = {
   service: "Cut",
 };
-
+const testProps: AppointmentFormProps ={
+  selectableServices: ["Cut", "Blow-dry"],
+  salonOpensAt: 9,
+  salonClosesAt: 19,
+  availableTimeSlots: [],
+  today: new Date(2018, 11, 1),
+  appointment: blankAppointment
+};
 describe('Appointment form', ()=>{
   it("renders appointment form", async () => {
     render(<AppointmentForm appointment={blankAppointment}/>)
@@ -43,27 +50,27 @@ describe('Appointment form', ()=>{
   describe('service field', ()=>{
     const services: Service[] = ["Cut", "Blow-dry" ];
     it('renders select box', ()=>{
-      render(<AppointmentForm appointment={blankAppointment} />)
+      render(<AppointmentForm {...testProps} />)
       const select = screen.getByLabelText('Service') as HTMLSelectElement;
 
       assert.ok(select, 'No select box found with aria-label "Service"');
       assert.strictEqual(select.tagName, 'SELECT', `Expected tag name select, but got ${select.tagName}`)
     })
     it('has a service item as a first value', ()=>{
-      render(<AppointmentForm selectableServices={['Cut']} appointment={blankAppointment}/>)
+      render(<AppointmentForm {...testProps}/>)
       const select = screen.getByRole('combobox', {name: 'Service'}) as HTMLSelectElement;
 
       assert.strictEqual(labelsOfAllOptions(select)[0], 'Cut', `Expected service Cut`)
     })
     it("lists all salon services", () => {
-      render(<AppointmentForm selectableServices={services} appointment={blankAppointment}/>)
+      render(<AppointmentForm {...testProps}/>)
       const select = screen.getByLabelText('Service') as HTMLSelectElement;
 
       assert.deepStrictEqual(labelsOfAllOptions(select), services, `Expected array ${JSON.stringify(services)}`)
     })
     it("pre selects value", () => {
       const appointment: Appointment = { service: "Blow-dry" };
-      render(<AppointmentForm selectableServices={services} appointment={appointment}/>)
+      render(<AppointmentForm {...testProps} appointment={appointment}/>)
       const select = screen.getByLabelText('Service') as HTMLSelectElement;
       const option = findOption(select, appointment.service) as HTMLOptionElement
 
@@ -72,13 +79,13 @@ describe('Appointment form', ()=>{
   })
   describe("time slot table", () => {
     it("renders a table for time slots with an id", () => {
-      render(<AppointmentForm appointment={blankAppointment} />);
+      render(<AppointmentForm {...testProps} />);
       const table = screen.getByLabelText('time slot table') as HTMLTableElement;
 
       assert.ok(table, 'No table found with aria-label "time slot table"');
     });
     it("renders time slot headings", () => {
-      render(<AppointmentForm appointment={blankAppointment} today={new Date(2018, 11, 1)} />);
+      render(<AppointmentForm {...testProps} />);
       const table = screen.getByLabelText('time slot table') as HTMLTableElement;
       const rowGroups = within(table).getAllByRole('rowgroup') as HTMLTableRowElement[];
       const [theadRowGroup, tbodyRowGroup] = rowGroups
@@ -88,7 +95,7 @@ describe('Appointment form', ()=>{
       assert.deepEqual(timesOfDayHeadings[2].textContent, '10:00', `Expected column heading "10:00"`);
     });
     it("renders day of week headings", () => {
-      render(<AppointmentForm appointment={blankAppointment} today={new Date(2018, 11, 1)} />);
+      render(<AppointmentForm {...testProps} />);
       const table = screen.getByLabelText('time slot table') as HTMLTableElement;
       const rowGroups = within(table).getAllByRole('rowgroup') as HTMLTableRowElement[];
       const [theadRowGroup, tbodyRowGroup] = rowGroups
@@ -101,6 +108,50 @@ describe('Appointment form', ()=>{
       assert.deepEqual(dates[2].textContent, 'Sun 02', `Expected column heading "Sun 02"`);
       assert.deepEqual(dates[3].textContent, 'Mon 03', `Expected column heading "Mon 03"`);
       assert.deepEqual(dates[4].textContent, 'Tue 04', `Expected column heading "Tue 04"`);
+    });
+    it("renders radio buttons in the correct table cell positions", () => {
+      const oneDayInMs = 24 * 60 * 60 * 1000;
+      const today = new Date();
+      const tomorrow = new Date(
+        today.getTime() + oneDayInMs
+      );
+      const availableTimeSlots = [
+        { startsAt: today.setHours(9, 0, 0, 0) },
+        { startsAt: today.setHours(9, 30, 0, 0) },
+        { startsAt: tomorrow.setHours(9, 30, 0, 0) },
+      ];
+      render(
+        <AppointmentForm
+          {...testProps}
+          availableTimeSlots={availableTimeSlots}
+          today={today}
+        />);
+      
+      const table = screen.getByLabelText('time slot table') as HTMLTableElement;
+      const rowGroups = within(table).getAllByRole('rowgroup') as HTMLTableRowElement[];
+      const [theadRowGroup, tbodyRowGroup] = rowGroups
+      const radioButtonElements = within(tbodyRowGroup).getAllByRole('radio') as HTMLInputElement[];
+      const radioButtonValues = radioButtonElements.map(rb => parseInt(rb.value));
+      const availableTimeSlotValues = availableTimeSlots.map(slot=>slot.startsAt)
+      
+      assert.strictEqual(radioButtonElements.length, 3,'Should be 3 available time slots')
+      assert.deepStrictEqual(radioButtonValues, availableTimeSlotValues, `Expected array ${JSON.stringify(availableTimeSlotValues)}`)
+    });
+    it("does not render radio buttons for unavailable time slots", () => {
+      const today = new Date();
+      render(
+        <AppointmentForm
+          {...testProps}
+          availableTimeSlots={[]}
+          today={today}
+        />);
+      
+      const table = screen.getByLabelText('time slot table') as HTMLTableElement;
+      const rowGroups = within(table).getAllByRole('rowgroup') as HTMLTableRowElement[];
+      const [theadRowGroup, tbodyRowGroup] = rowGroups
+      const cells = within(tbodyRowGroup).queryAllByRole('radio') as HTMLInputElement[];
+
+      assert.strictEqual(cells.length, 0)
     });
   });
 })

@@ -14,33 +14,36 @@ export type Appointment = {
   service: Service
 }
 
-  type AppointmentFormType = {
-    selectableServices: Service[],
-    salonOpensAt: number,
-    salonClosesAt: number,
-    appointment: Appointment,
-    today: Date
-  }
+export type AppointmentFormProps = {
+  selectableServices: Service[],
+  salonOpensAt: number,
+  salonClosesAt: number,
+  appointment: Appointment,
+  availableTimeSlots: {startsAt: number}[]
+  today: Date
+}
 
 export const AppointmentForm = ({
   selectableServices,
   salonOpensAt,
   salonClosesAt,
   appointment,
+  availableTimeSlots,
   today
-}: AppointmentFormType) =>{
+}: AppointmentFormProps) =>{
   return <form aria-label="Appointment form">
     <label htmlFor="service">Service</label>
     <select name="service" id="service" value={appointment.service} onChange={()=>{}}>
       {selectableServices.map((service: string)=><option key={service}>{service}</option>)}
     </select>
-    <TimeSlotTable salonOpensAt={salonOpensAt} salonClosesAt={salonClosesAt} today={today}/>
+    <TimeSlotTable salonOpensAt={salonOpensAt} salonClosesAt={salonClosesAt} today={today} availableTimeSlots={availableTimeSlots}/>
   </form>
 }
 AppointmentForm.defaultProps = {
   selectableServices,
   salonOpensAt: 9,
   salonClosesAt: 19,
+  availableTimeSlots: [],
   today: new Date(1970, 1, 1)
 };
 
@@ -82,8 +85,29 @@ const toShortDate = (timestamp: number) => {
   const [day, , dayOfMonth] = new Date(timestamp).toDateString().split(" ");
   return `${day} ${dayOfMonth}`;
 };
+const mergeDateAndTime = (date: number, timeSlot: number) => {
+  const time = new Date(timeSlot);
+  return new Date(date).setHours(
+    time.getHours(),
+    time.getMinutes(),
+    time.getSeconds(),
+    time.getMilliseconds()
+  );
+};
 
-const TimeSlotTable = ({salonOpensAt, salonClosesAt, today}: {salonOpensAt: number, salonClosesAt: number, today: Date})=>{
+type RadioButtonIfAvailableProps = {availableTimeSlots: {startsAt: number}[], date: number, timeSlot: number}
+const RadioButtonIfAvailable = ({availableTimeSlots, date, timeSlot}: RadioButtonIfAvailableProps) =>{
+  const startsAt = mergeDateAndTime(date, timeSlot);
+  if (availableTimeSlots.some(
+    (availableTimeSlot: { startsAt: number }) =>
+      availableTimeSlot.startsAt === startsAt
+    )) 
+     return <input type="radio" name="startsAt" aria-label={String(startsAt)} value={startsAt}/>
+    return null
+}
+
+type TimeSlotTableProps = {salonOpensAt: number, salonClosesAt: number, today: Date, availableTimeSlots: {startsAt: number}[]}
+const TimeSlotTable = ({salonOpensAt, salonClosesAt, today, availableTimeSlots}: TimeSlotTableProps)=>{
   const timeSlots = dailyTimeSlots(salonOpensAt, salonClosesAt);
   const dates = weeklyDateValues(today);
   return <table aria-label="time slot table" >
@@ -97,6 +121,11 @@ const TimeSlotTable = ({salonOpensAt, salonClosesAt, today}: {salonOpensAt: numb
       {timeSlots.map((timeSlot: number) => (
         <tr key={timeSlot}>
           <th>{toTimeValue(timeSlot)}</th>
+          {dates.map((date: number) => (
+            <td key={date}>
+              <RadioButtonIfAvailable availableTimeSlots={availableTimeSlots} date={date} timeSlot={timeSlot} />
+            </td>
+          ))}
         </tr>
       ))}
     </tbody>
