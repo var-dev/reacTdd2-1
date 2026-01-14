@@ -5,6 +5,7 @@ import "./domSetup"; // must be imported before render/screen
 import * as React from "react";
 
 import { render, screen, cleanup, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import { AppointmentForm } from "../src/appointmentForm";
 import type { Service, Appointment, AppointmentFormProps } from "../src/appointmentForm";
@@ -40,13 +41,46 @@ const testProps: AppointmentFormProps ={
   availableTimeSlots: [],
   today: new Date(2018, 11, 1),
   appointment: blankAppointment,
+  onSubmit: ()=>{}
 };
+const oneDayInMs = 24 * 60 * 60 * 1000;
+const today = new Date();
+const tomorrow = new Date(
+  today.getTime() + oneDayInMs
+);
+const availableTimeSlots = [
+  { startsAt: today.setHours(9, 0, 0, 0) },
+  { startsAt: today.setHours(9, 30, 0, 0) },
+  { startsAt: tomorrow.setHours(9, 30, 0, 0) },
+];
 describe('Appointment form', ()=>{
   it("renders appointment form", async () => {
     render(<AppointmentForm {...testProps}/> )
     const form = screen.getByLabelText('Appointment form') as HTMLFormElement;
 
     assert.ok(form, 'No form found with aria-label "Appointment form"');
+  })
+  it("renders submit button", async () => {
+    render(<AppointmentForm {...testProps}/> )
+    const submit = screen.getByLabelText('Submit') as HTMLFormElement;
+
+    assert.ok(submit, 'No button found with aria-label "Submit"');
+  })
+  it("saves existing value when submitted", async () => {
+    const appointment: Appointment = {startsAt: availableTimeSlots[1].startsAt, service:'Cut'};
+    const submitEvent = userEvent.setup();
+    const onSubmitMockHandler = mock.fn(({startsAt}: Appointment)=>{})
+    const mockEventListenerHandler = mock.fn((e: Event) => {})
+    render(<AppointmentForm {...testProps} onSubmit={onSubmitMockHandler} appointment={appointment}/> )
+    const submit = screen.getByLabelText('Submit') as HTMLFormElement;
+    const form = screen.getByLabelText('Appointment form') as HTMLFormElement;
+    form.addEventListener("submit", mockEventListenerHandler);
+    await submitEvent.click(submit)
+
+    assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
+    assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], appointment, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+    assert.strictEqual(mockEventListenerHandler.mock.calls[0].arguments[0].type, "submit", 'Event is not of Submit type');
+    assert.strictEqual(mockEventListenerHandler.mock.calls[0].arguments[0].defaultPrevented, true, 'PreventDefault was not set correctly');
   })
   describe('service field', ()=>{
     const services: Service[] = ["Cut", "Blow-dry" ];
@@ -79,16 +113,6 @@ describe('Appointment form', ()=>{
     })
   })
   describe("time slot table", () => {
-    const oneDayInMs = 24 * 60 * 60 * 1000;
-    const today = new Date();
-    const tomorrow = new Date(
-      today.getTime() + oneDayInMs
-    );
-    const availableTimeSlots = [
-      { startsAt: today.setHours(9, 0, 0, 0) },
-      { startsAt: today.setHours(9, 30, 0, 0) },
-      { startsAt: tomorrow.setHours(9, 30, 0, 0) },
-    ];
     it("renders a table for time slots with an id", () => {
       render(<AppointmentForm {...testProps} />);
       const table = screen.getByLabelText('time slot table') as HTMLTableElement;

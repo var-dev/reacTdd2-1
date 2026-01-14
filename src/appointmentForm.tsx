@@ -20,8 +20,9 @@ export type AppointmentFormProps = {
   salonOpensAt: number,
   salonClosesAt: number,
   appointment: Appointment,
-  availableTimeSlots: {startsAt: number}[]
+  availableTimeSlots: {startsAt: number}[],
   today: Date
+  onSubmit: (appointment: Appointment)=>void
 }
 
 export const AppointmentForm = ({
@@ -31,13 +32,19 @@ export const AppointmentForm = ({
   appointment,
   availableTimeSlots,
   today,
+  onSubmit,
 }: AppointmentFormProps) =>{
-  return <form aria-label="Appointment form">
+  const handleSubmit = (event: React.FormEvent) => {
+      event.preventDefault();
+      onSubmit(appointment);
+      };
+  return <form aria-label="Appointment form" onSubmit={handleSubmit}>
     <label htmlFor="service">Service</label>
     <select name="service" id="service" value={appointment.service} onChange={()=>{}}>
       {selectableServices.map((service: string)=><option key={service}>{service}</option>)}
     </select>
     <TimeSlotTable salonOpensAt={salonOpensAt} salonClosesAt={salonClosesAt} today={today} availableTimeSlots={availableTimeSlots} checkedTimeSlot={appointment.startsAt}/>
+    <input type="submit" value="Add" aria-label="Submit"/>
   </form>
 }
 AppointmentForm.defaultProps = {
