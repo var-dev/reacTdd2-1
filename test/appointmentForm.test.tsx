@@ -107,7 +107,7 @@ describe('Appointment form', ()=>{
       const appointment: Appointment = { service: "Blow-dry", startsAt: 0 };
       render(<AppointmentForm {...testProps} appointment={appointment}/>)
       const select = screen.getByLabelText('Service') as HTMLSelectElement;
-      const option = findOption(select, appointment.service) as HTMLOptionElement
+      const option = findOption(select, appointment.service!) as HTMLOptionElement
 
       assert.ok(option.tagName==='OPTION' && option.selected, `Expected option ${appointment.service} to be selected`)
     })

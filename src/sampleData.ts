@@ -1,5 +1,4 @@
 import { faker } from "@faker-js/faker";
-import type { Customer } from "./appointmentsDayView.js";
 
 declare global {
   interface Array<T> {
@@ -7,6 +6,10 @@ declare global {
     pickRandom(): T;
   }
 }
+
+const randomInt = (range: number) =>
+  Math.floor(Math.random() * range);
+
 Array.prototype.unique = function () {
   return this.filter(function (value, index, self) {
     return self.indexOf(value) === index;
@@ -14,17 +17,13 @@ Array.prototype.unique = function () {
 };
 
 Array.prototype.pickRandom = function () {
-  return this[
-    Math.floor(Math.random() * this.length)
-  ];
+  return this[randomInt(this.length)];
 };
 
 const today = new Date();
 const at = (hours: number) => today.setHours(hours, 0);
 
-const stylists = [0, 1, 2, 3, 4, 5, 6]
-  .map(() => faker.person.firstName())
-  .unique();
+const stylists = ["Ashley", "Jo", "Pat", "Sam"];
 
 const services = [
   "Cut",
@@ -35,10 +34,10 @@ const services = [
   "Extensions",
 ];
 
-const generateFakeCustomer: ()=>Customer = () => ({
+const generateFakeCustomer = () => ({
   firstName: faker.person.firstName(),
   lastName: faker.person.lastName(),
-  phoneNumber: faker.phone.number(),
+  phoneNumber: faker.phone.number({style: 'international'}),
 });
 
 const generateFakeAppointment = () => ({
@@ -60,20 +59,34 @@ export const sampleAppointments = [
   { startsAt: at(17), ...generateFakeAppointment() },
 ];
 
-console.log(JSON.stringify(sampleAppointments, null, 2))
+type TimeSlot = { startsAt: number; stylists: any[]; }
+const pickMany = <T>(items: T[], number: number) =>
+  Array(number)
+    .fill(1)
+    .map(() => items.pickRandom());
 
-class EnrichedArray<T> extends Array<T> {
-  constructor(...args: T[]) {
-    super(...args);
-  }
-  unique () {
-    return this.filter(function (value, index, self) {
-      return self.indexOf(value) === index;
+const buildTimeSlots = () => {
+  const today = new Date();
+  const startTime = today.setHours(9, 0, 0, 0);
+  const times = [...Array(7).keys()].map((day) => {
+    const daysToAdd = day * 24 * 60 * 60 * 1000;
+    return [...Array(20).keys()].map((halfHour) => {
+      const halfHoursToAdd =
+        halfHour * 30 * 60 * 1000;
+      return {
+        startsAt:
+          startTime + daysToAdd + halfHoursToAdd,
+        stylists: pickMany(
+          stylists,
+          randomInt(stylists.length)
+        ),
+      };
     });
-  };
-  pickRandom () {
-    return this[
-      Math.floor(Math.random() * this.length)
-    ]!;
-  };
-}
+  });
+  return ([] as TimeSlot[]).concat(...times);
+};
+
+export const sampleAvailableTimeSlots = pickMany(
+  buildTimeSlots(),
+  50
+);
