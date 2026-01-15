@@ -9,7 +9,7 @@ import {createRoot} from "react-dom/client";
 
 import {Appointment} from "../src/appointmentsDayView";
 import type { Customer } from "../src/appointmentsDayView";
-import { sampleAppointments } from "../src/sampleDataStatic";
+import { sampleAppointmentsShort } from "../src/sampleDataStatic";
 
 let container: HTMLDivElement
 const render = async (node: React.ReactNode) => {
@@ -37,7 +37,7 @@ describe("DOM basics", () => {
   })
   it("renders Appointment with lastName, phoneNumber, etc", async () => {
     // render(<Appointment customer={sampleAppointments[1].customer } stylist={sampleAppointments[1].stylist} service={sampleAppointments[1].service} notes={sampleAppointments[1].notes} startsAt={sampleAppointments[1].startsAt} />);
-    render(<Appointment {...sampleAppointments[1]}/>);
+    render(<Appointment {...sampleAppointmentsShort[1]}/>);
 
     assert.match(container.textContent, /Smith/, `Incorrect last name. Matched ${container.textContent}`);
     assert.match(container.textContent, /000000000001/, `Incorrect phone number. Matched ${container.textContent}`);

@@ -90,3 +90,11 @@ export const sampleAvailableTimeSlots = pickMany(
   buildTimeSlots(),
   50
 );
+
+console.log(JSON.stringify(sampleAvailableTimeSlots))
+
+console.log()
+
+console.log(("sampleAppointments"))
+
+console.log(JSON.stringify(sampleAppointments))

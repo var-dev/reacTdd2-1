@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react"
 
-
+const stylists = ["Ashley", "Jo", "Pat", "Sam"] as const
+type Stylist = typeof stylists[number] 
 const selectableServicesList = [
     "Cut",
     "Blow-dry",
@@ -10,23 +11,31 @@ const selectableServicesList = [
     "Extensions",
   ] as const
 export type Service = typeof selectableServicesList[number]
+
+export type AvailableTimeSlot = {
+    startsAt: number;
+    stylists: Stylist[];
+}
 export type Appointment = {
   service?: Service,
-  startsAt?: number
+  startsAt?: number,
+  stylist?: string
 } 
 
 export type AppointmentFormProps = {
   selectableServices: Service[],
+  selectableStylists: string[],
   salonOpensAt: number,
   salonClosesAt: number,
   appointment: Appointment,
-  availableTimeSlots: {startsAt: number}[],
+  availableTimeSlots: AvailableTimeSlot[],
   today: Date
   onSubmit: (appointment: Appointment)=>void
 }
 
 export const AppointmentForm = ({
   selectableServices,
+  selectableStylists,
   salonOpensAt,
   salonClosesAt,
   appointment,
@@ -34,11 +43,14 @@ export const AppointmentForm = ({
   today,
   onSubmit,
 }: AppointmentFormProps) =>{
+  const [appointmentState, setAppointmentState] = useState<Appointment>(appointment)
+  const serviceRef = useRef<HTMLSelectElement>(null)
+  const stylistRef = useRef<HTMLSelectElement>(null)
+
   const handleSubmit = (event: React.FormEvent) => {
       event.preventDefault();
       onSubmit(appointmentState);
       };
-  const [appointmentState, setAppointmentState] = useState(appointment)
   const handleStartsAtChange = useCallback(
     ({ target: { value } }: React.ChangeEvent<HTMLInputElement>) =>
       setAppointmentState((appointmentState: Appointment) => ({
@@ -47,28 +59,39 @@ export const AppointmentForm = ({
       })),
     []
   );
-  const handleServiceChange = 
+  const handleChange = 
     ({ target: { name, value } }: React.ChangeEvent<HTMLSelectElement>) =>
       setAppointmentState((appointmentState: Appointment) => ({
         ...appointmentState,
         [name]: value
       } as Appointment))
 
-  const selectRef = useRef<HTMLSelectElement>(null)
   useEffect(() => {
     if (!appointmentState.service) {
       setAppointmentState((appointmentState: Appointment) => ({
         ...appointmentState,
-        service: selectRef.current!.value ?? ''
+        service: serviceRef.current!.value ?? ''
+      } as Appointment))
+    }
+    if (!appointmentState.stylist) {
+      setAppointmentState((appointmentState: Appointment) => ({
+        ...appointmentState,
+        stylist: stylistRef.current!.value ?? ''
       } as Appointment))
     }
   }, [])
 
+  const stylistAvailableTimeSlots = availableTimeSlots.map((x)=>x)
   return <form aria-label="Appointment form" onSubmit={handleSubmit}>
     <label htmlFor="service">Service</label>
-    <select name="service" id="service" value={appointmentState.service} onChange={handleServiceChange} ref={selectRef}>
+    <select name="service" id="service" value={appointmentState.service} onChange={handleChange} ref={serviceRef}>
       {selectableServices.map((service: string)=><option key={service}>{service}</option>)}
     </select>
+    <label htmlFor="stylist">Stylist</label>
+    <select name="stylist" id="stylist" value={appointmentState.stylist} onChange={handleChange} ref={stylistRef}>
+      {selectableStylists.map((stylist: string)=><option key={stylist}>{stylist}</option>)}
+    </select>
+    <label htmlFor="timeSlotTable">Available Times</label>
     <TimeSlotTable salonOpensAt={salonOpensAt} salonClosesAt={salonClosesAt} today={today} availableTimeSlots={availableTimeSlots} checkedTimeSlot={appointmentState.startsAt!} handleChange={handleStartsAtChange}/>
     <input type="submit" value="Add" aria-label="Submit"/>
   </form>
@@ -129,10 +152,10 @@ const mergeDateAndTime = (date: number, timeSlot: number) => {
   );
 };
 
-type RadioButtonIfAvailableProps = {availableTimeSlots: {startsAt: number}[], date: number, timeSlot: number, checkedTimeSlot: number, handleChange: ({ target: { value } }: React.ChangeEvent<HTMLInputElement>)=>void}
+type RadioButtonIfAvailableProps = {availableTimeSlots: AvailableTimeSlot[], date: number, timeSlot: number, checkedTimeSlot: number, handleChange: ({ target: { value } }: React.ChangeEvent<HTMLInputElement>)=>void}
 const RadioButtonIfAvailable = ({availableTimeSlots, date, timeSlot, checkedTimeSlot, handleChange}: RadioButtonIfAvailableProps) =>{
   const startsAt = mergeDateAndTime(date, timeSlot);
-  const checkAvailableTimeSlots: boolean = availableTimeSlots.some((availableTimeSlot: { startsAt: number }) => availableTimeSlot.startsAt === startsAt)
+  const checkAvailableTimeSlots: boolean = availableTimeSlots.some((availableTimeSlot: AvailableTimeSlot) => availableTimeSlot.startsAt === startsAt)
   if (checkAvailableTimeSlots) 
     return (
       <input 
@@ -146,11 +169,11 @@ const RadioButtonIfAvailable = ({availableTimeSlots, date, timeSlot, checkedTime
     return null
 }
 
-type TimeSlotTableProps = {salonOpensAt: number, salonClosesAt: number, today: Date, availableTimeSlots: {startsAt: number}[], checkedTimeSlot: number, handleChange: ({ target: { value } }: React.ChangeEvent<HTMLInputElement>)=>void}
+type TimeSlotTableProps = {salonOpensAt: number, salonClosesAt: number, today: Date, availableTimeSlots: AvailableTimeSlot[], checkedTimeSlot: number, handleChange: ({ target: { value } }: React.ChangeEvent<HTMLInputElement>)=>void}
 const TimeSlotTable = ({salonOpensAt, salonClosesAt, today, availableTimeSlots, checkedTimeSlot, handleChange}: TimeSlotTableProps)=>{
   const timeSlots = dailyTimeSlots(salonOpensAt, salonClosesAt);
   const dates = weeklyDateValues(today);
-  return <table aria-label="time slot table" >
+  return <table id="timeSlotTable" className="timeSlotTable" aria-label="timeSlotTable">
     <thead>
       <tr>
         <th />

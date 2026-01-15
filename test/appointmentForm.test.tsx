@@ -8,7 +8,7 @@ import { render, screen, cleanup, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { AppointmentForm } from "../src/appointmentForm";
-import type { Service, Appointment, AppointmentFormProps } from "../src/appointmentForm";
+import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm";
 
 beforeEach( () => {
   globalThis.document.body.innerHTML = '<p>Hello world</p>';
@@ -36,6 +36,7 @@ const blankAppointment: Appointment = {
 };
 const testProps: AppointmentFormProps ={
   selectableServices: ["Cut", "Blow-dry"],
+  selectableStylists: ["Ashley", "Jordan", "Taylor"],
   salonOpensAt: 9,
   salonClosesAt: 19,
   availableTimeSlots: [],
@@ -48,10 +49,10 @@ const today = new Date();
 const tomorrow = new Date(
   today.getTime() + oneDayInMs
 );
-const availableTimeSlots = [
-  { startsAt: today.setHours(9, 0, 0, 0) },
-  { startsAt: today.setHours(9, 30, 0, 0) },
-  { startsAt: tomorrow.setHours(9, 30, 0, 0) },
+const availableTimeSlots: AvailableTimeSlot[] = [
+  { startsAt: today.setHours(9, 0, 0, 0), stylists: ["Ashley", "Jo"] },
+  { startsAt: today.setHours(9, 30, 0, 0), stylists: ["Ashley", "Jo"] },
+  { startsAt: tomorrow.setHours(9, 30, 0, 0), stylists: ["Ashley", "Jo"] },
 ];
 describe('Appointment form', ()=>{
   it("renders appointment form", async () => {
@@ -67,7 +68,7 @@ describe('Appointment form', ()=>{
     assert.ok(submit, 'No button found with aria-label "Submit"');
   })
   it("saves existing value when submitted", async () => {
-    const appointment: Appointment = {startsAt: availableTimeSlots[1].startsAt, service:'Cut'};
+    const appointment: Appointment = {startsAt: availableTimeSlots[1].startsAt, service:'Cut', stylist: 'Ashley'};
     const submitEvent = userEvent.setup();
     const onSubmitMockHandler = mock.fn(({startsAt}: Appointment)=>{})
     const mockEventListenerHandler = mock.fn((e: Event) => {})
@@ -120,7 +121,7 @@ describe('Appointment form', ()=>{
       await submitEvent.click(submit)
 
       assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
-      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {"service":"Cut"}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {service:"Cut",stylist: 'Ashley'}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
     })
     it("saves new selectBox value when submitted", async () => {
       const appointment: Appointment = {};
@@ -133,19 +134,19 @@ describe('Appointment form', ()=>{
       await submitEvent.click(submit)
 
       assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
-      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {"service":"Blow-dry"}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {service:"Blow-dry",stylist: 'Ashley'}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
     })
   })
   describe("time slot table", () => {
     it("renders a table for time slots with an id", () => {
       render(<AppointmentForm {...testProps} />);
-      const table = screen.getByLabelText('time slot table') as HTMLTableElement;
+      const table = screen.getByLabelText('timeSlotTable') as HTMLTableElement;
 
-      assert.ok(table, 'No table found with aria-label "time slot table"');
+      assert.ok(table, 'No table found with aria-label "timeSlotTable"');
     });
     it("renders time slot headings", () => {
       render(<AppointmentForm {...testProps} />);
-      const table = screen.getByLabelText('time slot table') as HTMLTableElement;
+      const table = screen.getByLabelText('timeSlotTable') as HTMLTableElement;
       const rowGroups = within(table).getAllByRole('rowgroup') as HTMLTableRowElement[];
       const [theadRowGroup, tbodyRowGroup] = rowGroups
       const timesOfDayHeadings = within(tbodyRowGroup).getAllByRole('columnheader') as HTMLTableRowElement[];
@@ -155,7 +156,7 @@ describe('Appointment form', ()=>{
     });
     it("renders day of week headings", () => {
       render(<AppointmentForm {...testProps} />);
-      const table = screen.getByLabelText('time slot table') as HTMLTableElement;
+      const table = screen.getByLabelText('timeSlotTable') as HTMLTableElement;
       const rowGroups = within(table).getAllByRole('rowgroup') as HTMLTableRowElement[];
       const [theadRowGroup, tbodyRowGroup] = rowGroups
       const row = within(theadRowGroup).getAllByRole('row');
@@ -176,7 +177,7 @@ describe('Appointment form', ()=>{
           today={today}
         />);
       
-      const table = screen.getByLabelText('time slot table') as HTMLTableElement;
+      const table = screen.getByLabelText('timeSlotTable') as HTMLTableElement;
       const rowGroups = within(table).getAllByRole('rowgroup') as HTMLTableRowElement[];
       const [theadRowGroup, tbodyRowGroup] = rowGroups
       const radioButtonElements = within(tbodyRowGroup).getAllByRole('radio') as HTMLInputElement[];
@@ -195,7 +196,7 @@ describe('Appointment form', ()=>{
           today={today}
         />);
       
-      const table = screen.getByLabelText('time slot table') as HTMLTableElement;
+      const table = screen.getByLabelText('timeSlotTable') as HTMLTableElement;
       const rowGroups = within(table).getAllByRole('rowgroup') as HTMLTableRowElement[];
       const [theadRowGroup, tbodyRowGroup] = rowGroups
       const cells = within(tbodyRowGroup).queryAllByRole('radio') as HTMLInputElement[];
@@ -212,7 +213,7 @@ describe('Appointment form', ()=>{
           appointment={appointment}
         />);
       
-      const table = screen.getByLabelText('time slot table') as HTMLTableElement;
+      const table = screen.getByLabelText('timeSlotTable') as HTMLTableElement;
       const rowGroups = within(table).getAllByRole('rowgroup') as HTMLTableRowElement[];
       const [theadRowGroup, tbodyRowGroup] = rowGroups
       const radioButtonElements = within(tbodyRowGroup).getAllByRole('radio') as HTMLInputElement[];
@@ -222,5 +223,34 @@ describe('Appointment form', ()=>{
       assert.deepStrictEqual(checkedRadioButtons, [false, true, false], `Expected array [false, true, false]`)
     });
   });
+  describe('stylist', ()=>{
+    it('renders a stylist field', ()=>{
+      render(<AppointmentForm {...testProps}/>)
+      const stylist = screen.getByLabelText('Stylist') as HTMLSelectElement;
+
+      assert.ok(stylist, 'No input found with aria-label "Stylist"');
+      assert.strictEqual(stylist.tagName, 'SELECT', `Expected tag name input, but got ${stylist.tagName}`)
+    })
+    it('lists all stylists', ()=>{
+      render(<AppointmentForm {...testProps}/>)
+      const stylists = screen.getByLabelText('Stylist') as HTMLSelectElement;
+      const stylistNames = Array.from(stylists.childNodes, (option)=>{return option.textContent} )
+
+      assert.deepStrictEqual(stylistNames, ["Ashley","Jordan","Taylor"], `Expected tag name input, but got ${JSON.stringify(stylistNames)}`)
+    })
+    it("saves new stylist box value when submitted", async () => {
+      const appointment: Appointment = {};
+      const submitEvent = userEvent.setup();
+      const onSubmitMockHandler = mock.fn(({stylist}: Appointment)=>{})
+      render(<AppointmentForm {...testProps} onSubmit={onSubmitMockHandler} appointment={appointment}/> )
+      const submit = screen.getByLabelText('Submit') as HTMLFormElement;
+      const select = screen.getByLabelText('Stylist') as HTMLSelectElement;
+      await submitEvent.selectOptions(select, 'Jordan')
+      await submitEvent.click(submit)
+
+      assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
+      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {service:"Cut",stylist: 'Jordan'}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+    })
+  })
 })
 
