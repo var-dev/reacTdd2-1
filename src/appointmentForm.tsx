@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react"
+import React, { useState, useCallback, useRef, useEffect } from "react"
 
 
 const selectableServicesList = [
@@ -47,9 +47,26 @@ export const AppointmentForm = ({
       })),
     []
   );
+  const handleServiceChange = 
+    ({ target: { name, value } }: React.ChangeEvent<HTMLSelectElement>) =>
+      setAppointmentState((appointmentState: Appointment) => ({
+        ...appointmentState,
+        [name]: value
+      } as Appointment))
+
+  const selectRef = useRef<HTMLSelectElement>(null)
+  useEffect(() => {
+    if (!appointmentState.service) {
+      setAppointmentState((appointmentState: Appointment) => ({
+        ...appointmentState,
+        service: selectRef.current!.value ?? ''
+      } as Appointment))
+    }
+  }, [])
+
   return <form aria-label="Appointment form" onSubmit={handleSubmit}>
     <label htmlFor="service">Service</label>
-    <select name="service" id="service" value={appointmentState.service} onChange={()=>{}}>
+    <select name="service" id="service" value={appointmentState.service} onChange={handleServiceChange} ref={selectRef}>
       {selectableServices.map((service: string)=><option key={service}>{service}</option>)}
     </select>
     <TimeSlotTable salonOpensAt={salonOpensAt} salonClosesAt={salonClosesAt} today={today} availableTimeSlots={availableTimeSlots} checkedTimeSlot={appointmentState.startsAt!} handleChange={handleStartsAtChange}/>

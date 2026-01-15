@@ -111,6 +111,30 @@ describe('Appointment form', ()=>{
 
       assert.ok(option.tagName==='OPTION' && option.selected, `Expected option ${appointment.service} to be selected`)
     })
+    it("saves existing selectBox value when submitted", async () => {
+      const appointment: Appointment = {};
+      const submitEvent = userEvent.setup();
+      const onSubmitMockHandler = mock.fn(({service}: Appointment)=>{})
+      render(<AppointmentForm {...testProps} onSubmit={onSubmitMockHandler} appointment={appointment}/> )
+      const submit = screen.getByLabelText('Submit') as HTMLFormElement;
+      await submitEvent.click(submit)
+
+      assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
+      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {"service":"Cut"}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+    })
+    it("saves new selectBox value when submitted", async () => {
+      const appointment: Appointment = {};
+      const submitEvent = userEvent.setup();
+      const onSubmitMockHandler = mock.fn(({service}: Appointment)=>{})
+      render(<AppointmentForm {...testProps} onSubmit={onSubmitMockHandler} appointment={appointment}/> )
+      const submit = screen.getByLabelText('Submit') as HTMLFormElement;
+      const select = screen.getByLabelText('Service') as HTMLSelectElement;
+      await submitEvent.selectOptions(select, 'Blow-dry')
+      await submitEvent.click(submit)
+
+      assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
+      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {"service":"Blow-dry"}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+    })
   })
   describe("time slot table", () => {
     it("renders a table for time slots with an id", () => {
