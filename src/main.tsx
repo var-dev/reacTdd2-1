@@ -3,11 +3,12 @@ import ReactDOM from "react-dom/client";
 import { AppointmentsDayView } from "./appointmentsDayView.js";
 import { CustomerForm } from "./customerForm.js";
 import { sampleAppointments, sampleAvailableTimeSlots } from "./sampleData.js";
-import { AppointmentForm, type Appointment, type AppointmentFormProps } from "./appointmentForm.js";
+import { AppointmentForm, serviceStylists, type Appointment, type AppointmentFormProps } from "./appointmentForm.js";
 
 const appointmentFormProps: AppointmentFormProps = {
   selectableServices: ["Cut","Blow-dry","Cut & color","Beard trim","Cut & beard trim","Extensions"],
   selectableStylists: ["Ashley", "Jo", "Pat", "Sam"],
+  serviceStylists,
   salonOpensAt: 9,
   salonClosesAt: 19,
   availableTimeSlots: sampleAvailableTimeSlots,

@@ -11,7 +11,16 @@ const selectableServicesList = [
     "Extensions",
   ] as const
 export type Service = typeof selectableServicesList[number] 
+type ServiceStylistRecord = Record<Service, Stylist[]>
 
+export const serviceStylists: ServiceStylistRecord = {
+    "Cut":          ["Ashley", "Jo", "Pat", "Sam"],
+    "Blow-dry":     ["Ashley", "Jo", "Pat", "Sam"],
+    "Cut & color":  ["Ashley", "Jo"],
+    "Beard trim":   ["Pat", "Sam"],
+    "Cut & beard trim": ["Pat", "Sam"],
+    "Extensions":   ["Ashley", "Pat"],
+  }
 export type AvailableTimeSlot = {
     startsAt: number;
     stylists: Stylist[];
@@ -25,6 +34,7 @@ export type Appointment = {
 export type AppointmentFormProps = {
   selectableServices: Service[],
   selectableStylists: Stylist[],
+  serviceStylists: ServiceStylistRecord,
   salonOpensAt: number,
   salonClosesAt: number,
   appointment: Appointment,
@@ -36,6 +46,7 @@ export type AppointmentFormProps = {
 export const AppointmentForm = ({
   selectableServices,
   selectableStylists,
+  serviceStylists,
   salonOpensAt,
   salonClosesAt,
   appointment,
@@ -73,6 +84,8 @@ export const AppointmentForm = ({
         service: serviceRef.current!.value ?? ''
       } as Appointment))
     }
+  }, [])
+  useEffect(() => {
     if (!appointmentState.stylist) {
       setAppointmentState((appointmentState: Appointment) => ({
         ...appointmentState,
@@ -80,6 +93,11 @@ export const AppointmentForm = ({
       } as Appointment))
     }
   }, [])
+
+
+  const stylistsForService = appointmentState.service
+    ? serviceStylists[appointmentState.service]
+    : selectableStylists;
 
   const stylistAvailableTimeSlots = availableTimeSlots.map(
     (timeSlot: AvailableTimeSlot): AvailableTimeSlot => {
@@ -92,6 +110,7 @@ export const AppointmentForm = ({
     }
   );
 
+
   return <form aria-label="Appointment form" onSubmit={handleSubmit}>
     <label htmlFor="service">Service</label>
     <select name="service" id="service" value={appointmentState.service} onChange={handleChange} ref={serviceRef}>
@@ -99,10 +118,11 @@ export const AppointmentForm = ({
     </select>
     <label htmlFor="stylist">Stylist</label>
     <select name="stylist" id="stylist" value={appointmentState.stylist} onChange={handleChange} ref={stylistRef}>
-      {selectableStylists.map((stylist: string)=><option key={stylist}>{stylist}</option>)}
+      {stylistsForService.map((stylist: string)=><option key={stylist}>{stylist}</option>)}
     </select>
-    <label htmlFor="timeSlotTable">Available Times</label>
+    
     <TimeSlotTable salonOpensAt={salonOpensAt} salonClosesAt={salonClosesAt} today={today} availableTimeSlots={stylistAvailableTimeSlots} checkedTimeSlot={appointmentState.startsAt!} handleChange={handleStartsAtChange}/>
+   
     <input type="submit" value="Add" aria-label="Submit"/>
   </form>
 }
@@ -183,7 +203,7 @@ type TimeSlotTableProps = {salonOpensAt: number, salonClosesAt: number, today: D
 const TimeSlotTable = ({salonOpensAt, salonClosesAt, today, availableTimeSlots, checkedTimeSlot, handleChange}: TimeSlotTableProps)=>{
   const timeSlots = dailyTimeSlots(salonOpensAt, salonClosesAt);
   const dates = weeklyDateValues(today);
-  return <table id="timeSlotTable" className="timeSlotTable" aria-label="timeSlotTable">
+  return <table id="time-slots" aria-label="timeSlotTable">
     <thead>
       <tr>
         <th />

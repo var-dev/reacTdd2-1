@@ -7,7 +7,7 @@ import * as React from "react";
 import { render, screen, cleanup, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AppointmentForm } from "../src/appointmentForm";
+import { AppointmentForm, serviceStylists } from "../src/appointmentForm";
 import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm";
 
 beforeEach( () => {
@@ -41,7 +41,8 @@ const tomorrow = new Date(
 );
 const testProps: AppointmentFormProps ={
   selectableServices: ["Cut", "Blow-dry"],
-  selectableStylists: ["Ashley", "Jo", "Pat"],
+  selectableStylists: ["Ashley", "Jo", "Pat", "Sam"],
+  serviceStylists: serviceStylists,
   salonOpensAt: 9,
   salonClosesAt: 19,
   availableTimeSlots: [],
@@ -236,7 +237,7 @@ describe('Appointment form', ()=>{
       const stylists = screen.getByLabelText('Stylist') as HTMLSelectElement;
       const stylistNames = Array.from(stylists.childNodes, (option)=>{return option.textContent} )
 
-      assert.deepStrictEqual(stylistNames, ["Ashley","Jo","Pat"], `Expected tag name input, but got ${JSON.stringify(stylistNames)}`)
+      assert.deepStrictEqual(stylistNames, ["Ashley","Jo","Pat","Sam"], `Expected ["Ashley","Jo","Pat","Sam"], but got ${JSON.stringify(stylistNames)}`)
     })
     it("saves new stylist box value when submitted", async () => {
       const appointment: Appointment = {};
@@ -253,24 +254,30 @@ describe('Appointment form', ()=>{
     })
   })
   describe('time slot - stylist availability', ()=>{
-    it('shows no appointments', ()=>{
+    it('shows no appointments', async ()=>{
       render(
         <AppointmentForm
           {...testProps}
+          appointment={{service: 'Beard trim', startsAt:today.getTime()}}
+          selectableServices={['Beard trim']}
           availableTimeSlots={availableTimeSlots}
-          selectableStylists={['Pat']}
         />);
       const radioButtons = screen.queryAllByRole('radio')
 
       assert.strictEqual(radioButtons.length, 0)
     })
-    it('shows 1 appointment for Sam', ()=>{
+    it('shows 1 appointment for Sam', async ()=>{
+      const submitEvent = userEvent.setup();
       render(
         <AppointmentForm
           {...testProps}
           availableTimeSlots={availableTimeSlots}
-          selectableStylists={['Sam']}
+          selectableServices={["Cut","Blow-dry","Cut & color","Beard trim","Cut & beard trim","Extensions"]}
         />);
+      const stylists = screen.getByLabelText('Stylist') as HTMLSelectElement;
+      const service = screen.getByLabelText('Service') as HTMLSelectElement;
+      await submitEvent.selectOptions(service, 'Beard trim')
+      await submitEvent.selectOptions(stylists, 'Sam')
       const radioButtons = screen.queryAllByRole('radio')
 
       assert.strictEqual(radioButtons.length, 1)
