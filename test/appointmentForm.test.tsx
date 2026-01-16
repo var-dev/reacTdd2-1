@@ -34,24 +34,24 @@ const blankAppointment: Appointment = {
   service: "Cut",
   startsAt: 0
 };
-const testProps: AppointmentFormProps ={
-  selectableServices: ["Cut", "Blow-dry"],
-  selectableStylists: ["Ashley", "Jordan", "Taylor"],
-  salonOpensAt: 9,
-  salonClosesAt: 19,
-  availableTimeSlots: [],
-  today: new Date(2018, 11, 1),
-  appointment: blankAppointment,
-  onSubmit: ()=>{}
-};
 const oneDayInMs = 24 * 60 * 60 * 1000;
-const today = new Date();
+const today = new Date(2018, 11, 1);
 const tomorrow = new Date(
   today.getTime() + oneDayInMs
 );
+const testProps: AppointmentFormProps ={
+  selectableServices: ["Cut", "Blow-dry"],
+  selectableStylists: ["Ashley", "Jo", "Pat"],
+  salonOpensAt: 9,
+  salonClosesAt: 19,
+  availableTimeSlots: [],
+  today,
+  appointment: blankAppointment,
+  onSubmit: ()=>{}
+};
 const availableTimeSlots: AvailableTimeSlot[] = [
   { startsAt: today.setHours(9, 0, 0, 0), stylists: ["Ashley", "Jo"] },
-  { startsAt: today.setHours(9, 30, 0, 0), stylists: ["Ashley", "Jo"] },
+  { startsAt: today.setHours(9, 30, 0, 0), stylists: ["Ashley", "Sam"] },
   { startsAt: tomorrow.setHours(9, 30, 0, 0), stylists: ["Ashley", "Jo"] },
 ];
 describe('Appointment form', ()=>{
@@ -236,7 +236,7 @@ describe('Appointment form', ()=>{
       const stylists = screen.getByLabelText('Stylist') as HTMLSelectElement;
       const stylistNames = Array.from(stylists.childNodes, (option)=>{return option.textContent} )
 
-      assert.deepStrictEqual(stylistNames, ["Ashley","Jordan","Taylor"], `Expected tag name input, but got ${JSON.stringify(stylistNames)}`)
+      assert.deepStrictEqual(stylistNames, ["Ashley","Jo","Pat"], `Expected tag name input, but got ${JSON.stringify(stylistNames)}`)
     })
     it("saves new stylist box value when submitted", async () => {
       const appointment: Appointment = {};
@@ -245,11 +245,35 @@ describe('Appointment form', ()=>{
       render(<AppointmentForm {...testProps} onSubmit={onSubmitMockHandler} appointment={appointment}/> )
       const submit = screen.getByLabelText('Submit') as HTMLFormElement;
       const select = screen.getByLabelText('Stylist') as HTMLSelectElement;
-      await submitEvent.selectOptions(select, 'Jordan')
+      await submitEvent.selectOptions(select, 'Jo')
       await submitEvent.click(submit)
 
       assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
-      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {service:"Cut",stylist: 'Jordan'}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {service:"Cut",stylist: 'Jo'}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+    })
+  })
+  describe('time slot - stylist availability', ()=>{
+    it('shows no appointments', ()=>{
+      render(
+        <AppointmentForm
+          {...testProps}
+          availableTimeSlots={availableTimeSlots}
+          selectableStylists={['Pat']}
+        />);
+      const radioButtons = screen.queryAllByRole('radio')
+
+      assert.strictEqual(radioButtons.length, 0)
+    })
+    it('shows 1 appointment for Sam', ()=>{
+      render(
+        <AppointmentForm
+          {...testProps}
+          availableTimeSlots={availableTimeSlots}
+          selectableStylists={['Sam']}
+        />);
+      const radioButtons = screen.queryAllByRole('radio')
+
+      assert.strictEqual(radioButtons.length, 1)
     })
   })
 })

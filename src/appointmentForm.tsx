@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react"
 
 const stylists = ["Ashley", "Jo", "Pat", "Sam"] as const
-type Stylist = typeof stylists[number] 
+type Stylist = typeof stylists[number] | "noOne"
 const selectableServicesList = [
     "Cut",
     "Blow-dry",
@@ -10,7 +10,7 @@ const selectableServicesList = [
     "Cut & beard trim",
     "Extensions",
   ] as const
-export type Service = typeof selectableServicesList[number]
+export type Service = typeof selectableServicesList[number] 
 
 export type AvailableTimeSlot = {
     startsAt: number;
@@ -24,7 +24,7 @@ export type Appointment = {
 
 export type AppointmentFormProps = {
   selectableServices: Service[],
-  selectableStylists: string[],
+  selectableStylists: Stylist[],
   salonOpensAt: number,
   salonClosesAt: number,
   appointment: Appointment,
@@ -81,7 +81,17 @@ export const AppointmentForm = ({
     }
   }, [])
 
-  const stylistAvailableTimeSlots = availableTimeSlots.map((x)=>x)
+  const stylistAvailableTimeSlots = availableTimeSlots.map(
+    (timeSlot: AvailableTimeSlot): AvailableTimeSlot => {
+      if (
+        timeSlot.stylists.some((stylist) => stylist === appointmentState.stylist)
+      ) { 
+        return timeSlot; 
+      }
+      return { stylists: ["noOne"], startsAt: -1 };
+    }
+  );
+
   return <form aria-label="Appointment form" onSubmit={handleSubmit}>
     <label htmlFor="service">Service</label>
     <select name="service" id="service" value={appointmentState.service} onChange={handleChange} ref={serviceRef}>
@@ -92,7 +102,7 @@ export const AppointmentForm = ({
       {selectableStylists.map((stylist: string)=><option key={stylist}>{stylist}</option>)}
     </select>
     <label htmlFor="timeSlotTable">Available Times</label>
-    <TimeSlotTable salonOpensAt={salonOpensAt} salonClosesAt={salonClosesAt} today={today} availableTimeSlots={availableTimeSlots} checkedTimeSlot={appointmentState.startsAt!} handleChange={handleStartsAtChange}/>
+    <TimeSlotTable salonOpensAt={salonOpensAt} salonClosesAt={salonClosesAt} today={today} availableTimeSlots={stylistAvailableTimeSlots} checkedTimeSlot={appointmentState.startsAt!} handleChange={handleStartsAtChange}/>
     <input type="submit" value="Add" aria-label="Submit"/>
   </form>
 }
@@ -166,7 +176,7 @@ const RadioButtonIfAvailable = ({availableTimeSlots, date, timeSlot, checkedTime
         checked={startsAt === checkedTimeSlot} 
         onChange={handleChange}
       />)
-    return null
+  return null
 }
 
 type TimeSlotTableProps = {salonOpensAt: number, salonClosesAt: number, today: Date, availableTimeSlots: AvailableTimeSlot[], checkedTimeSlot: number, handleChange: ({ target: { value } }: React.ChangeEvent<HTMLInputElement>)=>void}
