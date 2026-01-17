@@ -7,7 +7,7 @@ import * as React from "react";
 import { render, screen, cleanup, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AppointmentForm, serviceStylists } from "../src/appointmentForm";
+import { AppointmentForm, serviceStylists, stylists } from "../src/appointmentForm";
 import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm";
 
 beforeEach( () => {
@@ -41,7 +41,7 @@ const tomorrow = new Date(
 );
 const testProps: AppointmentFormProps ={
   selectableServices: ["Cut", "Blow-dry"],
-  selectableStylists: ["Ashley", "Jo", "Pat", "Sam"],
+  selectableStylists: stylists,
   serviceStylists: serviceStylists,
   salonOpensAt: 9,
   salonClosesAt: 19,
