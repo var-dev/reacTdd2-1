@@ -20,7 +20,7 @@ const appointmentFormProps: AppointmentFormProps = {
   availableTimeSlots: sampleAvailableTimeSlots,
   today: new Date(),
   appointment: (sampleAppointments[0]! as Appointment),
-  onSubmit: x=>{console.log(x)}
+  onSave: x=>{console.log(x)}
 }
 ReactDOM.createRoot(
   document.getElementById("root")!

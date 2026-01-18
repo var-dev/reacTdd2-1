@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, it, mock } from "node:test";
+import { afterEach, beforeEach, describe, it, mock,  } from "node:test";
 import * as assert from 'node:assert/strict';
 
 import "./domSetup"; // must be imported before render/screen
@@ -10,12 +10,17 @@ import userEvent from "@testing-library/user-event";
 import { AppointmentForm, serviceStylists, stylists } from "../src/appointmentForm";
 import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm";
 
+
+
+const originalFetch = globalThis.fetch;
+
 beforeEach( () => {
   globalThis.document.body.innerHTML = '<p>Hello world</p>';
 })
 afterEach(()=>{
   cleanup();
   globalThis.document.body.innerHTML = ' ';
+  globalThis.fetch = originalFetch;
 })
 
 function labelsOfAllOptions(selectBox: HTMLSelectElement) {
@@ -48,13 +53,16 @@ const testProps: AppointmentFormProps ={
   availableTimeSlots: [],
   today,
   appointment: blankAppointment,
-  onSubmit: ()=>{}
+  onSave: ()=>{}
 };
 const availableTimeSlots: AvailableTimeSlot[] = [
   { startsAt: today.setHours(9, 0, 0, 0), stylists: ["Ashley", "Jo"] },
   { startsAt: today.setHours(9, 30, 0, 0), stylists: ["Ashley", "Sam"] },
   { startsAt: tomorrow.setHours(9, 30, 0, 0), stylists: ["Ashley", "Jo"] },
 ];
+const mockFetchOk = (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(args) });
+const mockFetchError = (...args: any[]) => Promise.resolve({ ok: false });
+
 describe('Appointment form', ()=>{
   it("renders appointment form", async () => {
     render(<AppointmentForm {...testProps}/> )
@@ -69,18 +77,19 @@ describe('Appointment form', ()=>{
     assert.ok(submit, 'No button found with aria-label "Submit"');
   })
   it("saves existing value when submitted", async () => {
+    const mockFetch = mock.method(global,'fetch', mockFetchOk)
     const appointment: Appointment = {startsAt: availableTimeSlots[1].startsAt, service:'Cut', stylist: 'Ashley'};
     const submitEvent = userEvent.setup();
-    const onSubmitMockHandler = mock.fn(({startsAt}: Appointment)=>{})
     const mockEventListenerHandler = mock.fn((e: Event) => {})
-    render(<AppointmentForm {...testProps} onSubmit={onSubmitMockHandler} appointment={appointment}/> )
+    render(<AppointmentForm {...testProps} appointment={appointment}/> )
     const submit = screen.getByLabelText('Submit') as HTMLFormElement;
     const form = screen.getByLabelText('Appointment form') as HTMLFormElement;
     form.addEventListener("submit", mockEventListenerHandler);
     await submitEvent.click(submit)
 
-    assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
-    assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], appointment, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+    const expectedRequest = "{\"startsAt\":1543681800000,\"service\":\"Cut\",\"stylist\":\"Ashley\"}";
+    assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${mockFetch.mock.calls.length}`)
+    assert.strictEqual(mockFetch.mock.calls[0].arguments[1].body, expectedRequest, `Expected submitted appointment data ${JSON.stringify(expectedRequest)}, but got ${JSON.stringify(mockFetch.mock.calls[0].arguments[1].body)}`)
     assert.strictEqual(mockEventListenerHandler.mock.calls[0].arguments[0].type, "submit", 'Event is not of Submit type');
     assert.strictEqual(mockEventListenerHandler.mock.calls[0].arguments[0].defaultPrevented, true, 'PreventDefault was not set correctly');
   })
@@ -114,28 +123,30 @@ describe('Appointment form', ()=>{
       assert.ok(option.tagName==='OPTION' && option.selected, `Expected option ${appointment.service} to be selected`)
     })
     it("saves existing selectBox value when submitted", async () => {
+      const mockFetch = mock.method(global,'fetch', mockFetchOk)
       const appointment: Appointment = {};
       const submitEvent = userEvent.setup();
-      const onSubmitMockHandler = mock.fn(({service}: Appointment)=>{})
-      render(<AppointmentForm {...testProps} onSubmit={onSubmitMockHandler} appointment={appointment}/> )
+      render(<AppointmentForm {...testProps} appointment={appointment}/> )
       const submit = screen.getByLabelText('Submit') as HTMLFormElement;
       await submitEvent.click(submit)
 
-      assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
-      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {service:"Cut",stylist: 'Ashley'}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+      const expectedResult = "{\"service\":\"Cut\",\"stylist\":\"Ashley\"}"
+      assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${mockFetch.mock.calls.length}`)
+      assert.strictEqual(mockFetch.mock.calls[0].arguments[1].body, expectedResult, `Expected existing data ${expectedResult}, but got ${mockFetch.mock.calls[0].arguments[1].body}`)
     })
     it("saves new selectBox value when submitted", async () => {
+      const mockFetch = mock.method(global,'fetch', mockFetchOk)
       const appointment: Appointment = {};
       const submitEvent = userEvent.setup();
-      const onSubmitMockHandler = mock.fn(({service}: Appointment)=>{})
-      render(<AppointmentForm {...testProps} onSubmit={onSubmitMockHandler} appointment={appointment}/> )
+      render(<AppointmentForm {...testProps} appointment={appointment}/> )
       const submit = screen.getByLabelText('Submit') as HTMLFormElement;
       const select = screen.getByLabelText('Service') as HTMLSelectElement;
       await submitEvent.selectOptions(select, 'Blow-dry')
       await submitEvent.click(submit)
 
-      assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
-      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {service:"Blow-dry",stylist: 'Ashley'}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+      const expectedResult = "{\"service\":\"Blow-dry\",\"stylist\":\"Ashley\"}"
+      assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
+      assert.strictEqual(mockFetch.mock.calls[0].arguments[1].body, expectedResult, `Expected new appointment data ${expectedResult}, but got ${mockFetch.mock.calls[0].arguments[1].body}`)
     })
   })
   describe("time slot table", () => {
@@ -240,17 +251,19 @@ describe('Appointment form', ()=>{
       assert.deepStrictEqual(stylistNames, ["Ashley","Jo","Pat","Sam"], `Expected ["Ashley","Jo","Pat","Sam"], but got ${JSON.stringify(stylistNames)}`)
     })
     it("saves new stylist box value when submitted", async () => {
+      const mockFetch = mock.method(global,'fetch', mockFetchOk)
       const appointment: Appointment = {};
       const submitEvent = userEvent.setup();
-      const onSubmitMockHandler = mock.fn(({stylist}: Appointment)=>{})
-      render(<AppointmentForm {...testProps} onSubmit={onSubmitMockHandler} appointment={appointment}/> )
+      render(<AppointmentForm {...testProps} appointment={appointment}/> )
       const submit = screen.getByLabelText('Submit') as HTMLFormElement;
       const select = screen.getByLabelText('Stylist') as HTMLSelectElement;
       await submitEvent.selectOptions(select, 'Jo')
       await submitEvent.click(submit)
-
-      assert.strictEqual(onSubmitMockHandler.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${onSubmitMockHandler.mock.calls.length}`)
-      assert.deepStrictEqual(onSubmitMockHandler.mock.calls[0].arguments[0], {service:"Cut",stylist: 'Jo'}, `Expected onSubmit to be called with appointment data, but got ${JSON.stringify(onSubmitMockHandler.mock.calls[0].arguments)}`)
+      const expectedResult = "{\"service\":\"Cut\",\"stylist\":\"Jo\"}"
+      assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected onSubmit to be called once, but got ${mockFetch.mock.calls.length}`)
+      assert.strictEqual(mockFetch.mock.calls[0].arguments[1].body
+        , expectedResult
+        , `Expected submitting appointment data ${expectedResult}, but got ${mockFetch.mock.calls[0].arguments}`)
     })
   })
   describe('time slot - stylist availability', ()=>{
@@ -281,6 +294,78 @@ describe('Appointment form', ()=>{
       const radioButtons = screen.queryAllByRole('radio')
 
       assert.strictEqual(radioButtons.length, 1)
+    })
+  })
+  describe('Customer Form fetch mock', async ()=>{
+    beforeEach(()=>{
+      mock.restoreAll()
+    })
+    it('mock fetch', async ()=>{
+      const mockFetch = mock.method(global,'fetch', mockFetchOk)
+      globalThis.fetch('www.example.com')
+      
+      assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
+      assert.deepStrictEqual(mockFetch.mock.calls[0].arguments, ['www.example.com'], `Expected fetch to be called with "www.example.com", but got ${JSON.stringify(mockFetch.mock.calls[0].arguments)}`)
+    })
+    it("sends request to POST /customers when submitting the form", async () => {
+      const mockFetch = mock.method(global,'fetch', mockFetchOk)
+      const submitEvent = userEvent.setup();
+      const mockOnSave = mock.fn((args:any[])=>{})
+      render(
+        <AppointmentForm
+          {...testProps}
+          availableTimeSlots={availableTimeSlots}
+          selectableServices={["Cut","Blow-dry","Cut & color","Beard trim","Cut & beard trim","Extensions"]}
+          onSave={mockOnSave}
+        />);
+      const stylists = screen.getByLabelText('Stylist') as HTMLSelectElement;
+      const service = screen.getByLabelText('Service') as HTMLSelectElement;
+      const submit = screen.getByLabelText('Submit') as HTMLFormElement;
+      await submitEvent.selectOptions(service, 'Beard trim')
+      await submitEvent.selectOptions(stylists, 'Sam')
+      await submitEvent.click(submit)
+      
+      const expectedRequest = ["/customers",{"method":"POST","credentials":"same-origin","headers":{"Content-Type":"application/json"},"body":"{\"service\":\"Beard trim\",\"startsAt\":0,\"stylist\":\"Sam\"}"}]
+      const expectedResponse = [expectedRequest]
+      assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
+      assert.deepStrictEqual(
+        mockFetch.mock.calls[0].arguments
+        , expectedRequest
+        , `Expected fetch to be called with ${JSON.stringify(expectedRequest)}, but got ${JSON.stringify(mockFetch.mock.calls[0].arguments)}`)
+
+      assert.strictEqual(mockOnSave.mock.calls.length, 1, `Expected onSave to be called once, but got ${mockOnSave.mock.calls.length}`)
+      assert.deepStrictEqual(
+        mockOnSave.mock.calls[0].arguments
+        , expectedResponse
+        , `Expected fetch to return ${expectedResponse}, but got ${JSON.stringify( mockOnSave.mock.calls[0].arguments)}`)
+      
+    })
+    it("does not notify onSave if the POST request returns an error", async () => {
+      const mockFetch = mock.method(global,'fetch', mockFetchError)
+      const submitEvent = userEvent.setup();
+      const mockOnSave = mock.fn((args:any[])=>{})
+      render(
+        <AppointmentForm
+          {...testProps}
+          availableTimeSlots={availableTimeSlots}
+          selectableServices={["Cut","Blow-dry","Cut & color","Beard trim","Cut & beard trim","Extensions"]}
+          onSave={mockOnSave}
+        />);
+      const stylists = screen.getByLabelText('Stylist') as HTMLSelectElement;
+      const service = screen.getByLabelText('Service') as HTMLSelectElement;
+      const submit = screen.getByLabelText('Submit') as HTMLFormElement;
+      await submitEvent.selectOptions(service, 'Beard trim')
+      await submitEvent.selectOptions(stylists, 'Sam')
+      await submitEvent.click(submit)
+
+      const expectedRequest = ["/customers",{"method":"POST","credentials":"same-origin","headers":{"Content-Type":"application/json"},"body":"{\"service\":\"Beard trim\",\"startsAt\":0,\"stylist\":\"Sam\"}"}]
+      assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
+      assert.deepStrictEqual(
+        mockFetch.mock.calls[0].arguments
+        , expectedRequest
+        , `Expected fetch to be called with ${JSON.stringify(expectedRequest)}, but got ${JSON.stringify(mockFetch.mock.calls[0].arguments)}`)
+
+      assert.strictEqual(mockOnSave.mock.calls.length, 0, `Expected NO onSave calls, but got ${mockOnSave.mock.calls.length}`)
     })
   })
 })

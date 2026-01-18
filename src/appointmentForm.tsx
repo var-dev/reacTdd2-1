@@ -166,8 +166,8 @@ export type AppointmentFormProps = {
   salonClosesAt: number,
   appointment: Appointment,
   availableTimeSlots: AvailableTimeSlot[],
-  today: Date
-  onSubmit: (appointment: Appointment)=>void
+  today: Date,
+  onSave: (response: any)=>void
 }
 
 export const AppointmentForm = 
@@ -180,15 +180,24 @@ export const AppointmentForm =
     appointment,
     availableTimeSlots,
     today,
-    onSubmit,
+    onSave
   }: AppointmentFormProps) =>{
   const [appointmentState, setAppointmentState] = useState<Appointment>(appointment)
   const serviceRef = useRef<HTMLSelectElement>(null)
   const stylistRef = useRef<HTMLSelectElement>(null)
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
       event.preventDefault();
-      onSubmit(appointmentState);
+      const result = await globalThis.fetch("/customers", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(appointmentState),
+      });
+      if(result?.ok){
+        const customerWithId = await result.json();
+        onSave(customerWithId);
+      }
       };
   const handleStartsAtChange = useCallback(
     ({ target: { value } }: React.ChangeEvent<HTMLInputElement>) =>
