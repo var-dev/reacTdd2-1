@@ -91,54 +91,12 @@ describe('CustomerForm tests using render and screen', ()=>{
       mockOnSave.mock.calls[0].arguments
       , expectedResponse
       , `Expected fetch to return ${expectedResponse}, but got ${JSON.stringify( mockOnSave.mock.calls[0].arguments)}`)
-    
-  })
-  it("does not notify onSave if the POST request returns an error", async () => {
-    const mockFetch = mock.method(global,'fetch', mockFetchError)
-    const submitEvent = userEvent.setup();
-    const mockOnSave = mock.fn((args:any)=>{})
-    render(
-      <CustomerForm
-        {...testProps}
-        onSave={mockOnSave}
-      />);
-    const firstNameInput = screen.getByLabelText('First Name') as HTMLInputElement;
-    await userEvent.clear(firstNameInput);
-    await userEvent.type(firstNameInput, "James")
-    const lastNameInput = screen.getByLabelText('Last Name') as HTMLInputElement;
-    await userEvent.clear(lastNameInput);
-    await userEvent.type(lastNameInput, "Duck")
-    const phoneNumberInput = screen.getByLabelText('Phone Number') as HTMLInputElement;
-    await userEvent.clear(phoneNumberInput);
-    await userEvent.type(phoneNumberInput, "777-1239")
-    const submitButton = screen.getByRole('button', { name: /Add/i })
-    await submitEvent.click(submitButton)
-  
-    const expectedRequest = ["/customers",{"method":"POST","credentials":"same-origin","headers":{"Content-Type":"application/json"},"body":"{\"firstName\":\"James\",\"lastName\":\"Duck\",\"phoneNumber\":\"777-1239\"}"}]
-    assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
-    assert.deepStrictEqual(
-      mockFetch.mock.calls[0].arguments
-      , expectedRequest
-      , `Expected fetch to be called with ${JSON.stringify(expectedRequest)}, but got ${JSON.stringify(mockFetch.mock.calls[0].arguments)}`)
-
-    assert.strictEqual(mockOnSave.mock.calls.length, 0, `Expected NO onSave calls, but got ${mockOnSave.mock.calls.length}`)
   })
   it("renders an alert space", async () => {
     render(<CustomerForm {...testProps} />);
     const alert = await screen.findByRole("alert", );
     
     assert.strictEqual(alert.tagName, 'P', `Expected tag name P, but got ${alert.tagName}`)
-  });
-  it("renders error message when fetch call fails", async () => {
-    const mockFetch = mock.method(global,'fetch', mockFetchError)
-    const submitEvent = userEvent.setup();
-    render(<CustomerForm {...testProps} />);
-    const alert = await screen.findByRole("alert", ) as HTMLParagraphElement;
-    const submitButton = screen.getByRole('button', { name: /Add/i })
-    
-    await submitEvent.click(submitButton)
-    
-    assert.match(alert.textContent, /error occurred/i, `Expected /error occurred/i, but got ${alert.textContent}`)
   });
   it("initially has no error message", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
@@ -151,6 +109,53 @@ describe('CustomerForm tests using render and screen', ()=>{
     
     assert.strictEqual(alert.textContent, "", `Expected empty string, but got ${alert.textContent}`)
   });
+  describe('when POST request returns an error', ()=>{
+  it("renders error message", async () => {
+    let mockFetch = mock.method(global,'fetch', mockFetchError)
+    const submitEvent = userEvent.setup();
+    render(<CustomerForm {...testProps} />);
+    const alert = await screen.findByRole("alert", ) as HTMLParagraphElement;
+    const submitButton = screen.getByRole('button', { name: /Add/i })
+    await submitEvent.click(submitButton)
+    
+    assert.match(alert.textContent, /error occurred/i, `Expected /error occurred/i, but got ${alert.textContent}`)
+
+    mockFetch = mock.method(global,'fetch', mockFetchOk)
+    await submitEvent.click(submitButton)
+    
+    assert.strictEqual(alert.textContent, "", `Expected empty string after clearing error, but got ${alert.textContent}`)
+  });
+    it("does not notify onSave", async () => {
+      const mockFetch = mock.method(global,'fetch', mockFetchError)
+      const submitEvent = userEvent.setup();
+      const mockOnSave = mock.fn((args:any)=>{})
+      render(
+        <CustomerForm
+          {...testProps}
+          onSave={mockOnSave}
+        />);
+      const firstNameInput = screen.getByLabelText('First Name') as HTMLInputElement;
+      await userEvent.clear(firstNameInput);
+      await userEvent.type(firstNameInput, "James")
+      const lastNameInput = screen.getByLabelText('Last Name') as HTMLInputElement;
+      await userEvent.clear(lastNameInput);
+      await userEvent.type(lastNameInput, "Duck")
+      const phoneNumberInput = screen.getByLabelText('Phone Number') as HTMLInputElement;
+      await userEvent.clear(phoneNumberInput);
+      await userEvent.type(phoneNumberInput, "777-1239")
+      const submitButton = screen.getByRole('button', { name: /Add/i })
+      await submitEvent.click(submitButton)
+    
+      const expectedRequest = ["/customers",{"method":"POST","credentials":"same-origin","headers":{"Content-Type":"application/json"},"body":"{\"firstName\":\"James\",\"lastName\":\"Duck\",\"phoneNumber\":\"777-1239\"}"}]
+      assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
+      assert.deepStrictEqual(
+        mockFetch.mock.calls[0].arguments
+        , expectedRequest
+        , `Expected fetch to be called with ${JSON.stringify(expectedRequest)}, but got ${JSON.stringify(mockFetch.mock.calls[0].arguments)}`)
+
+      assert.strictEqual(mockOnSave.mock.calls.length, 0, `Expected NO onSave calls, but got ${mockOnSave.mock.calls.length}`)
+    })
+  })
 })
 
 

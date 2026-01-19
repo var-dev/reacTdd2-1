@@ -167,7 +167,7 @@ export type AppointmentFormProps = {
   appointment: Appointment,
   availableTimeSlots: AvailableTimeSlot[],
   today: Date,
-  onSave: (response: any)=>void
+  onSave: ()=>void
 }
 
 export const AppointmentForm = 
@@ -188,15 +188,14 @@ export const AppointmentForm =
 
   const handleSubmit = async (event: React.FormEvent) => {
       event.preventDefault();
-      const result = await globalThis.fetch("/customers", {
+      const result = await globalThis.fetch("/appointments", {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(appointmentState),
       });
       if(result?.ok){
-        const customerWithId = await result.json();
-        onSave(customerWithId);
+        onSave();
       }
       };
   const handleStartsAtChange = useCallback(

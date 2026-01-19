@@ -60,7 +60,8 @@ const availableTimeSlots: AvailableTimeSlot[] = [
   { startsAt: today.setHours(9, 30, 0, 0), stylists: ["Ashley", "Sam"] },
   { startsAt: tomorrow.setHours(9, 30, 0, 0), stylists: ["Ashley", "Jo"] },
 ];
-const mockFetchOk = (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(args) });
+
+const mockFetch201 = (...args: any[]) => Promise.resolve({ ok: true, status: 201 });
 const mockFetchError = (...args: any[]) => Promise.resolve({ ok: false });
 
 describe('Appointment form', ()=>{
@@ -77,7 +78,7 @@ describe('Appointment form', ()=>{
     assert.ok(submit, 'No button found with aria-label "Submit"');
   })
   it("saves existing value when submitted", async () => {
-    const mockFetch = mock.method(global,'fetch', mockFetchOk)
+    const mockFetch = mock.method(global,'fetch', mockFetch201)
     const appointment: Appointment = {startsAt: availableTimeSlots[1].startsAt, service:'Cut', stylist: 'Ashley'};
     const submitEvent = userEvent.setup();
     const mockEventListenerHandler = mock.fn((e: Event) => {})
@@ -123,7 +124,7 @@ describe('Appointment form', ()=>{
       assert.ok(option.tagName==='OPTION' && option.selected, `Expected option ${appointment.service} to be selected`)
     })
     it("saves existing selectBox value when submitted", async () => {
-      const mockFetch = mock.method(global,'fetch', mockFetchOk)
+      const mockFetch = mock.method(global,'fetch', mockFetch201)
       const appointment: Appointment = {};
       const submitEvent = userEvent.setup();
       render(<AppointmentForm {...testProps} appointment={appointment}/> )
@@ -135,7 +136,7 @@ describe('Appointment form', ()=>{
       assert.strictEqual(mockFetch.mock.calls[0].arguments[1].body, expectedResult, `Expected existing data ${expectedResult}, but got ${mockFetch.mock.calls[0].arguments[1].body}`)
     })
     it("saves new selectBox value when submitted", async () => {
-      const mockFetch = mock.method(global,'fetch', mockFetchOk)
+      const mockFetch = mock.method(global,'fetch', mockFetch201)
       const appointment: Appointment = {};
       const submitEvent = userEvent.setup();
       render(<AppointmentForm {...testProps} appointment={appointment}/> )
@@ -251,7 +252,7 @@ describe('Appointment form', ()=>{
       assert.deepStrictEqual(stylistNames, ["Ashley","Jo","Pat","Sam"], `Expected ["Ashley","Jo","Pat","Sam"], but got ${JSON.stringify(stylistNames)}`)
     })
     it("saves new stylist box value when submitted", async () => {
-      const mockFetch = mock.method(global,'fetch', mockFetchOk)
+      const mockFetch = mock.method(global,'fetch', mockFetch201)
       const appointment: Appointment = {};
       const submitEvent = userEvent.setup();
       render(<AppointmentForm {...testProps} appointment={appointment}/> )
@@ -301,16 +302,16 @@ describe('Appointment form', ()=>{
       mock.restoreAll()
     })
     it('mock fetch', async ()=>{
-      const mockFetch = mock.method(global,'fetch', mockFetchOk)
+      const mockFetch = mock.method(global,'fetch', mockFetch201)
       globalThis.fetch('www.example.com')
       
       assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
       assert.deepStrictEqual(mockFetch.mock.calls[0].arguments, ['www.example.com'], `Expected fetch to be called with "www.example.com", but got ${JSON.stringify(mockFetch.mock.calls[0].arguments)}`)
     })
-    it("sends request to POST /customers when submitting the form", async () => {
-      const mockFetch = mock.method(global,'fetch', mockFetchOk)
+    it("sends request to POST /appointments when submitting the form", async () => {
+      const mockFetch = mock.method(global,'fetch', mockFetch201)
       const submitEvent = userEvent.setup();
-      const mockOnSave = mock.fn((args:any[])=>{})
+      const mockOnSave = mock.fn(()=>{})
       render(
         <AppointmentForm
           {...testProps}
@@ -325,25 +326,25 @@ describe('Appointment form', ()=>{
       await submitEvent.selectOptions(stylists, 'Sam')
       await submitEvent.click(submit)
       
-      const expectedRequest = ["/customers",{"method":"POST","credentials":"same-origin","headers":{"Content-Type":"application/json"},"body":"{\"service\":\"Beard trim\",\"startsAt\":0,\"stylist\":\"Sam\"}"}]
+      const expectedRequest = ["/appointments",{"method":"POST","credentials":"same-origin","headers":{"Content-Type":"application/json"},"body":"{\"service\":\"Beard trim\",\"startsAt\":0,\"stylist\":\"Sam\"}"}]
       const expectedResponse = [expectedRequest]
+
       assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
       assert.deepStrictEqual(
         mockFetch.mock.calls[0].arguments
         , expectedRequest
         , `Expected fetch to be called with ${JSON.stringify(expectedRequest)}, but got ${JSON.stringify(mockFetch.mock.calls[0].arguments)}`)
-
-      assert.strictEqual(mockOnSave.mock.calls.length, 1, `Expected onSave to be called once, but got ${mockOnSave.mock.calls.length}`)
-      assert.deepStrictEqual(
-        mockOnSave.mock.calls[0].arguments
-        , expectedResponse
-        , `Expected fetch to return ${expectedResponse}, but got ${JSON.stringify( mockOnSave.mock.calls[0].arguments)}`)
       
+      const actualResult = await mockFetch.mock.calls[0].result
+      const expectedResult = {"ok":true,"status":201}
+
+      assert.deepStrictEqual(actualResult, expectedResult, `Expected fetch to return ${JSON.stringify(expectedResult)}, but got ${JSON.stringify(actualResult)}`)
+      assert.strictEqual(mockOnSave.mock.calls.length, 1, `Expected onSave to be called once, but got ${mockOnSave.mock.calls.length}`)
     })
     it("does not notify onSave if the POST request returns an error", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetchError)
       const submitEvent = userEvent.setup();
-      const mockOnSave = mock.fn((args:any[])=>{})
+      const mockOnSave = mock.fn(()=>{})
       render(
         <AppointmentForm
           {...testProps}
@@ -358,13 +359,17 @@ describe('Appointment form', ()=>{
       await submitEvent.selectOptions(stylists, 'Sam')
       await submitEvent.click(submit)
 
-      const expectedRequest = ["/customers",{"method":"POST","credentials":"same-origin","headers":{"Content-Type":"application/json"},"body":"{\"service\":\"Beard trim\",\"startsAt\":0,\"stylist\":\"Sam\"}"}]
+      const expectedRequest = ["/appointments",{"method":"POST","credentials":"same-origin","headers":{"Content-Type":"application/json"},"body":"{\"service\":\"Beard trim\",\"startsAt\":0,\"stylist\":\"Sam\"}"}]
       assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
       assert.deepStrictEqual(
         mockFetch.mock.calls[0].arguments
         , expectedRequest
         , `Expected fetch to be called with ${JSON.stringify(expectedRequest)}, but got ${JSON.stringify(mockFetch.mock.calls[0].arguments)}`)
 
+      const actualResult = await mockFetch.mock.calls[0].result
+      const expectedResult = {"ok":false}
+
+      assert.deepStrictEqual(actualResult, expectedResult, `Expected fetch to return ${JSON.stringify(expectedResult)}, but got ${JSON.stringify(actualResult)}`)
       assert.strictEqual(mockOnSave.mock.calls.length, 0, `Expected NO onSave calls, but got ${mockOnSave.mock.calls.length}`)
     })
   })
