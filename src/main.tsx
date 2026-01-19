@@ -29,7 +29,7 @@ ReactDOM.createRoot(
   //     <AppointmentsDayView appointments={sampleAppointments} />
   // );
   // render(
-  //     <CustomerForm customer={sampleAppointments[0]!.customer} onSubmit={(customer)=>{console.log(customer.phoneNumber)}}/>
+  //     <CustomerForm customer={sampleAppointments[0]!.customer} onSave={(customer)=>{console.log(customer)}}/>
   // );
   render(
       <AppointmentForm {...appointmentFormProps}/>
