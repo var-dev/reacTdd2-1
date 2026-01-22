@@ -3,12 +3,12 @@ import { afterEach, beforeEach, describe, it, test, mock} from "node:test";
 import * as assert from 'node:assert/strict';
 
 import "./domSetup.ts"; // must be imported before render/screen
-import * as React from "react";
+import React, {act}  from "react";
 
 import { render, screen, cleanup, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AppointmentForm, serviceStylists, stylists } from "../src/appointmentForm.tsx";
+import { AppointmentForm, serviceStylistRecord, stylists } from "../src/appointmentForm.tsx";
 import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm.tsx";
 import type { AppointmentsDayViewLoaderProps } from "../src/appointmentsDayViewLoader.tsx";
 
@@ -69,11 +69,13 @@ describe('AppointmentsDayViewLoader',  ()=>{
     const from = today.setHours(0, 0, 0, 0)
     const to = today.setHours(23, 59, 59, 999);
     const mockFetch = mock.method(globalThis,'fetch', mockFetchOk)
+  
     render(
-      <AppointmentsDayViewLoader today={today} />
+      <AppointmentsDayViewLoader {...testProps} />
     );
-    assert.strictEqual(mockFetch.mock.calls.length, 1, `mockFetch is expected to be called 1 time, but was ${mockFetch.mock.calls.length}`)
+    await screen.findByTestId('appointmentsDayView')
 
+    assert.strictEqual(mockFetch.mock.calls.length, 1, `mockFetch is expected to be called 1 time, but was ${mockFetch.mock.calls.length}`)
     const expectedArgs = [`/appointments/${from}-${to}`,{"method":"GET","credentials":"same-origin","headers":{"Content-Type":"application/json"}}]
     const actualArgs = mockFetch.mock.calls[0].arguments
     assert.deepStrictEqual(actualArgs, expectedArgs, `globalThis.fetch should be called with ${expectedArgs} but got ${JSON.stringify(actualArgs)}`)
@@ -97,5 +99,12 @@ describe('AppointmentsDayViewLoader',  ()=>{
     const expectedArgs = [{"appointments":[`/appointments/${from}-${to}`,{"method":"GET","credentials":"same-origin","headers":{"Content-Type":"application/json"}}]},undefined]
     const actualArgs = mockAppointmentsDayView.mock.calls[1].arguments
     assert.deepStrictEqual(actualArgs, expectedArgs, `mockAppointmentsDayView should be called with \n${JSON.stringify(expectedArgs)} but got \n${JSON.stringify(actualArgs)}`)
+  })
+  it("re-requests appointment when today prop changes", async () => {
+    const {AppointmentsDayViewLoader, mockAppointmentsDayView} = await importSpyAppointmentsDayViewLoader()
+    render(<AppointmentsDayViewLoader today={today} />)
+    render(<AppointmentsDayViewLoader today={new Date(2018, 11, 2)} />)
+
+    assert.strictEqual(mockAppointmentsDayView.mock.calls.length, 2, `re-requesting appointment with a new time should trigger re-render`)
   })
 })

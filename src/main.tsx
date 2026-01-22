@@ -5,7 +5,7 @@ import { CustomerForm } from "./customerForm.js";
 import { sampleAppointments, sampleAvailableTimeSlots } from "./sampleData.js";
 import { 
   AppointmentForm, 
-  serviceStylists, 
+  serviceStylistRecord, 
   selectableServicesList,
   stylists,
 type Appointment, 
@@ -14,7 +14,7 @@ type AppointmentFormProps } from "./appointmentForm.js";
 const appointmentFormProps: AppointmentFormProps = {
   selectableServices: selectableServicesList,
   selectableStylists: stylists,
-  serviceStylists,
+  serviceStylists: serviceStylistRecord,
   salonOpensAt: 9,
   salonClosesAt: 19,
   availableTimeSlots: sampleAvailableTimeSlots,

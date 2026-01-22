@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from "react"
 
-export const serviceStylists = 
+export const serviceStylistRecord = 
   {
     "Cut":          ["Ashley", "Jo", "Pat", "Sam"],
     "Blow-dry":     ["Ashley", "Jo", "Pat", "Sam"],
@@ -9,11 +9,11 @@ export const serviceStylists =
     "Cut & beard trim": ["Pat", "Sam"],
     "Extensions":   ["Ashley", "Pat"],
   } as const
-export type ServiceStylistRecord = typeof serviceStylists;
+export type ServiceStylistRecord = typeof serviceStylistRecord;
 export type Service = keyof ServiceStylistRecord;
-export const selectableServicesList = Object.keys(serviceStylists) as Service[]
+export const selectableServicesList = Object.keys(serviceStylistRecord) as Service[]
 export type Stylist = ServiceStylistRecord[keyof ServiceStylistRecord][number] | "noOne"
-export const stylists = Array.from(new Set(Object.values(serviceStylists).flatMap((stylist)=>stylist)))
+export const stylists = Array.from(new Set(Object.values(serviceStylistRecord).flatMap((stylist)=>stylist)))
 
 export type AvailableTimeSlot = {
     startsAt: number;
@@ -159,28 +159,28 @@ const TimeSlotTable = (
 
 
 export type AppointmentFormProps = {
-  selectableServices: Service[],
-  selectableStylists: Stylist[],
-  serviceStylists: ServiceStylistRecord,
-  salonOpensAt: number,
-  salonClosesAt: number,
-  appointment: Appointment,
+  selectableServices?: Service[],
+  selectableStylists?: Stylist[],
+  serviceStylists?: ServiceStylistRecord,
+  salonOpensAt?: number,
+  salonClosesAt?: number,
+  appointment?: Appointment,
   availableTimeSlots: AvailableTimeSlot[],
   today: Date,
-  onSave: ()=>void
+  onSave?: ()=>void
 }
 
 export const AppointmentForm = 
   ({
-    selectableServices,
-    selectableStylists,
-    serviceStylists,
-    salonOpensAt,
-    salonClosesAt,
-    appointment,
-    availableTimeSlots,
-    today,
-    onSave
+    selectableServices = selectableServicesList,
+    selectableStylists = stylists,
+    serviceStylists = serviceStylistRecord,
+    salonOpensAt = 9,
+    salonClosesAt = 19,
+    appointment = {},
+    availableTimeSlots = [],
+    today = new Date(1970, 1, 1) ,
+    onSave = ()=>{}
   }: AppointmentFormProps) =>{
   const [appointmentState, setAppointmentState] = useState<Appointment>(appointment)
   const serviceRef = useRef<HTMLSelectElement>(null)
@@ -285,12 +285,5 @@ export const AppointmentForm =
     </form>
   );
 }
-AppointmentForm.defaultProps = {
-  selectableServices: selectableServicesList,
-  selectableStylists: stylists,
-  salonOpensAt: 9,
-  salonClosesAt: 19,
-  availableTimeSlots: [],
-  today: new Date(1970, 1, 1)
-};
+
 

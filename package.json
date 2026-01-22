@@ -3,6 +3,7 @@
   "main": "index.ts",
   "scripts": {
     "test": "node --import tsx --test ./**/*.test.ts?",
+    "test-only": "node --test-only --import tsx --test ./**/*.test.ts?",
     "start": "node --import tsx ./src/index.ts",
     "nodemon": "nodemon",
     "tsc": "tsc --noEmit --watch --preserveWatchOutput",

@@ -27,6 +27,6 @@ export const AppointmentsDayViewLoader = (
       .catch((e) => {
         // console.log(e)
       })  
-  }, []);
+  }, [today]);
   return <AppointmentsDayView appointments={appointments}/>
   }
