@@ -5,7 +5,7 @@ import * as assert from 'node:assert/strict';
 import "./domSetup.ts"; // must be imported before render/screen
 import * as React from "react";
 
-import { render, screen, cleanup, within } from "@testing-library/react";
+import { render, screen, cleanup, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { AppointmentForm, serviceStylistRecord, stylists, selectableServicesList } from "../src/appointmentForm.tsx";
@@ -75,6 +75,7 @@ describe('AppointmentFormLoader', ()=>{
     mock.method(globalThis,'fetch', mockFetchAppointmentForm)
     render(<AppointmentFormLoader {...testProps}/>)
     await screen.findByTestId('appointmentForm')
+    // await waitFor(() => screen.getByTestId('appointmentForm'))
 
     assert.strictEqual(mockAppointmentForm.mock.calls.length, 2, `mockAppointmentForm should be called twice because of re-render on useEffect-useState`)
 

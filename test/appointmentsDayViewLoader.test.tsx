@@ -5,7 +5,7 @@ import * as assert from 'node:assert/strict';
 import "./domSetup.ts"; // must be imported before render/screen
 import React, {act}  from "react";
 
-import { render, screen, cleanup, within } from "@testing-library/react";
+import { render, screen, cleanup, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { AppointmentForm, serviceStylistRecord, stylists } from "../src/appointmentForm.tsx";
@@ -13,6 +13,7 @@ import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } fr
 import type { AppointmentsDayViewLoaderProps } from "../src/appointmentsDayViewLoader.tsx";
 
 import quibble from 'quibble'
+import { wait } from "@testing-library/user-event/dist/cjs/utils/index.js";
 
 
 async function importSpyAppointmentsDayViewLoader() {
@@ -102,8 +103,9 @@ describe('AppointmentsDayViewLoader',  ()=>{
   })
   it("re-requests appointment when today prop changes", async () => {
     const {AppointmentsDayViewLoader, mockAppointmentsDayView} = await importSpyAppointmentsDayViewLoader()
-    render(<AppointmentsDayViewLoader today={today} />)
-    render(<AppointmentsDayViewLoader today={new Date(2018, 11, 2)} />)
+    const { rerender } = render(<AppointmentsDayViewLoader today={today} />)
+    rerender(<AppointmentsDayViewLoader today={new Date(2018, 11, 2)} />)
+    await waitFor(() => {screen.getByTestId('appointmentsDayView')})
 
     assert.strictEqual(mockAppointmentsDayView.mock.calls.length, 2, `re-requesting appointment with a new time should trigger re-render`)
   })
