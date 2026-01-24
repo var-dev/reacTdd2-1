@@ -10,7 +10,7 @@ import {createRoot} from "react-dom/client";
 import { fireEvent } from '@testing-library/react';
 
 import type { Customer } from "../src/appointmentsDayView";
-import {CustomerForm, CustomerFormProps} from "../src/customerForm";
+import {CustomerForm, CustomerFormProps} from "../src/CustomerForm";
 
 const originalFetch = globalThis.fetch;
 let container: HTMLDivElement

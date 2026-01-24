@@ -10,7 +10,7 @@ import userEvent from "@testing-library/user-event";
 
 import { AppointmentForm, serviceStylistRecord, stylists, selectableServicesList } from "../src/appointmentForm.tsx";
 import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm.tsx";
-import { AppointmentFormLoader } from "../src/appointmentFormLoader.tsx";
+import { AppointmentFormLoader } from "../src/AppointmentFormLoader.tsx";
 import quibble from 'quibble'
 
 

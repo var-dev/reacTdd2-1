@@ -10,7 +10,7 @@ import userEvent from "@testing-library/user-event";
 
 import { AppointmentForm, serviceStylistRecord, stylists } from "../src/appointmentForm.tsx";
 import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm.tsx";
-import type { AppointmentsDayViewLoaderProps } from "../src/appointmentsDayViewLoader.tsx";
+import type { AppointmentsDayViewLoaderProps } from "../src/AppointmentsDayViewLoader.tsx";
 
 import quibble from 'quibble'
 import { wait } from "@testing-library/user-event/dist/cjs/utils/index.js";
@@ -21,7 +21,7 @@ async function importSpyAppointmentsDayViewLoader() {
   await quibble.esm('../src/appointmentsDayView.tsx', {
     AppointmentsDayView: mockAppointmentsDayView
   })
-  const { AppointmentsDayViewLoader } = await import( "../src/appointmentsDayViewLoader.tsx");
+  const { AppointmentsDayViewLoader } = await import( "../src/AppointmentsDayViewLoader.tsx");
   return {AppointmentsDayViewLoader, mockAppointmentsDayView}
 }
 

@@ -9,7 +9,7 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { Customer } from "../src/appointmentsDayView";
-import {CustomerForm, CustomerFormProps as testProps} from "../src/customerForm";
+import {CustomerForm, CustomerFormProps as testProps} from "../src/CustomerForm";
 
 const originalFetch = globalThis.fetch;
 

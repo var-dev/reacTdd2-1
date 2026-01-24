@@ -19,7 +19,7 @@ async function importSpyAppointmentFormLoader() {
   await quibble.esm('../src/appointmentForm.tsx', {
     AppointmentForm: mockAppointmentForm
   })
-  const { AppointmentFormLoader } = await import( "../src/appointmentFormLoader.tsx");
+  const { AppointmentFormLoader } = await import( "../src/AppointmentFormLoader.tsx");
   return {AppointmentFormLoader, mockAppointmentForm}
 }
 
