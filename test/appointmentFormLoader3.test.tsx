@@ -5,7 +5,7 @@ import "./domSetup.ts"; // must be imported before render/screen
 import * as React from "react";
 import { render, screen, cleanup, waitFor } from "@testing-library/react";
 
-import type { AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm.tsx";
+import type { AppointmentFormProps, AvailableTimeSlot } from "../src/AppointmentForm.js";
 
 
 const today = new Date(2018, 11, 1);
@@ -37,12 +37,12 @@ describe('#3: AppointmentFormLoader. Node native AppointmentForm mock', ()=>{
   it('#3: Native mock-checks props for AppointmentForm', async ()=>{
     mock.method(globalThis,'fetch', mockFetchAppointmentForm)
     const mockAppointmentForm = mock.fn((...props:any[])=>(<div data-testid="appointmentForm"></div>))
-    const mModule = mock.module('../src/appointmentForm.js',{
+    const mModule = mock.module('../src/AppointmentForm.tsx',{
       namedExports:{
         AppointmentForm: mockAppointmentForm
       }
     })
-    const {AppointmentFormLoader} = await import('../src/appointmentFormLoader.js')
+    const {AppointmentFormLoader} = await import('../src/AppointmentFormLoader.js')
     render(<AppointmentFormLoader {...testProps}/>)
     await waitFor(()=>{screen.getByTestId('appointmentForm')})
     mModule.restore()

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import { AppointmentsDayView } from "./appointmentsDayView.js";
+import { AppointmentsDayView } from "./AppointmentsDayView.js";
 
 export type AppointmentsDayViewLoaderProps = {today: Date}
 export const AppointmentsDayViewLoader = (

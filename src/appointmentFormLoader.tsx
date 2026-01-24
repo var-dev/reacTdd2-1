@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react'
 
-import { AppointmentForm, type AppointmentFormProps, type AvailableTimeSlot } from './appointmentForm.js'
+import { AppointmentForm, type AppointmentFormProps, type AvailableTimeSlot } from './AppointmentForm.js'
 
 export const AppointmentFormLoader = (
   {

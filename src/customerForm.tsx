@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import type { Customer } from "./appointmentsDayView.js"
+import type { Customer } from "./AppointmentsDayView.js"
 
 type ErrorProps = {hasError:boolean}
 const Error = ({hasError}: ErrorProps) => (

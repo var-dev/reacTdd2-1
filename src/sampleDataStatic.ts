@@ -1,5 +1,5 @@
-import type { AppointmentObj } from "./appointmentsDayView.js";
-import { type Service, type Stylist } from "./appointmentForm.js";
+import type { AppointmentObj } from "./AppointmentsDayView.js";
+import { type Service, type Stylist } from "./AppointmentForm.js";
 
 const today = new Date();
 const at = (hours: number) => today.setHours(hours, 0);

@@ -7,9 +7,9 @@ import * as React from "react";
 import { act,  } from "react";
 import {createRoot} from "react-dom/client";
 
-import {Appointment} from "../src/appointmentsDayView";
-import type { Customer } from "../src/appointmentsDayView";
-import { sampleAppointmentsShort } from "../src/sampleDataStatic";
+import {Appointment} from "../src/AppointmentsDayView.js";
+import type { Customer } from "../src/AppointmentsDayView.js";
+import { sampleAppointmentsShort } from "../src/sampleDataStatic.js";
 
 let container: HTMLDivElement
 const render = async (node: React.ReactNode) => {

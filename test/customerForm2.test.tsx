@@ -8,8 +8,8 @@ import { act } from "react";
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import type { Customer } from "../src/appointmentsDayView";
-import {CustomerForm, CustomerFormProps as testProps} from "../src/CustomerForm";
+import type { Customer } from "../src/AppointmentsDayView.js";
+import {CustomerForm, CustomerFormProps as testProps} from "../src/CustomerForm.js";
 
 const originalFetch = globalThis.fetch;
 

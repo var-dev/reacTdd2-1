@@ -8,18 +8,18 @@ import * as React from "react";
 import { render, screen, cleanup, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AppointmentForm, serviceStylistRecord, stylists, selectableServicesList } from "../src/appointmentForm.tsx";
-import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm.tsx";
+import { AppointmentForm, serviceStylistRecord, stylists, selectableServicesList } from "../src/AppointmentForm.js";
+import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/AppointmentForm.js";
 
 import quibble from 'quibble'
 
 
 async function importSpyAppointmentFormLoader() {
   const mockAppointmentForm = mock.fn(({ appointments }) => <div data-testid="appointmentForm" />)
-  await quibble.esm('../src/appointmentForm.tsx', {
+  await quibble.esm('../src/AppointmentForm.tsx', {
     AppointmentForm: mockAppointmentForm
   })
-  const { AppointmentFormLoader } = await import( "../src/AppointmentFormLoader.tsx");
+  const { AppointmentFormLoader } = await import( "../src/AppointmentFormLoader.js");
   return {AppointmentFormLoader, mockAppointmentForm}
 }
 

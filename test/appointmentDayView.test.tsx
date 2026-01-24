@@ -7,8 +7,8 @@ import * as React from "react";
 import { act } from "react";
 import {createRoot} from "react-dom/client";
 
-import { AppointmentsDayView} from "../src/appointmentsDayView";
-import type { AppointmentObj, Customer } from "../src/appointmentsDayView";
+import { AppointmentsDayView} from "../src/AppointmentsDayView.js";
+import type { AppointmentObj, Customer } from "../src/AppointmentsDayView.js";
 
 const today = new Date();
 const twoAppointments: AppointmentObj[] = [

@@ -8,9 +8,9 @@ import * as React from "react";
 import { render, screen, cleanup, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AppointmentForm, serviceStylistRecord, stylists, selectableServicesList } from "../src/appointmentForm.tsx";
-import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm.tsx";
-import { AppointmentFormLoader } from "../src/AppointmentFormLoader.tsx";
+import { AppointmentForm, serviceStylistRecord, stylists, selectableServicesList } from "../src/AppointmentForm.js";
+import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/AppointmentForm.js";
+import { AppointmentFormLoader } from "../src/AppointmentFormLoader.js";
 import quibble from 'quibble'
 
 

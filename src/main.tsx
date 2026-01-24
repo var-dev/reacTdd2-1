@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { AppointmentsDayView } from "./appointmentsDayView.js";
-import { CustomerForm } from "./customerForm.js";
+import { AppointmentsDayView } from "./AppointmentsDayView.js";
+import { CustomerForm } from "./CustomerForm.js";
 import { sampleAppointments, sampleAvailableTimeSlots } from "./sampleData.js";
 import { 
   AppointmentForm, 
@@ -9,7 +9,7 @@ import {
   selectableServicesList,
   stylists,
 type Appointment, 
-type AppointmentFormProps } from "./appointmentForm.js";
+type AppointmentFormProps } from "./AppointmentForm.js";
 
 const appointmentFormProps: AppointmentFormProps = {
   selectableServices: selectableServicesList,

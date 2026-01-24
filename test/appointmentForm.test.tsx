@@ -7,8 +7,8 @@ import * as React from "react";
 import { render, screen, cleanup, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AppointmentForm, serviceStylistRecord, stylists } from "../src/appointmentForm";
-import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm";
+import { AppointmentForm, serviceStylistRecord, stylists } from "../src/AppointmentForm.js";
+import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/AppointmentForm.js";
 
 
 

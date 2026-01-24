@@ -8,20 +8,19 @@ import React, {act}  from "react";
 import { render, screen, cleanup, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AppointmentForm, serviceStylistRecord, stylists } from "../src/appointmentForm.tsx";
-import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/appointmentForm.tsx";
+import { AppointmentForm, serviceStylistRecord, stylists } from "../src/AppointmentForm.js";
+import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/AppointmentForm.js";
 import type { AppointmentsDayViewLoaderProps } from "../src/AppointmentsDayViewLoader.tsx";
 
 import quibble from 'quibble'
-import { wait } from "@testing-library/user-event/dist/cjs/utils/index.js";
 
 
 async function importSpyAppointmentsDayViewLoader() {
   const mockAppointmentsDayView = mock.fn(({ appointments }) => <div data-testid="appointmentsDayView" />)
-  await quibble.esm('../src/appointmentsDayView.tsx', {
+  await quibble.esm('../src/AppointmentsDayView.tsx', {
     AppointmentsDayView: mockAppointmentsDayView
   })
-  const { AppointmentsDayViewLoader } = await import( "../src/AppointmentsDayViewLoader.tsx");
+  const { AppointmentsDayViewLoader } = await import( "../src/AppointmentsDayViewLoader.js");
   return {AppointmentsDayViewLoader, mockAppointmentsDayView}
 }
 
