@@ -1,4 +1,4 @@
-import type { AppointmentObj } from "./AppointmentsDayView.js";
+import type { AppointmentObj, Customer } from "./AppointmentsDayView.js";
 import { type Service, type Stylist } from "./AppointmentForm.js";
 
 const today = new Date();
@@ -22,6 +22,12 @@ export const sampleAppointmentsShort: AppointmentObj[] = [
   { startsAt: at(12), customer: { firstName: "Ashley", lastName: "Doe", phoneNumber: "000000000000"}, stylist: "Mary", service: "cut", notes: "notes QWE" } ,
   { startsAt: at(13), customer: { firstName: "Jordan", lastName: "Smith", phoneNumber: "000000000001"}, stylist: "Larry", service: "trim", notes: "notes ASD"  } ,
 ];
+
+export const blankCustomer:Customer = {
+  firstName: "",
+  lastName: "",
+  phoneNumber: "",
+};
 
 export const sampleAvailableTimeSlots = [
   { startsAt: 1768698000000, stylists: [] },
