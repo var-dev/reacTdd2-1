@@ -7,9 +7,10 @@ import {
   AppointmentForm, 
   serviceStylistRecord, 
   selectableServicesList,
-  stylists,
-type Appointment, 
+  stylists, 
 type AppointmentFormProps } from "./AppointmentForm.js";
+import type { AppointmentProps } from "./AppointmentsDayView.js";
+import { App } from "./App.js";
 
 const appointmentFormProps: AppointmentFormProps = {
   selectableServices: selectableServicesList,
@@ -19,7 +20,7 @@ const appointmentFormProps: AppointmentFormProps = {
   salonClosesAt: 19,
   availableTimeSlots: sampleAvailableTimeSlots,
   today: new Date(),
-  appointment: (sampleAppointments[0]! as Appointment),
+  appointment: (sampleAppointments[0]! as AppointmentProps),
   onSave: ()=>{}
 }
 ReactDOM.createRoot(
@@ -31,7 +32,9 @@ ReactDOM.createRoot(
   // render(
   //     <CustomerForm customer={sampleAppointments[0]!.customer} onSave={(customer)=>{console.log(customer)}}/>
   // );
+  // render(
+  //     <AppointmentForm {...appointmentFormProps}/>
   render(
-      <AppointmentForm {...appointmentFormProps}/>
+      <App />
   );
 

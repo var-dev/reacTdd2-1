@@ -1,4 +1,4 @@
-import type { AppointmentObj, Customer } from "./AppointmentsDayView.js";
+import type { Customer, AppointmentProps } from "./AppointmentsDayView.js";
 import { type Service, type Stylist } from "./AppointmentForm.js";
 
 const today = new Date();
@@ -18,7 +18,7 @@ export const selectableServicesList = Object.keys(serviceStylists) as Service[]
 export const stylists = Array.from(new Set(Object.values(serviceStylists).flatMap((stylist)=>stylist))) as Stylist[]
 
 
-export const sampleAppointmentsShort: AppointmentObj[] = [
+export const sampleAppointmentsShort: AppointmentProps[] = [
   { startsAt: at(12), customer: { firstName: "Ashley", lastName: "Doe", phoneNumber: "000000000000"}, stylist: "Mary", service: "cut", notes: "notes QWE" } ,
   { startsAt: at(13), customer: { firstName: "Jordan", lastName: "Smith", phoneNumber: "000000000001"}, stylist: "Larry", service: "trim", notes: "notes ASD"  } ,
 ];
@@ -27,6 +27,11 @@ export const blankCustomer:Customer = {
   firstName: "",
   lastName: "",
   phoneNumber: "",
+};
+export const blankAppointment: AppointmentProps = {
+  service: "Cut",
+  stylist: "",
+  startsAt: 0,
 };
 
 export const sampleAvailableTimeSlots = [
@@ -81,7 +86,7 @@ export const sampleAvailableTimeSlots = [
   { startsAt: 1768669200000, stylists: ["Sam", "Ashley", "Jo"] },
   { startsAt: 1768437000000, stylists: [] },
 ];
-export const sampleAppointments: AppointmentObj[] = [
+export const sampleAppointments: AppointmentProps[] = [
   {
     startsAt: 1768406450089,
     customer: {

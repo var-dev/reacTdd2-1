@@ -4,35 +4,41 @@ import { AppointmentsDayViewLoader } from "./AppointmentsDayViewLoader.js";
 import { AppointmentFormLoader } from "./AppointmentFormLoader.js";
 import { CustomerForm } from "./CustomerForm.js";
 import type { Customer } from "./AppointmentsDayView.js";
+import { blankAppointment, blankCustomer } from "./sampleDataStatic.js";
 
 export type AppProps = {
-  today?: Date;
-  customer: Customer
+
 }
 export const App = (
   {
-    today = new Date(1970,1,1),
-    customer
+    
   }: AppProps) => {
   const [view, setView] = useState("dayView");
+  const [customer, setCustomer] = useState<Customer>();
   const transitionToAddCustomer = useCallback(
     () => setView("addCustomer"),
     []
   );
   const transitionToAddAppointment = useCallback(
-    () => setView("addAppointment"), 
+    (customer: Customer) => {
+      setCustomer(customer);
+      setView("addAppointment")
+    }, 
     []
   );
+  const transitionToDayView = useCallback(() => setView("dayView"), []);
   switch(view){
     case "addCustomer": 
       return (
         <CustomerForm 
-          customer={customer}
+          customer={blankCustomer}
           onSave={transitionToAddAppointment}
           />)
     case "addAppointment":
       return (
-        <AppointmentFormLoader today={today}/>
+        <AppointmentFormLoader 
+          appointment={{...blankAppointment, customer: customer!}}
+          onSave={transitionToDayView}/>
       )
     default:
       return (
@@ -42,35 +48,12 @@ export const App = (
               <button type="button"
                 onClick={transitionToAddCustomer}
               >
-              Add customer and appointment
+                Add customer and appointment
               </button>
             </li>
           </menu>
-          <AppointmentsDayViewLoader today={today}/>
+          <AppointmentsDayViewLoader today={new Date(1970,1,1)}/>
         </> 
       )
   }
-  // return (
-  //   <>
-  //     {view === "addCustomer" 
-  //       ? (<CustomerForm 
-  //         customer={customer}
-  //         onSave={transitionToAddAppointment}
-  //         /> )
-  //       :
-  //       <>
-  //         <menu aria-label="menu">
-  //           <li>
-  //             <button type="button"
-  //               onClick={transitionToAddCustomer}
-  //             >
-  //             Add customer and appointment
-  //             </button>
-  //           </li>
-  //         </menu>
-  //         <AppointmentsDayViewLoader today={today}/>
-  //       </> 
-  //     }
-  //   </>
-  // )
 }

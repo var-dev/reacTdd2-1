@@ -7,32 +7,33 @@ export type Customer = {
     stylist?: string
     service?: string
     notes?: string
+    id?: number
 }
-export type AppointmentObj = {
-    startsAt: number
-    customer: Customer
-    stylist: string
-    service: string
-    notes: string
+export type AppointmentProps = {
+    startsAt?: number
+    customer?: Customer
+    stylist?: string
+    service?: string
+    notes?: string
 }
 
-export function Appointment({customer, stylist, service, notes, startsAt}: AppointmentObj){
+export function Appointment({customer, stylist, service, notes, startsAt}: AppointmentProps){
   return (
     <div>
-      <h2>Today's appointment at {appointmentTimeOfDay(startsAt)}</h2>
+      <h2>Today's appointment at {appointmentTimeOfDay(startsAt!)}</h2>
       <table>
       <tbody>
         <tr>
           <th>First name</th>
-          <td>{customer.firstName ?? ''}</td>
+          <td>{customer!.firstName ?? ''}</td>
         </tr>
         <tr>
           <th>Last name</th>
-          <td>{customer.lastName ?? ''}</td>
+          <td>{customer!.lastName ?? ''}</td>
         </tr>
         <tr>
           <th>Phone</th>
-          <td>{customer.phoneNumber ?? ''}</td>
+          <td>{customer!.phoneNumber ?? ''}</td>
         </tr>
         <tr>
           <th>Stylist</th>
@@ -57,17 +58,17 @@ const appointmentTimeOfDay = (startsAt:number)=>{
   return `${h}:${m}`
 }
 
-export function AppointmentsDayView({appointments}:{appointments: AppointmentObj[]}) {
+export function AppointmentsDayView({appointments}:{appointments: AppointmentProps[]}) {
   const [selectedAppointment, setSelectedAppointment] = useState(0)
   return <div id="appointmentsDayView">
     <ol> 
-      {appointments.map((appointment: AppointmentObj, index) => (
+      {appointments.map((appointment: AppointmentProps, index) => (
         <li key={appointment.startsAt}>
           <button 
             type="button"
             onClick={ handleClick(index)}
             >
-            {appointmentTimeOfDay(appointment.startsAt)}
+            {appointmentTimeOfDay(appointment.startsAt!)}
           </button>
         </li>
       ))}

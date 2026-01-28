@@ -7,7 +7,7 @@ const Error = ({hasError}: ErrorProps) => (
 );
 
 export type CustomerFormProps = {
-  customer?: Customer
+  customer?: Customer | undefined
   onSave: (customer: Customer)=>void
 }
 export const CustomerForm = (
