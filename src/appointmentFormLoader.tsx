@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from 'react'
 
 import { AppointmentForm, type AppointmentFormProps, type AvailableTimeSlot } from './AppointmentForm.js'
-
+export type AppointmentFormLoaderProps = Omit<AppointmentFormProps, 'availableTimeSlots'>
 export const AppointmentFormLoader = (
   {
     ...props
-  }: AppointmentFormProps) => {
+  }: AppointmentFormLoaderProps) => {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<AvailableTimeSlot[]>([]);
   useEffect(() => {
     globalThis.fetch(
