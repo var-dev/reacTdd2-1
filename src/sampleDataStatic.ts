@@ -1,5 +1,6 @@
-import type { Customer, AppointmentProps } from "./AppointmentsDayView.js";
-import { type Service, type Stylist } from "./AppointmentForm.js";
+import type { AppointmentProps } from "./AppointmentsDayView.js";
+import type { Customer } from "./types.js";
+import { type Service, type Stylist } from "./types.js";
 
 const today = new Date();
 const at = (hours: number) => today.setHours(hours, 0);

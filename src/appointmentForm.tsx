@@ -1,27 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from "react"
 
 import type { AppointmentProps } from "./AppointmentsDayView.js"
-
-export const serviceStylistRecord = 
-  {
-    "Cut":          ["Ashley", "Jo", "Pat", "Sam"],
-    "Blow-dry":     ["Ashley", "Jo", "Pat", "Sam"],
-    "Cut & color":  ["Ashley", "Jo"],
-    "Beard trim":   ["Pat", "Sam"],
-    "Cut & beard trim": ["Pat", "Sam"],
-    "Extensions":   ["Ashley", "Pat"],
-  } as const
-export type ServiceStylistRecord = typeof serviceStylistRecord;
-export type Service = keyof ServiceStylistRecord;
-export const selectableServicesList = Object.keys(serviceStylistRecord) as Service[]
-export type Stylist = ServiceStylistRecord[keyof ServiceStylistRecord][number] | "noOne"
-export const stylists = Array.from(new Set(Object.values(serviceStylistRecord).flatMap((stylist)=>stylist)))
-
-export type AvailableTimeSlot = {
-    startsAt: number;
-    stylists: Stylist[];
-}
-
+import type { Service, Stylist, AvailableTimeSlot, ServiceStylistRecord } from "./types.js"
+import { serviceStylists as serviceStylistRecord, selectableServicesList, stylists} from "./sampleDataStatic.js"
 
 const timeIncrements = 
   (

@@ -1,14 +1,5 @@
 import { useState } from "react"
-
-export type Customer = {
-    firstName?: string
-    lastName?: string
-    phoneNumber?: string
-    stylist?: string
-    service?: string
-    notes?: string
-    id?: number
-}
+import type { Customer } from "./types.js"
 export type AppointmentProps = {
     startsAt?: number
     customer?: Customer
