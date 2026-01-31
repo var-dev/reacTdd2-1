@@ -1,6 +1,8 @@
 import React, {useEffect, useState} from 'react'
 
-import { AppointmentForm, type AppointmentFormProps, type AvailableTimeSlot } from './AppointmentForm.js'
+import { AppointmentForm} from './AppointmentForm.js'
+import type { AppointmentFormProps } from './AppointmentForm.js'
+import type { AvailableTimeSlot } from './types.js'
 export type AppointmentFormLoaderProps = Omit<AppointmentFormProps, 'availableTimeSlots'>
 export const AppointmentFormLoader = (
   {
@@ -19,7 +21,7 @@ export const AppointmentFormLoader = (
         })
       .then(res => res.json())
       .then(json=> setAvailableTimeSlots(json))
-      .catch(console.log)
+      .catch((e) =>  console.log('FETCH availableTimeSlots ERROR ',e))
   }, [])
   return <AppointmentForm {...props} availableTimeSlots={availableTimeSlots} />
 }

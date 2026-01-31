@@ -3,13 +3,12 @@ import { afterEach, beforeEach, describe, it, test, mock} from "node:test";
 import * as assert from 'node:assert/strict';
 
 import "./domSetup.ts"; // must be imported before render/screen
-import * as React from "react";
+import React from "react";
 
 import { render, screen, cleanup, within, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 
-import { AppointmentForm, serviceStylistRecord, stylists, selectableServicesList } from "../src/AppointmentForm.js";
-import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/AppointmentForm.js";
+import type { AppointmentFormProps } from "../src/AppointmentForm.js";
+import type { AvailableTimeSlot } from "../src/types.ts";
 
 import quibble from 'quibble'
 

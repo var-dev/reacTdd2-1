@@ -3,14 +3,10 @@ import { afterEach, beforeEach, describe, it, test, mock} from "node:test";
 import * as assert from 'node:assert/strict';
 
 import "./domSetup.ts"; // must be imported before render/screen
-import React, {act}  from "react";
+import React from "react";
 
-import { render, screen, cleanup, within, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-
-import { AppointmentForm, serviceStylistRecord, stylists } from "../src/AppointmentForm.js";
-import type { Service, Appointment, AppointmentFormProps, AvailableTimeSlot } from "../src/AppointmentForm.js";
-import type { AppointmentsDayViewLoaderProps } from "../src/AppointmentsDayViewLoader.tsx";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
+import type { AppointmentsDayViewLoaderProps } from "../src/AppointmentsDayViewLoader.js";
 
 import quibble from 'quibble'
 
@@ -44,10 +40,6 @@ const testProps: AppointmentsDayViewLoaderProps = {
 }
 
 describe('AppointmentsDayViewLoader',  ()=>{
-  const appointments: Appointment[] = [
-    { startsAt: today.setHours(9, 0, 0, 0), },
-    { startsAt: today.setHours(9, 30, 0, 0), },
-  ]
   it('renders AppointmentsDayView', async ()=>{
     const {AppointmentsDayViewLoader} = await importSpyAppointmentsDayViewLoader()
     render(<AppointmentsDayViewLoader {...testProps} />)

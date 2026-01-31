@@ -9,7 +9,7 @@ import {createRoot} from "react-dom/client";
 
 import { fireEvent } from '@testing-library/react';
 
-import type { Customer } from "../src/AppointmentsDayView.js";
+import type { Customer } from "../src/types.js";
 import {CustomerForm, CustomerFormProps} from "../src/CustomerForm.js";
 
 const originalFetch = globalThis.fetch;

@@ -2,13 +2,12 @@ import { afterEach, beforeEach, describe, it, mock } from "node:test";
 import * as assert from 'node:assert/strict';
 
 import "./domSetup"; // must be imported before render/screen
-import * as React from "react";
-import { act } from "react";
+import React from "react";
 
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import type { Customer } from "../src/AppointmentsDayView.js";
+import type { Customer } from "../src/types.js";
 import {CustomerForm, CustomerFormProps as testProps} from "../src/CustomerForm.js";
 
 const originalFetch = globalThis.fetch;

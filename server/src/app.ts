@@ -13,7 +13,12 @@ import { GraphQLError } from "graphql";
 import { Appointments } from "./appointments.js";
 import { Customers } from "./customers.js";
 import morgan from "morgan";
-import schemaText from "../../src/schema.graphql";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const schemaText = fs.readFileSync(path.join(__dirname, "../../src/schema.graphql"), "utf-8");
 
 import type { AvailableTimeSlot, Customer, CustomerWithId, Appointment } from "../../src/types.js";
 
@@ -199,7 +204,7 @@ export function buildApp(
     }
   });
 
-  app.get("*", function (req, res) {
+  app.get(/.*/, function (req, res) {
     res.sendFile("dist/index.html", {
       root: process.cwd(),
     });

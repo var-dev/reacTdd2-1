@@ -5,7 +5,8 @@ import "./domSetup.ts"; // must be imported before render/screen
 import * as React from "react";
 import { render, screen, cleanup, waitFor } from "@testing-library/react";
 
-import type { AppointmentFormProps, AvailableTimeSlot } from "../src/AppointmentForm.js";
+import type { AppointmentFormProps } from "../src/AppointmentForm.js";
+import type { AvailableTimeSlot } from "../src/types.ts";
 
 
 const today = new Date(2018, 11, 1);

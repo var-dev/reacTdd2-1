@@ -1,9 +1,9 @@
 import { buildApp } from "./app.js";
-import { generateFakeCustomers } from "./customers";
+import { generateFakeCustomers } from "./customers.js";
 import {
   generateFakeAppointments,
   buildTimeSlots,
-} from "./appointments";
+} from "./appointments.js";
 
 let port = process.env.PORT || 3000;
 let customers = generateFakeCustomers();

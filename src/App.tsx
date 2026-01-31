@@ -3,7 +3,7 @@ import React, {useState, useCallback} from "react";
 import { AppointmentsDayViewLoader } from "./AppointmentsDayViewLoader.js";
 import { AppointmentFormLoader } from "./AppointmentFormLoader.js";
 import { CustomerForm } from "./CustomerForm.js";
-import type { Customer } from "./AppointmentsDayView.js";
+import type { Customer } from "./types.js";
 import { blankAppointment, blankCustomer } from "./sampleDataStatic.js";
 
 export type AppProps = {
@@ -37,6 +37,7 @@ export const App = (
     case "addAppointment":
       return (
         <AppointmentFormLoader 
+          today={new Date()}
           appointment={{...blankAppointment, customer: customer!}}
           onSave={transitionToDayView}/>
       )
@@ -52,7 +53,7 @@ export const App = (
               </button>
             </li>
           </menu>
-          <AppointmentsDayViewLoader today={new Date(1970,1,1)}/>
+          <AppointmentsDayViewLoader today={new Date()}/>
         </> 
       )
   }

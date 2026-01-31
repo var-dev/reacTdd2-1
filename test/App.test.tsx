@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, it, mock} from "node:test";
 import * as assert from 'node:assert/strict';
 
 import "./domSetup.ts"; // must be imported before render/screen
-import React, {act} from "react";
+import React from "react";
 import { render, screen, cleanup, waitForElementToBeRemoved, waitFor} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 

@@ -8,7 +8,7 @@ import { act,  } from "react";
 import {createRoot} from "react-dom/client";
 
 import {Appointment} from "../src/AppointmentsDayView.js";
-import type { Customer } from "../src/AppointmentsDayView.js";
+import type { Customer } from "../src/types.js";
 import { sampleAppointmentsShort } from "../src/sampleDataStatic.js";
 
 let container: HTMLDivElement
@@ -28,7 +28,6 @@ describe("DOM basics", () => {
     
     assert.equal(container.textContent, "Hello");
   })
-
   it("renders Appointment with customer prop", async () => {
     const customer: Customer = {firstName: "Jordan", lastName: "Doe", phoneNumber: "123-456-7890"};
     render(<Appointment customer={customer} stylist="" service="" notes="" startsAt={0}/>);
@@ -45,5 +44,4 @@ describe("DOM basics", () => {
     assert.match(container.textContent, /trim/, `Incorrect service. Matched ${container.textContent}`);
     assert.match(document.body.textContent, /notes ASD/, `Incorrect notes. Matched ${container.textContent}`);
   })
-
 })
