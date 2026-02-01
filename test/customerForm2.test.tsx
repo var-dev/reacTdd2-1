@@ -4,7 +4,7 @@ import * as assert from 'node:assert/strict';
 import "./domSetup"; // must be imported before render/screen
 import React from "react";
 
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { Customer } from "../src/types.js";
@@ -93,36 +93,43 @@ describe('CustomerForm tests using render and screen', ()=>{
   })
   it("renders an alert space", async () => {
     render(<CustomerForm {...testProps} />);
-    const alert = await screen.findByRole("alert", );
+    const alerts = await screen.findAllByRole("alert", );
+    const alertPiElements = alerts.filter(alert => alert.tagName === 'P');
     
-    assert.strictEqual(alert.tagName, 'P', `Expected tag name P, but got ${alert.tagName}`)
+    assert.ok(alertPiElements.length===1, `Expected single tag name P, but got ${JSON.stringify(alertPiElements.map(el=>el.tagName))}`)
   });
   it("initially has no error message", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
     const submitEvent = userEvent.setup();
     render(<CustomerForm {...testProps} />);
-    const alert = await screen.findByRole("alert", ) as HTMLParagraphElement;
     const submitButton = screen.getByRole('button', { name: /Add/i })
-    
     await submitEvent.click(submitButton)
+    const alerts = await screen.findAllByRole("alert", );
+    const alertPiElements = alerts.filter(alert => alert.tagName === 'P');
+    assert.ok(alertPiElements.length===1, `Expected single tag name P, but got ${JSON.stringify(alertPiElements.map(el=>el.tagName))}`)
     
-    assert.strictEqual(alert.textContent, "", `Expected empty string, but got ${alert.textContent}`)
+    assert.strictEqual(alertPiElements[0].textContent, "", `Expected empty string, but got ${JSON.stringify(alertPiElements.map(el=>el.textContent))}`)
   });
   describe('when POST request returns an error', ()=>{
   it("renders error message", async () => {
     let mockFetch = mock.method(global,'fetch', mockFetchError)
     const submitEvent = userEvent.setup();
     render(<CustomerForm {...testProps} />);
-    const alert = await screen.findByRole("alert", ) as HTMLParagraphElement;
     const submitButton = screen.getByRole('button', { name: /Add/i })
     await submitEvent.click(submitButton)
     
-    assert.match(alert.textContent, /error occurred/i, `Expected /error occurred/i, but got ${alert.textContent}`)
+    // const alert = await screen.findByRole("alert", ) as HTMLParagraphElement;
+    // assert.match(alert.textContent, /error occurred/i, `Expected /error occurred/i, but got ${alert.textContent}`)
+    const alerts = await screen.findAllByRole("alert", );
+    const alertPiElements = alerts.filter(alert => alert.tagName === 'P');
+
+    assert.ok(alertPiElements.length===1, `Expected single tag name P, but got ${JSON.stringify(alertPiElements.map(el=>el.tagName))}`)
+    assert.match(alertPiElements[0].textContent, /error occurred/i, `Expected /error occurred/i, but got ${JSON.stringify(alertPiElements.map(el=>el.textContent))}`)
 
     mockFetch = mock.method(global,'fetch', mockFetchOk)
     await submitEvent.click(submitButton)
     
-    assert.strictEqual(alert.textContent, "", `Expected empty string after clearing error, but got ${alert.textContent}`)
+    assert.strictEqual(alertPiElements[0].textContent, "", `Expected empty string after clearing error`)
   });
     it("does not notify onSave", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetchError)
@@ -242,4 +249,53 @@ describe("phone number field", () => {
   itIncludesTheExistingValue('Phone Number', '555-1234');
   itSavesExistingValueWhenSubmitted(/\"phoneNumber\":\"555-1234/);
   itSavesNewValueWhenSubmitted('Phone Number', '555-1239', /\"phoneNumber\":\"555-1239\"/);
+});
+
+describe("validation", () => {
+  it("renders alert spaces for 3 input validation errors", async () => {
+    render(<CustomerForm {...testProps} />);
+    const form = await screen.findByRole("form", {name:/Customer form/i} );
+    const alerts = await within(form).findAllByRole("alert", );
+    const alertSpanElements = alerts.filter(alert => alert.tagName === 'SPAN');
+    assert.ok(alertSpanElements.length===3, `Expected 3 tag name SPAN, but got ${JSON.stringify(alertSpanElements.map(el=>el.tagName))}`)
+  });
+  it("renders First Name input validation error", async () => {
+    render(<CustomerForm {...testProps} />);
+    const form = await screen.findByRole("form", {name:/Customer form/i} );
+    const firstNameInput = within(form).getByLabelText<HTMLInputElement>('First Name');
+    await userEvent.clear(firstNameInput);
+    await userEvent.tab()
+    const spanElement = await within(form).findByText(/first name is required/i)
+    assert.ok(spanElement.tagName === 'SPAN', 'Expected first name is required error')
+
+    await userEvent.type(firstNameInput,'Amanda');
+    await userEvent.tab()
+    assert.throws( ()=> within(form).getByText(/first name is required/i), 'Expected to throw on no First Name error')
+  });
+  it("renders Last Name input validation error", async () => {
+    render(<CustomerForm {...testProps} />);
+    const form = await screen.findByRole("form", {name:/Customer form/i} );
+    const lastNameInput = within(form).getByLabelText<HTMLInputElement>('Last Name');
+    await userEvent.clear(lastNameInput);
+    await userEvent.tab()
+    const spanElement = await within(form).findByText(/last name is required/i)
+    assert.ok(spanElement.tagName === 'SPAN', 'Expected Last Name is required error')
+
+    await userEvent.type(lastNameInput,'Smith');
+    await userEvent.tab()
+    assert.throws( ()=> within(form).getByText(/last name is required/i), 'Expected to throw on no Last Name error')
+  });
+  it("renders Phone Number input validation error", async () => {
+    render(<CustomerForm {...testProps} />);
+    const form = await screen.findByRole("form", {name:/Customer form/i} );
+    const phoneNumberInput = within(form).getByLabelText<HTMLInputElement>('Phone Number');
+    await userEvent.clear(phoneNumberInput);
+    await userEvent.tab()
+    const spanElement = await within(form).findByText(/phone number is required/i)
+    assert.ok(spanElement.tagName === 'SPAN', 'Expected Phone Number is required error')
+
+    await userEvent.type(phoneNumberInput,'555-5555');
+    await userEvent.tab()
+    assert.throws( ()=> within(form).getByText(/phone number is required/i), 'Expected to throw on no Phone Number error')
+  });
 });
