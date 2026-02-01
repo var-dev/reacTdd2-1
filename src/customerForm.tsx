@@ -5,6 +5,15 @@ const required = (description: string) => (value: string) =>
   !value || value.trim() === ""
     ? description
     : undefined;
+const match = (re: RegExp, description: string) => (value: string) =>
+  !value.match(re) 
+    ? description 
+    : undefined;
+const list = (...validators: ((v:string)=>string|undefined)[]) => (value: string) =>
+  validators.reduce(
+    (result:string|undefined, validator) => result || validator(value),
+    undefined
+  );
 
 type ErrorProps = {hasError:boolean}
 const Error = ({hasError}: ErrorProps) => (
@@ -48,7 +57,11 @@ export const CustomerForm = (
     const validators = {
       firstName: required("First name is required"),
       lastName: required("Last name is required"),
-      phoneNumber: required("Phone Number is required"),
+      phoneNumber: 
+        list(
+          required("Phone Number is required"), 
+          match(/^[0-9+()\- ]*$/, 'Only numbers, spaces and these symbols are allowed: ( ) + -')
+        ),
     };
     if (validators.hasOwnProperty(target.name)) {
       const result = (validators as any)[target.name](target.value);

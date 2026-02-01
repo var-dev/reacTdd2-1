@@ -297,5 +297,11 @@ describe("validation", () => {
     await userEvent.type(phoneNumberInput,'555-5555');
     await userEvent.tab()
     assert.throws( ()=> within(form).getByText(/phone number is required/i), 'Expected to throw on no Phone Number error')
+
+    await userEvent.clear(phoneNumberInput);
+    await userEvent.type(phoneNumberInput,'555A5555');
+    await userEvent.tab()
+    const spanElement2 = await within(form).findByText(/numbers, spaces and these symbols are allowed/i)
+    assert.ok(spanElement2.tagName === 'SPAN', 'Only numbers, spaces and +- symbols are allowed')
   });
 });
