@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import type { Customer } from "./types.js";
+import type { Customer, CustomerWithId } from "./types.js";
 
 const required = (description: string) => (value: string) =>
   !value || value.trim() === ""
@@ -14,6 +14,10 @@ const list = (...validators: ((v:string)=>string|undefined)[]) => (value: string
     (result:string|undefined, validator) => result || validator(value),
     undefined
   );
+const anyErrors = (errors: Record<string, string|undefined>): boolean =>
+  Object.values(errors).some(error => (
+    error !== undefined
+  ));
 
 type ErrorProps = {hasError:boolean}
 const Error = ({hasError}: ErrorProps) => (
@@ -31,38 +35,55 @@ export const CustomerForm = (
   }: CustomerFormProps) =>{
   const [customerState, setCustomerState] = useState<Customer>(customer ?? {firstName: ""});
   const [error, setError] = useState(false);
-  const [validationErrors, setValidationErrors] = useState({});
+  const [validationErrors, setValidationErrors] = useState({} as Record<ValidatorName, string | undefined>);
 
-  const onSubmitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
+
+  type ValidatorName = 'firstName' | 'lastName' | 'phoneNumber';
+  type Validators = Record<ValidatorName, (value: string) => string | undefined>;
+  const validators = {
+    firstName: required("First name is required"),
+    lastName: required("Last name is required"),
+    phoneNumber: 
+      list(
+        required("Phone Number is required"), 
+        match(/^[0-9+()\- ]*$/, 'Only numbers, spaces and these symbols are allowed: ( ) + -')
+      ),
+  } satisfies Validators;
+
+  const validateMany = (fields: Pick<Customer,ValidatorName>): Record<ValidatorName, string|undefined> =>
+    Object.entries(fields).reduce(
+      (result, [name, value]) => ({
+        ...result,
+        [name]: validators[name as ValidatorName](value as string)
+      }),
+      {} as Record<ValidatorName, string|undefined>
+    );
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault() 
+    const validationResult = validateMany(customerState);
+    if (anyErrors(validationResult)) {
+      setValidationErrors(validationResult);
+      return
+    }
 
-      const result = await globalThis.fetch("/customers", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(customerState),
-      });
-      if(result?.ok){
-        setError(false);
-        const customerWithId = await result.json();
-        onSave(customerWithId);
-      } else {
-        setError(true);
-      }
+    const result = await globalThis.fetch("/customers", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(customerState),
+    });
+    if(result?.ok){
+      setError(false);
+      const customerWithId = await result.json();
+      onSave(customerWithId);
+    } else {
+      setError(true);
+    }
   }
   const handleChange = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
     setCustomerState((customerState) => ({ ...customerState, [target.name]: target.value}))
   }
   const handleBlur = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
-    const validators = {
-      firstName: required("First name is required"),
-      lastName: required("Last name is required"),
-      phoneNumber: 
-        list(
-          required("Phone Number is required"), 
-          match(/^[0-9+()\- ]*$/, 'Only numbers, spaces and these symbols are allowed: ( ) + -')
-        ),
-    };
     if (validators.hasOwnProperty(target.name)) {
       const result = (validators as any)[target.name](target.value);
       setValidationErrors({
@@ -80,7 +101,7 @@ export const CustomerForm = (
     </span>;
   }
   
-  return <form onSubmit = {onSubmitHandler} aria-label="Customer form">
+  return <form onSubmit = {handleSubmit} aria-label="Customer form">
     <Error hasError={error} />
     <label htmlFor="firstName">First Name</label>
     <input 

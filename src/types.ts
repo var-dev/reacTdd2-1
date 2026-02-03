@@ -1,15 +1,6 @@
 import { serviceStylists } from "./sampleDataStatic.js"
-
-export type Customer = {
-    firstName?: string
-    lastName?: string
-    phoneNumber?: string
-    stylist?: string
-    service?: string
-    notes?: string
-    id?: number
-}
-export type CustomerWithId =   Omit<Customer,'id'> & Required<Pick<Customer,'id'>>
+export type CustomerWithId = Record<'firstName'|'lastName'|'phoneNumber'|'stylist'|'service'|'notes'|'id', string>
+export type Customer = Partial<CustomerWithId>
 export type ServiceStylistRecord = typeof serviceStylists
 export type Service = keyof ServiceStylistRecord;
 export type Stylist = RealStylist | "noOne"

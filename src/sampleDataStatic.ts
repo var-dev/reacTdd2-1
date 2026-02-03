@@ -29,6 +29,11 @@ export const blankCustomer:Customer = {
   lastName: "",
   phoneNumber: "",
 };
+export const validCustomer:Customer = {
+  firstName: "first",
+  lastName: "last",
+  phoneNumber: "123456789"
+};
 export const blankAppointment: AppointmentProps = {
   service: "Cut",
   stylist: "",

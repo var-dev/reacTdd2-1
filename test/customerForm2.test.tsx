@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 
 import type { Customer } from "../src/types.js";
 import {CustomerForm, CustomerFormProps as testProps} from "../src/CustomerForm.js";
+import { validCustomer, blankCustomer } from "../src/sampleDataStatic.js";
 
 const originalFetch = globalThis.fetch;
 
@@ -21,7 +22,7 @@ afterEach(()=>{
   globalThis.fetch = originalFetch;
 })
 const testProps = {
-  customer: { firstName: "Jane", lastName: "Doe", phoneNumber: "555-1234" },
+  customer: validCustomer,
   onSave: (customer: Customer)=>{}
 }
 const mockFetchOk = (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(args) });
@@ -33,7 +34,7 @@ describe('CustomerForm tests using render and screen', ()=>{
     const firstNameInput = screen.getByLabelText('First Name') as HTMLInputElement;
     await userEvent.clear(firstNameInput);
     await userEvent.type(firstNameInput, "Jamie")
-    assert.equal(firstNameInput.value, "Jamie", 'Name should be Jamie, not Jane');
+    assert.equal(firstNameInput.value, "Jamie", 'Name should be Jamie, not first');
   })
   it("checks preventDefault to be true", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
@@ -111,26 +112,26 @@ describe('CustomerForm tests using render and screen', ()=>{
     assert.strictEqual(alertPiElements[0].textContent, "", `Expected empty string, but got ${JSON.stringify(alertPiElements.map(el=>el.textContent))}`)
   });
   describe('when POST request returns an error', ()=>{
-  it("renders error message", async () => {
-    let mockFetch = mock.method(global,'fetch', mockFetchError)
-    const submitEvent = userEvent.setup();
-    render(<CustomerForm {...testProps} />);
-    const submitButton = screen.getByRole('button', { name: /Add/i })
-    await submitEvent.click(submitButton)
-    
-    // const alert = await screen.findByRole("alert", ) as HTMLParagraphElement;
-    // assert.match(alert.textContent, /error occurred/i, `Expected /error occurred/i, but got ${alert.textContent}`)
-    const alerts = await screen.findAllByRole("alert", );
-    const alertPiElements = alerts.filter(alert => alert.tagName === 'P');
+    it("renders error message", async () => {
+      let mockFetch = mock.method(global,'fetch', mockFetchError)
+      const submitEvent = userEvent.setup();
+      render(<CustomerForm {...testProps} />);
+      const submitButton = screen.getByRole('button', { name: /Add/i })
+      await submitEvent.click(submitButton)
+      
+      // const alert = await screen.findByRole("alert", ) as HTMLParagraphElement;
+      // assert.match(alert.textContent, /error occurred/i, `Expected /error occurred/i, but got ${alert.textContent}`)
+      const alerts = await screen.findAllByRole("alert", );
+      const alertPiElements = alerts.filter(alert => alert.tagName === 'P');
 
-    assert.ok(alertPiElements.length===1, `Expected single tag name P, but got ${JSON.stringify(alertPiElements.map(el=>el.tagName))}`)
-    assert.match(alertPiElements[0].textContent, /error occurred/i, `Expected /error occurred/i, but got ${JSON.stringify(alertPiElements.map(el=>el.textContent))}`)
+      assert.ok(alertPiElements.length===1, `Expected single tag name P, but got ${JSON.stringify(alertPiElements.map(el=>el.tagName))}`)
+      assert.match(alertPiElements[0].textContent, /error occurred/i, `Expected /error occurred/i, but got ${JSON.stringify(alertPiElements.map(el=>el.textContent))}`)
 
-    mockFetch = mock.method(global,'fetch', mockFetchOk)
-    await submitEvent.click(submitButton)
-    
-    assert.strictEqual(alertPiElements[0].textContent, "", `Expected empty string after clearing error`)
-  });
+      mockFetch = mock.method(global,'fetch', mockFetchOk)
+      await submitEvent.click(submitButton)
+      
+      assert.strictEqual(alertPiElements[0].textContent, "", `Expected empty string after clearing error`)
+    });
     it("does not notify onSave", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetchError)
       const submitEvent = userEvent.setup();
@@ -162,12 +163,25 @@ describe('CustomerForm tests using render and screen', ()=>{
       assert.strictEqual(mockOnSave.mock.calls.length, 0, `Expected NO onSave calls, but got ${mockOnSave.mock.calls.length}`)
     })
   })
+  it("Does not submit when there is an error", async ()=>{
+    const mockFetch = mock.method(global,'fetch', mockFetchOk)
+    const interactiveEvent = userEvent.setup();
+    render(<CustomerForm {...testProps} />)
+    const form = await screen.findByRole("form", {name:/Customer form/i} );
+    const firstNameInput = within(form).getByLabelText<HTMLInputElement>('First Name');
+    await userEvent.clear(firstNameInput);
+    await userEvent.tab()
+    const submitButton = screen.getByRole('button', { name: /Add/i })
+    await interactiveEvent.click(submitButton)
+
+    assert.strictEqual(mockFetch.mock.calls.length, 0, `Expected NO fetch calls because firstName empty error, but got ${mockFetch.mock.calls.length}`)
+  })
 })
 
 
 const itRendersAsATextBox = (
   label: string
-  ) =>it("renders as a text box with label", () => {
+  ) => it("renders as a text box with label", () => {
     render(<CustomerForm {...testProps}/>)
     const textBoxInputElement = screen.getByLabelText(label) as HTMLInputElement;
 
@@ -232,22 +246,22 @@ const itSavesNewValueWhenSubmitted = (
 
 describe("first name field", () => {
   itRendersAsATextBox('First Name');
-  itIncludesTheExistingValue('First Name', 'Jane');
-  itSavesExistingValueWhenSubmitted(/\"firstName\":\"Jane\"/);
+  itIncludesTheExistingValue('First Name', 'first');
+  itSavesExistingValueWhenSubmitted(/\"firstName\":\"first\"/);
   itSavesNewValueWhenSubmitted('First Name','Jamie', /\"firstName\":\"Jamie\"/);
 });
 
 describe("last name field", () => {
   itRendersAsATextBox('Last Name');
-  itIncludesTheExistingValue('Last Name', 'Doe');
-  itSavesExistingValueWhenSubmitted(/\"lastName\":\"Doe\"/);
+  itIncludesTheExistingValue('Last Name', 'last');
+  itSavesExistingValueWhenSubmitted(/\"lastName\":\"last\"/);
   itSavesNewValueWhenSubmitted('Last Name', 'Doh', /\"lastName\":\"Doh\"/ );
 });
 
 describe("phone number field", () => {
   itRendersAsATextBox('Phone Number');
-  itIncludesTheExistingValue('Phone Number', '555-1234');
-  itSavesExistingValueWhenSubmitted(/\"phoneNumber\":\"555-1234/);
+  itIncludesTheExistingValue('Phone Number', '123456789');
+  itSavesExistingValueWhenSubmitted(/\"phoneNumber\":\"123456789/);
   itSavesNewValueWhenSubmitted('Phone Number', '555-1239', /\"phoneNumber\":\"555-1239\"/);
 });
 
@@ -303,5 +317,29 @@ describe("validation", () => {
     await userEvent.tab()
     const spanElement2 = await within(form).findByText(/numbers, spaces and these symbols are allowed/i)
     assert.ok(spanElement2.tagName === 'SPAN', 'Only numbers, spaces and +- symbols are allowed')
+
+    await userEvent.clear(phoneNumberInput);
+    await userEvent.type(phoneNumberInput,'0123456789+()- ');
+    await userEvent.tab()
+    assert.throws( ()=> within(form).getByText(/numbers, spaces and these symbols are allowed/i), 'Expected not to error (throw text not found) on valid Phone Number chars')
   });
+  it("renders validation errors after submission fails", async ()=>{
+    const mockFetch = mock.method(global,'fetch', mockFetchOk)
+    const submitEvent = userEvent.setup();
+    const mockEventListenerHandler = mock.fn((e: Event) => {})
+    render(<CustomerForm {...testProps} customer={blankCustomer}  />);
+    const form = screen.getByRole("form", { name: /customer/i });
+    form.addEventListener("submit", (e: Event) => {});
+    const submitButton = screen.getByRole('button', { name: /Add/i })
+    await submitEvent.click(submitButton)
+
+    const firstNameSpan = within(form).getByText(/first name is required/i)
+    assert.ok(firstNameSpan.tagName === 'SPAN', 'Expected first name is required error')
+    const lastNameSpan = within(form).getByText(/last name is required/i)
+    assert.ok(lastNameSpan.tagName === 'SPAN', 'Expected last name is required error')
+    const numberNameSpan = within(form).getByText(/phone number is required/i)
+    assert.ok(numberNameSpan.tagName === 'SPAN', 'Expected phone number is required error')
+
+    assert.strictEqual(mockFetch.mock.calls.length, 0, `mockFetch was called ${mockFetch.mock.calls.length} times instead of 0 times`);;
+  })
 });
