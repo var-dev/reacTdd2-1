@@ -1,29 +1,10 @@
 import React, { useState } from "react"
 import type { Customer, CustomerWithId } from "./types.js";
-
-const required = (description: string) => (value: string) =>
-  !value || value.trim() === ""
-    ? description
-    : undefined;
-const match = (re: RegExp, description: string) => (value: string) =>
-  !value.match(re) 
-    ? description 
-    : undefined;
-const list = (...validators: ((v:string)=>string|undefined)[]) => (value: string) =>
-  validators.reduce(
-    (result:string|undefined, validator) => result || validator(value),
-    undefined
-  );
-const anyErrors = (errors: Record<string, string|undefined>): boolean =>
-  Object.values(errors).some(error => (
-    error !== undefined
-  ));
-
+import { required, list, match, anyErrors, hasError, type ValidatorName, type Validators, validateMany, type ValidationErrors } from "./customerFormValidation.js";
 type ErrorProps = {hasError:boolean}
 const Error = ({hasError}: ErrorProps) => (
   <p role="alert" >{hasError ? 'An error occurred during save.' : ''}</p>
-);
-
+);  
 export type CustomerFormProps = {
   customer?: Customer | undefined
   onSave: (customer: Customer)=>void
@@ -35,11 +16,8 @@ export const CustomerForm = (
   }: CustomerFormProps) =>{
   const [customerState, setCustomerState] = useState<Customer>(customer ?? {firstName: ""});
   const [error, setError] = useState(false);
-  const [validationErrors, setValidationErrors] = useState({} as Record<ValidatorName, string | undefined>);
+  const [validationErrors, setValidationErrors] = useState({} as ValidationErrors);
 
-
-  type ValidatorName = 'firstName' | 'lastName' | 'phoneNumber';
-  type Validators = Record<ValidatorName, (value: string) => string | undefined>;
   const validators = {
     firstName: required("First name is required"),
     lastName: required("Last name is required"),
@@ -49,18 +27,10 @@ export const CustomerForm = (
         match(/^[0-9+()\- ]*$/, 'Only numbers, spaces and these symbols are allowed: ( ) + -')
       ),
   } satisfies Validators;
-
-  const validateMany = (fields: Pick<Customer,ValidatorName>): Record<ValidatorName, string|undefined> =>
-    Object.entries(fields).reduce(
-      (result, [name, value]) => ({
-        ...result,
-        [name]: validators[name as ValidatorName](value as string)
-      }),
-      {} as Record<ValidatorName, string|undefined>
-    );
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault() 
-    const validationResult = validateMany(customerState);
+    const validationResult = validateMany(validators, customerState);
     if (anyErrors(validationResult)) {
       setValidationErrors(validationResult);
       return
@@ -85,19 +55,17 @@ export const CustomerForm = (
   }
   const handleBlur = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
     if (validators.hasOwnProperty(target.name)) {
-      const result = (validators as any)[target.name](target.value);
+      const validationResult = validateMany(validators, {[target.name]: target.value});
       setValidationErrors({
         ...validationErrors,
-        [target.name]: result
+        ...validationResult
       });
     }
-    
   };
-  const hasError = (fieldName: string) => (validationErrors as any)[fieldName] !== undefined;
-
-  const renderError = (fieldName: string) => {
+  
+  const renderError = (fieldName: keyof Validators) => {
     return <span id={`${fieldName}Error`} role="alert">
-      {hasError(fieldName) ? (validationErrors as any)[fieldName] : ""}
+      {hasError(fieldName, validationErrors) ? (validationErrors as any)[fieldName] : ""}
     </span>;
   }
   
