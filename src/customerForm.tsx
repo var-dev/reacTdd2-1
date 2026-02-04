@@ -42,10 +42,13 @@ export const CustomerForm = (
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(customerState),
     });
-    if(result?.ok){
+    if (result?.ok) {
       setError(false);
       const customerWithId = await result.json();
       onSave(customerWithId);
+    } else if (result.status === 422) {
+      const response = await result.json();
+      setValidationErrors(response.errors);
     } else {
       setError(true);
     }

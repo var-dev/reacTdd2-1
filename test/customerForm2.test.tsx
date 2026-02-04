@@ -28,6 +28,12 @@ const testProps = {
 const mockFetchOk = (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(args) });
 const mockFetchError = (...args: any[]) => Promise.resolve({ ok: false });
 
+const mockFetchErr422 = (...args: any[]) => Promise.resolve({ 
+  ok: false ,
+  status: 422,
+  json: ()=>Promise.resolve({errors:{phoneNumber: "Phone number already exists in the system"}}) 
+});
+
 describe('CustomerForm tests using render and screen', ()=>{
   it("types into firstName", async () => {
     render(<CustomerForm {...testProps}/>)
@@ -113,7 +119,7 @@ describe('CustomerForm tests using render and screen', ()=>{
   });
   describe('when POST request returns an error', ()=>{
     it("renders error message", async () => {
-      let mockFetch = mock.method(global,'fetch', mockFetchError)
+      mock.method(global,'fetch', mockFetchError)
       const submitEvent = userEvent.setup();
       render(<CustomerForm {...testProps} />);
       const submitButton = screen.getByRole('button', { name: /Add/i })
@@ -127,7 +133,7 @@ describe('CustomerForm tests using render and screen', ()=>{
       assert.ok(alertPiElements.length===1, `Expected single tag name P, but got ${JSON.stringify(alertPiElements.map(el=>el.tagName))}`)
       assert.match(alertPiElements[0].textContent, /error occurred/i, `Expected /error occurred/i, but got ${JSON.stringify(alertPiElements.map(el=>el.textContent))}`)
 
-      mockFetch = mock.method(global,'fetch', mockFetchOk)
+      mock.method(global,'fetch', mockFetchOk)
       await submitEvent.click(submitButton)
       
       assert.strictEqual(alertPiElements[0].textContent, "", `Expected empty string after clearing error`)
@@ -341,5 +347,17 @@ describe("validation", () => {
     assert.ok(numberNameSpan.tagName === 'SPAN', 'Expected phone number is required error')
 
     assert.strictEqual(mockFetch.mock.calls.length, 0, `mockFetch was called ${mockFetch.mock.calls.length} times instead of 0 times`);;
+  })
+  it("renders field validation errors from server", async ()=>{
+    const mockFetch = mock.method(global,'fetch', mockFetchErr422)
+    render(<CustomerForm {...testProps}  />);
+    const submitButton = screen.getByRole('button', { name: /Add/i })
+    await userEvent.click(submitButton)
+    assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
+    const result = await mockFetch.mock.calls[0].result;
+    assert.strictEqual(result?.status, 422, `Expected fetch status to be 422`)
+
+    const errSpan = await screen.findByText(/Phone number already exists/i)
+    assert.strictEqual(errSpan.tagName, 'SPAN', 'Expected a phone exist server error on submit')
   })
 });
