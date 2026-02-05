@@ -16,6 +16,7 @@ export const CustomerForm = (
   }: CustomerFormProps) =>{
   const [customerState, setCustomerState] = useState<Customer>(customer ?? {firstName: ""});
   const [error, setError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState({} as ValidationErrors);
 
   const validators = {
@@ -35,13 +36,14 @@ export const CustomerForm = (
       setValidationErrors(validationResult);
       return
     }
-
+    setSubmitting(true)
     const result = await globalThis.fetch("/customers", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(customerState),
     });
+    setSubmitting(false)
     if (result?.ok) {
       setError(false);
       const customerWithId = await result.json();
@@ -110,6 +112,7 @@ export const CustomerForm = (
       />
     {renderError("phoneNumber")}
     <input type="submit" value="Add" />
+    {submitting ? (<span className="submittingIndicator" aria-label="spinner"/>) : null}
   </form>
 }
 

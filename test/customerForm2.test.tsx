@@ -4,7 +4,7 @@ import * as assert from 'node:assert/strict';
 import "./domSetup"; // must be imported before render/screen
 import React from "react";
 
-import { render, screen, cleanup, within } from "@testing-library/react";
+import { render, screen, cleanup, within, waitFor, waitForElementToBeRemoved } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { Customer } from "../src/types.js";
@@ -360,4 +360,24 @@ describe("validation", () => {
     const errSpan = await screen.findByText(/Phone number already exists/i)
     assert.strictEqual(errSpan.tagName, 'SPAN', 'Expected a phone exist server error on submit')
   })
+});
+describe("submitting indicator", () => {
+  it("displays spinner when form is submitting", async () => {
+    mock.method(global,'fetch', mockFetchOk)
+    render(<CustomerForm {...testProps}/>);
+    const submitButton = screen.getByRole('button', { name: /Add/i })
+    userEvent.click(submitButton)
+    let spinner: HTMLElement | null = null
+    await waitFor(()=>{
+      spinner = screen.queryByLabelText(/spinner/); 
+      assert.ok(spinner, 'Expected spinner to appear');
+      assert.strictEqual(spinner!.tagName, 'SPAN', 'Expected spinner appearing on submit')
+    })
+
+    assert.strictEqual(screen.queryByLabelText(/spinner/i), null, 'Expected spinner to be removed');
+  });
+  it("initially does not display the submitting indicator", async () => {
+    render(<CustomerForm {...testProps}/>);
+    assert.throws( ()=>( screen.getByLabelText(/spinner/i)), 'Expected no spinner before submit')
+  });
 });
