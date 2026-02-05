@@ -1,10 +1,18 @@
 import React, { useState } from "react"
 import type { Customer, CustomerWithId } from "./types.js";
 import { required, list, match, anyErrors, hasError, type ValidatorName, type Validators, validateMany, type ValidationErrors } from "./customerFormValidation.js";
+
 type ErrorProps = {hasError:boolean}
 const Error = ({hasError}: ErrorProps) => (
   <p role="alert" >{hasError ? 'An error occurred during save.' : ''}</p>
 );  
+
+type RenderErrorProps = {fieldName: ValidatorName, errors: ValidationErrors}
+const RenderError = ({fieldName, errors}: RenderErrorProps) => (
+  <span id={`${fieldName}Error`} role="alert">
+    {hasError(fieldName, errors) ? errors[fieldName] : ""}
+  </span>
+)
 export type CustomerFormProps = {
   customer?: Customer | undefined
   onSave: (customer: Customer)=>void
@@ -28,22 +36,16 @@ export const CustomerForm = (
         match(/^[0-9+()\- ]*$/, 'Only numbers, spaces and these symbols are allowed: ( ) + -')
       ),
   } satisfies Validators;
-  
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault() 
-    const validationResult = validateMany(validators, customerState);
-    if (anyErrors(validationResult)) {
-      setValidationErrors(validationResult);
-      return
-    }
-    setSubmitting(true)
+
+  const doSave = async () => {
+    setSubmitting(true);
     const result = await globalThis.fetch("/customers", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(customerState),
-    });
-    setSubmitting(false)
+    }).finally(() => { setSubmitting(false) });
+
     if (result?.ok) {
       setError(false);
       const customerWithId = await result.json();
@@ -54,6 +56,17 @@ export const CustomerForm = (
     } else {
       setError(true);
     }
+  }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault() 
+    const validationResult = validateMany(validators, customerState);
+    if (anyErrors(validationResult)) {
+      setValidationErrors(validationResult);
+      return
+    }
+    await doSave();
+
+    
   }
   const handleChange = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
     setCustomerState((customerState) => ({ ...customerState, [target.name]: target.value}))
@@ -68,12 +81,6 @@ export const CustomerForm = (
     }
   };
   
-  const renderError = (fieldName: keyof Validators) => {
-    return <span id={`${fieldName}Error`} role="alert">
-      {hasError(fieldName, validationErrors) ? (validationErrors as any)[fieldName] : ""}
-    </span>;
-  }
-  
   return <form onSubmit = {handleSubmit} aria-label="Customer form">
     <Error hasError={error} />
     <label htmlFor="firstName">First Name</label>
@@ -86,7 +93,7 @@ export const CustomerForm = (
       onBlur={handleBlur}
       aria-describedby="firstNameError"
       />
-    {renderError("firstName")}
+    <RenderError fieldName="firstName" errors={validationErrors}/>
 
     <label htmlFor="lastName">Last Name</label>
     <input 
@@ -98,7 +105,7 @@ export const CustomerForm = (
       onBlur={handleBlur}
       aria-describedby="lastNameError"
       />
-    {renderError("lastName")}
+    <RenderError fieldName="lastName" errors={validationErrors}/>
 
     <label htmlFor="phoneNumber">Phone Number</label>
     <input 
@@ -110,9 +117,9 @@ export const CustomerForm = (
       onBlur={handleBlur}
       aria-describedby="phoneNumberError"
       />
-    {renderError("phoneNumber")}
+    <RenderError fieldName="phoneNumber" errors={validationErrors}/>
     <input type="submit" value="Add" />
-    {submitting ? (<span className="submittingIndicator" aria-label="spinner"/>) : null}
+    {submitting ? (<span className="submittingIndicator" aria-label="Submitting Indicator"/>) : null}
   </form>
 }
 

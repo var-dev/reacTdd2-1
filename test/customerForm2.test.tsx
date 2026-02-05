@@ -4,7 +4,7 @@ import * as assert from 'node:assert/strict';
 import "./domSetup"; // must be imported before render/screen
 import React from "react";
 
-import { render, screen, cleanup, within, waitFor, waitForElementToBeRemoved } from "@testing-library/react";
+import { render, screen, cleanup, within, waitFor, waitForElementToBeRemoved, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { Customer } from "../src/types.js";
@@ -366,18 +366,19 @@ describe("submitting indicator", () => {
     mock.method(global,'fetch', mockFetchOk)
     render(<CustomerForm {...testProps}/>);
     const submitButton = screen.getByRole('button', { name: /Add/i })
-    userEvent.click(submitButton)
-    let spinner: HTMLElement | null = null
+    const clickPromise = act(async () => {
+      await userEvent.click(submitButton)
+    })
     await waitFor(()=>{
-      spinner = screen.queryByLabelText(/spinner/); 
+      const spinner = screen.queryByLabelText(/Submitting Indicator/i); 
       assert.ok(spinner, 'Expected spinner to appear');
       assert.strictEqual(spinner!.tagName, 'SPAN', 'Expected spinner appearing on submit')
     })
-
-    assert.strictEqual(screen.queryByLabelText(/spinner/i), null, 'Expected spinner to be removed');
+    await clickPromise;
+    assert.strictEqual(screen.queryByLabelText(/Submitting Indicator/i), null, 'Expected spinner to be removed');
   });
-  it("initially does not display the submitting indicator", async () => {
+  it("initially does not display the submitting indicator", () => {
     render(<CustomerForm {...testProps}/>);
-    assert.throws( ()=>( screen.getByLabelText(/spinner/i)), 'Expected no spinner before submit')
+    assert.strictEqual(screen.queryByLabelText(/Submitting Indicator/i), null, 'Expected no spinner before submit')
   });
 });
