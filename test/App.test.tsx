@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 import {blankAppointment, blankCustomer} from '../src/sampleDataStatic.ts'
 import { type CustomerFormProps } from "../src/CustomerForm.js";
 import { type AppointmentFormLoaderProps } from "../src/AppointmentFormLoader.js";
+import { type CustomerSearchProps } from "../src/CustomerSearch.js";
 
 const today = new Date(2018, 11, 1);
 
@@ -22,6 +23,9 @@ const mockAppointmentFormLoader = mock.fn((
     today,
     onSave
   }: AppointmentFormLoaderProps)=>(<div data-testid='mockAppointmentFormLoader'></div>))
+const mockCustomerSearch = mock.fn((
+  {
+  }: CustomerSearchProps)=>(<div data-testid='mockCustomerSearch'></div>))
 mock.module('../src/CustomerForm.tsx', {
   namedExports: {
     CustomerForm: mockCustomerForm
@@ -30,6 +34,11 @@ mock.module('../src/CustomerForm.tsx', {
 mock.module('../src/AppointmentFormLoader.tsx', {
   namedExports: {
     AppointmentFormLoader: mockAppointmentFormLoader
+  }
+})
+mock.module('../src/CustomerSearch.tsx', {
+  namedExports: {
+    CustomerSearch: mockCustomerSearch
   }
 })
 const {App} = await import('../src/App.js')
@@ -83,7 +92,7 @@ describe('App', ()=>{
   })
   it('displays the AppointmentFormLoader after the CustomerForm is submitted', async ()=>{
     const evt = userEvent.setup()
-    const a = render(<App/>)
+    render(<App/>)
     const button = screen.getByText('Add customer and appointment')
     await evt.click(button)
     await screen.findByTestId('mockCustomerForm')
@@ -109,5 +118,16 @@ describe('App', ()=>{
       .onSave!
     await waitFor(()=>onSaveAppointmentFormLoader())
     assert.ok(await screen.findByText('There are no appointments scheduled for today'), 'Should render AppointmentDayView')
+  })
+  it("displays the CustomerSearch when button is clicked", async () => {
+    render(<App/>)
+    const button = screen.getByText('Search customers')
+    await userEvent.click(button)
+    await screen.findByTestId('mockCustomerSearch')
+    assert.ok(screen.getByTestId('mockCustomerSearch'))
+    assert.equal(mockCustomerSearch.mock.callCount(), 1, 'CustomerSearch expected to be called once on App render')
+    // const actualArguments = JSON.stringify(mockCustomerSearch.mock.calls[0].arguments)
+    // const expectedArguments = JSON.stringify([{}])
+    // assert.strictEqual(actualArguments, expectedArguments, 'CustomerSearch called with expected arguments')
   })
 })

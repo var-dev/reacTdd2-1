@@ -4,6 +4,7 @@ import { AppointmentsDayViewLoader } from "./AppointmentsDayViewLoader.js";
 import { AppointmentFormLoader } from "./AppointmentFormLoader.js";
 import { CustomerForm } from "./CustomerForm.js";
 import type { Customer } from "./types.js";
+import { CustomerSearch } from "./CustomerSearch.js";
 import { blankAppointment, blankCustomer } from "./sampleDataStatic.js";
 
 export type AppProps = {
@@ -27,6 +28,7 @@ export const App = (
     []
   );
   const transitionToDayView = useCallback(() => setView("dayView"), []);
+  const transitionToSearchCustomers = useCallback(() => setView("searchCustomers"), []);
   switch(view){
     case "addCustomer": 
       return (
@@ -41,6 +43,8 @@ export const App = (
           appointment={{...blankAppointment, customer: customer!}}
           onSave={transitionToDayView}/>
       )
+    case "searchCustomers":
+      return (<CustomerSearch/>)
     default:
       return (
         <>
@@ -50,6 +54,14 @@ export const App = (
                 onClick={transitionToAddCustomer}
               >
                 Add customer and appointment
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={transitionToSearchCustomers}
+              >
+                Search customers
               </button>
             </li>
           </menu>

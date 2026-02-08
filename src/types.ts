@@ -1,5 +1,13 @@
 import { serviceStylists } from "./sampleDataStatic.js"
-export type CustomerWithId = Record<'firstName'|'lastName'|'phoneNumber'|'stylist'|'service'|'notes'|'id', string>
+export type CustomerWithId = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  stylist: string;
+  service: string;
+  notes: string;
+};
 export type Customer = Partial<CustomerWithId>
 export type ServiceStylistRecord = typeof serviceStylists
 export type Service = keyof ServiceStylistRecord;

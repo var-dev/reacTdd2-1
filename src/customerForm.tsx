@@ -52,14 +52,14 @@ export const CustomerForm = (
       setError(false);
       const customerWithId = await result.json();
       onSave(customerWithId);
+      return
     } else if (result.status === 422) {
       const response = await result.json();
       setValidationErrors(response.errors);
-    setDisableSubmit(false)
     } else {
       setError(true);
-    setDisableSubmit(false)
     }
+    setDisableSubmit(false)
   }
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault() 
@@ -69,11 +69,16 @@ export const CustomerForm = (
       return
     }
     await doSave();
-
-    
   }
   const handleChange = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
     setCustomerState((customerState) => ({ ...customerState, [target.name]: target.value}))
+    if (validators.hasOwnProperty(target.name)) {
+      const validationResult = validateMany(validators, {[target.name]: target.value});
+      setValidationErrors({
+        ...validationErrors,
+        ...validationResult
+      });
+    }
   }
   const handleBlur = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
     if (validators.hasOwnProperty(target.name)) {
