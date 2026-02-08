@@ -26,6 +26,7 @@ export const CustomerForm = (
   const [error, setError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState({} as ValidationErrors);
+  const [disableSubmit, setDisableSubmit] = useState(false)
 
   const validators = {
     firstName: required("First name is required"),
@@ -38,6 +39,7 @@ export const CustomerForm = (
   } satisfies Validators;
 
   const doSave = async () => {
+    setDisableSubmit(true)
     setSubmitting(true);
     const result = await globalThis.fetch("/customers", {
       method: "POST",
@@ -53,8 +55,10 @@ export const CustomerForm = (
     } else if (result.status === 422) {
       const response = await result.json();
       setValidationErrors(response.errors);
+    setDisableSubmit(false)
     } else {
       setError(true);
+    setDisableSubmit(false)
     }
   }
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -118,7 +122,11 @@ export const CustomerForm = (
       aria-describedby="phoneNumberError"
       />
     <RenderError fieldName="phoneNumber" errors={validationErrors}/>
-    <input type="submit" value="Add" />
+    <input 
+      disabled={disableSubmit}
+      type="submit" 
+      value="Add" 
+    />
     {submitting ? (<span className="submittingIndicator" aria-label="Submitting Indicator"/>) : null}
   </form>
 }

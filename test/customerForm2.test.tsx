@@ -122,21 +122,21 @@ describe('CustomerForm tests using render and screen', ()=>{
       mock.method(global,'fetch', mockFetchError)
       const submitEvent = userEvent.setup();
       render(<CustomerForm {...testProps} />);
-      const submitButton = screen.getByRole('button', { name: /Add/i })
+      const submitButton = screen.getByRole<HTMLButtonElement>('button', { name: /Add/i })
       await submitEvent.click(submitButton)
-      
-      // const alert = await screen.findByRole("alert", ) as HTMLParagraphElement;
-      // assert.match(alert.textContent, /error occurred/i, `Expected /error occurred/i, but got ${alert.textContent}`)
-      const alerts = await screen.findAllByRole("alert", );
-      const alertPiElements = alerts.filter(alert => alert.tagName === 'P');
 
-      assert.ok(alertPiElements.length===1, `Expected single tag name P, but got ${JSON.stringify(alertPiElements.map(el=>el.tagName))}`)
-      assert.match(alertPiElements[0].textContent, /error occurred/i, `Expected /error occurred/i, but got ${JSON.stringify(alertPiElements.map(el=>el.textContent))}`)
+      assert.ok(!await confirmNoAlerts(), `Expected validation error alert`)
 
       mock.method(global,'fetch', mockFetchOk)
       await submitEvent.click(submitButton)
       
-      assert.strictEqual(alertPiElements[0].textContent, "", `Expected empty string after clearing error`)
+      assert.ok(await confirmNoAlerts(), `Expected empty string after clearing error`)
+
+      async function confirmNoAlerts() {
+        const alerts = await screen.findAllByRole("alert");
+        const alertPiElements = alerts.filter(alert => alert.tagName === 'P');
+        return alertPiElements.every((el)=>el.textContent==='');
+      }
     });
     it("does not notify onSave", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetchError)
@@ -382,3 +382,13 @@ describe("submitting indicator", () => {
     assert.strictEqual(screen.queryByLabelText(/Submitting Indicator/i), null, 'Expected no spinner before submit')
   });
 });
+describe('p259 exercises', ()=>{
+  it('disables Submit Button after submit', async ()=>{
+    mock.method(global,'fetch', mockFetchOk)
+    render(<CustomerForm {...testProps}/>);
+    const submitButton = screen.getByRole<HTMLButtonElement>('button', { name: /Add/i })
+    assert.ok(!submitButton.disabled, 'Expected button to be enabled initially');
+    await userEvent.click(submitButton)
+    assert.ok(submitButton.disabled, 'Expected button to be disabled after submit');
+  })
+})

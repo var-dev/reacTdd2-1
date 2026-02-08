@@ -2,8 +2,8 @@
   "type": "module",
   "main": "index.ts",
   "scripts": {
-    "test": "node --experimental-test-module-mocks --import tsx --test ./**/*.test.ts?",
-    "test-only": "node --test-only --import tsx --test ./**/*.test.ts?",
+    "test": "node --experimental-test-module-mocks --import tsx --test ./**/*.test.ts --test ./**/*.test.tsx",
+    "test-only": "node --test-only --import tsx --test ./**/*.test.ts --test ./**/*.test.tsx",
     "start": "node --import tsx ./src/index.ts",
     "server": "node --import tsx ./server/src/server.ts",
     "nodemon": "nodemon",

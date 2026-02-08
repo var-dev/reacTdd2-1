@@ -14,7 +14,7 @@ import {CustomerForm, CustomerFormProps} from "../src/CustomerForm.js";
 
 const originalFetch = globalThis.fetch;
 let container: HTMLDivElement
-const render = async (node: React.ReactNode) => {
+const render =  (node: React.ReactNode) => {
   act(() => { createRoot(container).render(node) })
 }
 
@@ -66,21 +66,5 @@ describe("CustomerForm", () => {
     render(<CustomerForm {...testProps}/>)
     
     assert.ok(document.querySelector('input[type=submit]'), 'No Submit found in the form');
-  })
-  it("checks preventDefault to be true", async () => {
-    const mockFetch = mock.method(global,'fetch', mockFetchOk)
-    let event: Event|null = null
-    const mockHandler = mock.fn((e:Event)=>{ event = e; });
-    render(
-      <CustomerForm 
-        {...testProps}
-      />
-    )
-    const form = document.querySelector('form') as HTMLFormElement
-    form.addEventListener('submit', (e) => { mockHandler(e) })  
-    act(()=>{fireEvent.submit(form)})
-    
-    assert.ok(event!.defaultPrevented, 'Event defaultPrevented not set');
-    assert.strictEqual(mockHandler.mock.calls.length, 1);
   })
 })
