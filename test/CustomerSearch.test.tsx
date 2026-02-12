@@ -21,7 +21,12 @@ afterEach(()=>{
 const testProps = {
 }
 const mockFetchOk = (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(args) });
-const mockFetchOkFactory = (object: any) => (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(object) });
+const mockFetchOkFactory = (...customersVariadic: Customer[][]) => {
+  let mutableCopy = [...customersVariadic]
+  return (...args: any[]) => {
+    const currentPageCustomers: Customer[] = mutableCopy.shift() as Customer[]
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(currentPageCustomers) })
+}};
 
 const oneCustomer: Customer[] = [
   {
@@ -45,6 +50,9 @@ const twoCustomers = [
     phoneNumber: "2"
   }
 ];
+const tenCustomers: Customer[] =
+  Array.from("0123456789", (_, id) => ({ id })
+  );
 describe('CustomerSearch', async () => {
   it("renders a table with four headings", async () => {
     mock.method(global,'fetch', mockFetchOk)
@@ -89,4 +97,49 @@ describe('CustomerSearch', async () => {
     assert.deepStrictEqual(cellsRow0, ['A', 'B', '1', ''], `Row 0 should be ['A', 'B', '1', ''] but got: ${JSON.stringify(cellsRow0)}`)
     assert.deepStrictEqual(cellsRow1, ['C', 'D', '2', ''], `Row 1 should be ['C', 'D', '2', ''] but got: ${JSON.stringify(cellsRow1)}`)
   });
+  it('has a Next button', async ()=>{
+    mock.method(global,'fetch', mockFetchOkFactory(twoCustomers))
+    render(<CustomerSearch />);
+    const button = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
+    assert.ok(button.tagName === 'BUTTON', 'Next button not found')
+  })
+  it('requests next page of data when next button is clicked', async ()=>{
+    const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers))
+    render(<CustomerSearch />);
+    const button = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
+    await userEvent.click(button)
+    const fetchCallsCounter = mockFetch.mock.callCount()
+
+    assert.ok(fetchCallsCounter === 2, `Expected fetch to be called twice, but it was called ${fetchCallsCounter} times`)
+    const actual = mockFetch.mock.calls[fetchCallsCounter-1].arguments[0]
+    const expected = '/customers?after=9'
+    
+    assert.strictEqual(actual, expected, `Expected Fetch URL '/customers?after=9'`);
+  })
+  it("displays next page of data when Next button is clicked", async () => {
+    const nextCustomer: Customer[] = [{ id: 99, firstName: "NextPageCustomerName"}];
+    const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, nextCustomer))
+    render(<CustomerSearch />);
+    const button = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
+
+    assert.ok(mockFetch.mock.callCount() === 1, `Expected fetch to be called one time, but it was called ${mockFetch.mock.callCount()} times`)
+    const actualResultOne = mockFetch.mock.calls[0].result
+    assert.deepStrictEqual(await (await actualResultOne)?.json(),[
+      { id: 0 }, { id: 1 },
+      { id: 2 }, { id: 3 },
+      { id: 4 }, { id: 5 },
+      { id: 6 }, { id: 7 },
+      { id: 8 }, { id: 9 }
+    ], `Expected mockFetch returns first page of customers`)
+
+    await userEvent.click(button)
+
+    assert.ok(mockFetch.mock.callCount() === 2, `Expected fetch to be called twice, but it was called ${mockFetch.mock.callCount()} times`)
+    const actualResultPage2 = mockFetch.mock.calls[1].result
+    assert.deepStrictEqual(await (await actualResultPage2)?.json(),[ { id: 99, firstName: 'NextPageCustomerName' } ], `Expected mockFetch returns second page of customers`)
+
+    const table = await waitFor(()=>screen.getByLabelText<HTMLTableElement>(/customer search table/))
+    const next = within(table).getByText(/NextPageCustomerName/i)
+    assert.ok(next.tagName==='TD', 'Next customer not found in the table')
+  })
 })
