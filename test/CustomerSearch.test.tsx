@@ -51,8 +51,11 @@ const twoCustomers = [
   }
 ];
 const tenCustomers: Customer[] =
-  Array.from("0123456789", (_, id) => ({ id })
+  Array.from("0123456789", (id) => ({ id })
   );
+const anotherTenCustomers: Customer[] =
+  Array.from("ABCDEFGHIJ", id => ({ id }));
+
 describe('CustomerSearch', async () => {
   it("renders a table with four headings", async () => {
     mock.method(global,'fetch', mockFetchOk)
@@ -125,11 +128,11 @@ describe('CustomerSearch', async () => {
     assert.ok(mockFetch.mock.callCount() === 1, `Expected fetch to be called one time, but it was called ${mockFetch.mock.callCount()} times`)
     const actualResultOne = mockFetch.mock.calls[0].result
     assert.deepStrictEqual(await (await actualResultOne)?.json(),[
-      { id: 0 }, { id: 1 },
-      { id: 2 }, { id: 3 },
-      { id: 4 }, { id: 5 },
-      { id: 6 }, { id: 7 },
-      { id: 8 }, { id: 9 }
+      { id: '0' }, { id: '1' },
+      { id: '2' }, { id: '3' },
+      { id: '4' }, { id: '5' },
+      { id: '6' }, { id: '7' },
+      { id: '8' }, { id: '9' }
     ], `Expected mockFetch returns first page of customers`)
 
     await userEvent.click(button)
@@ -141,5 +144,38 @@ describe('CustomerSearch', async () => {
     const table = await waitFor(()=>screen.getByLabelText<HTMLTableElement>(/customer search table/))
     const next = within(table).getByText(/NextPageCustomerName/i)
     assert.ok(next.tagName==='TD', 'Next customer not found in the table')
+  })
+  it("has a previous button", async () => {
+    mock.method(global,'fetch', mockFetchOkFactory(oneCustomer))
+    render(<CustomerSearch />);
+    const button = await waitFor(()=>screen.getByRole('button', {name: /previous/i}))
+
+    assert.ok(button.tagName === 'BUTTON', 'Previous button not found')
+  })
+  it("moves back to first page when previous button is clicked", async () => {
+    const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, anotherTenCustomers, oneCustomer))
+    render(<CustomerSearch />);
+    const buttonNext = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
+    const buttonPrev = await waitFor(()=>screen.getByRole('button', {name: /previous/i}))
+
+    assert.ok(buttonNext.tagName === 'BUTTON', 'Next button not found')
+    assert.ok(buttonPrev.tagName === 'BUTTON', 'Previous button not found')
+    await userEvent.click(buttonNext)
+    await userEvent.click(buttonNext)
+    await userEvent.click(buttonPrev)
+
+    assert.ok(mockFetch.mock.callCount() === 4, `Expected fetch to be called four times, but it was called ${mockFetch.mock.callCount()} times`)
+
+    const actual1 = mockFetch.mock.calls[1].arguments[0]
+    const expected1 = '/customers?after=9'
+    assert.strictEqual(actual1, expected1, `Expected Fetch URL '/customers?after=9'`);
+    
+    const actual2 = mockFetch.mock.calls[2].arguments[0]
+    const expected2 = '/customers?after=J'
+    assert.strictEqual(actual2, expected2, `Expected Fetch URL '/customers?after=J'`);
+
+    const actual3 = mockFetch.mock.calls[3].arguments[0]
+    const expected3 = '/customers?after=9'
+    assert.strictEqual(actual3, expected3, `Expected Fetch URL '/customers?after=9'`);
   })
 })

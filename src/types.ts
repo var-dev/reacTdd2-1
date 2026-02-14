@@ -1,6 +1,6 @@
 import { serviceStylists } from "./sampleDataStatic.js"
 export type CustomerWithId = {
-  id: number;
+  id: number|string;
   firstName: string;
   lastName: string;
   phoneNumber: string;

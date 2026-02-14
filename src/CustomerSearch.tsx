@@ -3,14 +3,21 @@ import type { Customer } from "./types.js";
 
 type SearchButtonsProps = {
   handleNext: ()=>void
+  handlePrevious: ()=>void
 }
-const SearchButtons = ({handleNext}: SearchButtonsProps) => (
+const SearchButtons = ({handleNext, handlePrevious}: SearchButtonsProps) => (
   <menu>
     <li>
       <button 
         type="button"
         onClick={handleNext}
       >Next</button >
+    </li>
+    <li>
+      <button 
+        type="button"
+        onClick={handlePrevious}
+      >Previous</button >
     </li>
   </menu>
 );
@@ -25,19 +32,20 @@ const CustomerRow = ({ customer }: {customer: Customer}) => (
 
 export const CustomerSearch = ()=>{
   const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
+  const [queryString, setQueryString] = useState("");
+  const [previousQueryString, setPreviousQueryString] = useState("");
   const handleNext = useCallback(async () => {
     if (!Array.isArray(customers) || customers.length === 0) return;
     const after = customers[customers.length - 1]!.id;
-    const url = `/customers?after=${after}`;
-    const result = await globalThis.fetch(url, {
-      method: "GET",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" }
-    });
-    setCustomers(await result.json());
-  }, [customers]);
+    const newQueryString = `?after=${after}`;
+    setPreviousQueryString(queryString);
+    setQueryString(newQueryString);
+  }, [customers, queryString]);
+  const handlePrevious = useCallback(async () => {
+    setQueryString(previousQueryString)
+  }, [previousQueryString]);
   const fetchData = async () => {
-    const result = await globalThis.fetch("/customers", {
+    const result = await globalThis.fetch(`/customers${queryString}`, {
         method: "GET",
         credentials: "same-origin",
         headers: {
@@ -48,10 +56,10 @@ export const CustomerSearch = ()=>{
   };
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [queryString]);
   return (
     <>
-      <SearchButtons handleNext={handleNext}/>
+      <SearchButtons handleNext={handleNext} handlePrevious={handlePrevious}/>
       <table aria-label="customer search table">
         <thead>
           <tr>
