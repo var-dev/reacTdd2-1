@@ -163,8 +163,9 @@ describe('CustomerSearch', async () => {
     await userEvent.click(buttonNext)
     await userEvent.click(buttonNext)
     await userEvent.click(buttonPrev)
+    await userEvent.click(buttonPrev)
 
-    assert.ok(mockFetch.mock.callCount() === 4, `Expected fetch to be called four times, but it was called ${mockFetch.mock.callCount()} times`)
+    assert.ok(mockFetch.mock.callCount() === 5, `Expected fetch to be called five times, but it was called ${mockFetch.mock.callCount()} times`)
 
     const actual1 = mockFetch.mock.calls[1].arguments[0]
     const expected1 = '/customers?after=9'
@@ -177,5 +178,9 @@ describe('CustomerSearch', async () => {
     const actual3 = mockFetch.mock.calls[3].arguments[0]
     const expected3 = '/customers?after=9'
     assert.strictEqual(actual3, expected3, `Expected Fetch URL '/customers?after=9'`);
+
+    const actual4 = mockFetch.mock.calls[4].arguments[0]
+    const expected4 = '/customers'
+    assert.strictEqual(actual4, expected4, `Expected Fetch URL '/customers'`);
   })
 })

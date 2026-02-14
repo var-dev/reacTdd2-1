@@ -32,19 +32,18 @@ const CustomerRow = ({ customer }: {customer: Customer}) => (
 
 export const CustomerSearch = ()=>{
   const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
-  const [queryString, setQueryString] = useState("");
-  const [previousQueryString, setPreviousQueryString] = useState("");
+  const [queryStringState, setQueryString] = useState<string[]>([]);
   const handleNext = useCallback(async () => {
     if (!Array.isArray(customers) || customers.length === 0) return;
     const after = customers[customers.length - 1]!.id;
     const newQueryString = `?after=${after}`;
-    setPreviousQueryString(queryString);
-    setQueryString(newQueryString);
-  }, [customers, queryString]);
+    setQueryString([...queryStringState, newQueryString]);
+  }, [customers, queryStringState]);
   const handlePrevious = useCallback(async () => {
-    setQueryString(previousQueryString)
-  }, [previousQueryString]);
+    setQueryString(queryStringState.slice(0, -1))
+  }, [queryStringState]);
   const fetchData = async () => {
+    const queryString = queryStringState[queryStringState.length-1] ?? ''
     const result = await globalThis.fetch(`/customers${queryString}`, {
         method: "GET",
         credentials: "same-origin",
@@ -56,7 +55,7 @@ export const CustomerSearch = ()=>{
   };
   useEffect(() => {
     fetchData();
-  }, [queryString]);
+  }, [queryStringState]);
   return (
     <>
       <SearchButtons handleNext={handleNext} handlePrevious={handlePrevious}/>
