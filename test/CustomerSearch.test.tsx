@@ -23,8 +23,8 @@ const testProps = {
 const mockFetchOk = (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(args) });
 const mockFetchOkFactory = (...customersVariadic: Customer[][]) => {
   let mutableCopy = [...customersVariadic]
-  return (...args: any[]) => {
-    const currentPageCustomers: Customer[] = mutableCopy.shift() as Customer[]
+  return (...args: string[]) => {
+    let currentPageCustomers: Customer[] = mutableCopy.shift() as Customer[]
     return Promise.resolve({ ok: true, json: () => Promise.resolve(currentPageCustomers) })
 }};
 
@@ -182,5 +182,42 @@ describe('CustomerSearch', async () => {
     const actual4 = mockFetch.mock.calls[4].arguments[0]
     const expected4 = '/customers'
     assert.strictEqual(actual4, expected4, `Expected Fetch URL '/customers'`);
+  })
+  it("renders a text field for a search term", async () =>{
+    mock.method(global,'fetch', mockFetchOk)
+    render (<CustomerSearch />);
+    const searchbox = await waitFor(()=>screen.getByLabelText(/search for customers/i))
+
+    assert.ok(searchbox.tagName==='INPUT', 'Search box not found')  
+  })
+  it("performs search when search term is changed", async ()=>{
+    const mockFetch = mock.method(global,'fetch', mockFetchOk)
+    render(<CustomerSearch />);
+    const searchbox = await waitFor(()=>screen.getByLabelText(/search for customers/i))
+    await userEvent.type(searchbox, "asdf")
+    assert.ok(
+      mockFetch.mock.callCount() === 5, 
+      `Expected fetch to be called 5 times, but it was called ${mockFetch.mock.callCount()} times`
+    )
+
+    const actual1 = mockFetch.mock.calls[4].arguments[0]
+    const expected1 = '/customers?searchTerm=asdf'
+    assert.strictEqual(actual1, expected1, `Expected Fetch URL '/customers?searchTerm=asdf'`);
+  })
+  it("includes search term when moving to next page", async ()=>{
+    const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, tenCustomers, tenCustomers, tenCustomers, tenCustomers, tenCustomers))
+    render(<CustomerSearch />);
+    const searchbox = await waitFor(()=>screen.getByLabelText(/search for customers/i))
+    const buttonNext = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
+    await userEvent.type(searchbox, "asdf")
+    await userEvent.click(buttonNext)
+    assert.ok(
+      mockFetch.mock.callCount() === 6, 
+      `Expected fetch to be called 6 times for each letter in asdf and button click, but it was called ${mockFetch.mock.callCount()} times`
+    )
+
+    const actual1 = mockFetch.mock.calls[mockFetch.mock.callCount()-1].arguments[0]
+    const expected1 = '/customers?after=9&searchTerm=asdf'
+    assert.strictEqual(actual1, expected1, `Expected Fetch URL '/customers?after=9&searchTerm=asdf'`);
   })
 })

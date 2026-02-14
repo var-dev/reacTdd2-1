@@ -32,19 +32,30 @@ const CustomerRow = ({ customer }: {customer: Customer}) => (
 
 export const CustomerSearch = ()=>{
   const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
-  const [queryStringState, setQueryString] = useState<string[]>([]);
+  const [queryString, setQueryString] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const handleNext = useCallback(async () => {
     if (!Array.isArray(customers) || customers.length === 0) return;
     const after = customers[customers.length - 1]!.id;
     const newQueryString = `?after=${after}`;
-    setQueryString([...queryStringState, newQueryString]);
-  }, [customers, queryStringState]);
+    setQueryString([...queryString, newQueryString]);
+  }, [customers, queryString]);
   const handlePrevious = useCallback(async () => {
-    setQueryString(queryStringState.slice(0, -1))
-  }, [queryStringState]);
+    setQueryString(queryString.slice(0, -1))
+  }, [queryString]);
+  const handleSearchTextChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  }
   const fetchData = async () => {
-    const queryString = queryStringState[queryStringState.length-1] ?? ''
-    const result = await globalThis.fetch(`/customers${queryString}`, {
+    let query = ''
+    if (queryString.length > 0 && searchTerm !== ''){
+      query = queryString[queryString.length-1] + `&searchTerm=${searchTerm}`;
+    } else if(searchTerm !== ''){
+      query = `?searchTerm=${searchTerm}`;
+    } else if (queryString.length > 0 ){
+      query = queryString[queryString.length-1] ?? '';
+    }
+    const result = await globalThis.fetch(`/customers${query}`, {
         method: "GET",
         credentials: "same-origin",
         headers: {
@@ -55,9 +66,15 @@ export const CustomerSearch = ()=>{
   };
   useEffect(() => {
     fetchData();
-  }, [queryStringState]);
+  }, [queryString, searchTerm]);
   return (
     <>
+      <label>
+        <input placeholder="Enter filter text"
+        value={searchTerm}
+        onChange={handleSearchTextChanged}
+        />
+      Search for customers</label>
       <SearchButtons handleNext={handleNext} handlePrevious={handlePrevious}/>
       <table aria-label="customer search table">
         <thead>
