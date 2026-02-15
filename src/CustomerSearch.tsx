@@ -1,6 +1,17 @@
 import React, {useEffect, useState, useCallback} from "react";
 import type { Customer } from "./types.js";
 
+const searchParams = (after: string, searchTerm: string ) => {
+  let pairs = [];
+  if (after) { pairs.push(`after=${after}`)}
+  if (searchTerm) { pairs.push(`searchTerm=${searchTerm}`)}
+  if (pairs.length > 0) {
+    return `?${pairs.join("&")}`;
+  }
+  return "";
+};
+
+
 type SearchButtonsProps = {
   handleNext: ()=>void
   handlePrevious: ()=>void
@@ -32,29 +43,22 @@ const CustomerRow = ({ customer }: {customer: Customer}) => (
 
 export const CustomerSearch = ()=>{
   const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
-  const [queryString, setQueryString] = useState<string[]>([]);
+  const [lastRowIds, setLastRowIds] = useState<(string )[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const handleNext = useCallback(async () => {
     if (!Array.isArray(customers) || customers.length === 0) return;
-    const after = customers[customers.length - 1]!.id;
-    const newQueryString = `?after=${after}`;
-    setQueryString([...queryString, newQueryString]);
-  }, [customers, queryString]);
+    const currentLastRowId = customers[customers.length - 1]!.id!;
+    setLastRowIds([...lastRowIds, currentLastRowId]);
+  }, [customers, lastRowIds]);
   const handlePrevious = useCallback(async () => {
-    setQueryString(queryString.slice(0, -1))
-  }, [queryString]);
+    setLastRowIds(lastRowIds.slice(0, -1))
+  }, [lastRowIds]);
   const handleSearchTextChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   }
   const fetchData = async () => {
-    let query = ''
-    if (queryString.length > 0 && searchTerm !== ''){
-      query = queryString[queryString.length-1] + `&searchTerm=${searchTerm}`;
-    } else if(searchTerm !== ''){
-      query = `?searchTerm=${searchTerm}`;
-    } else if (queryString.length > 0 ){
-      query = queryString[queryString.length-1] ?? '';
-    }
+    const after = lastRowIds[lastRowIds.length - 1] ?? '';
+    const query = searchParams(after, searchTerm);
     const result = await globalThis.fetch(`/customers${query}`, {
         method: "GET",
         credentials: "same-origin",
@@ -66,7 +70,7 @@ export const CustomerSearch = ()=>{
   };
   useEffect(() => {
     fetchData();
-  }, [queryString, searchTerm]);
+  }, [lastRowIds, searchTerm]);
   return (
     <>
       <label>
