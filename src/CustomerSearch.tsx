@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback} from "react";
+import React, {useEffect, useState, useCallback, type ReactNode} from "react";
 import type { Customer } from "./types.js";
 
 const searchParams = (after: string, searchTerm: string ) => {
@@ -10,7 +10,6 @@ const searchParams = (after: string, searchTerm: string ) => {
   }
   return "";
 };
-
 
 type SearchButtonsProps = {
   handleNext: ()=>void
@@ -32,16 +31,25 @@ const SearchButtons = ({handleNext, handlePrevious}: SearchButtonsProps) => (
     </li>
   </menu>
 );
-const CustomerRow = ({ customer }: {customer: Customer}) => (
+
+type CustomerRowProps = {customer: Customer, renderCustomerActions: (customer: Customer)=>ReactNode}
+const CustomerRow = ({ 
+  customer,
+  renderCustomerActions
+}: CustomerRowProps) => (
   <tr>
     <td>{customer.firstName}</td>
     <td>{customer.lastName}</td>
     <td>{customer.phoneNumber}</td>
+    <td>{renderCustomerActions(customer)}</td>
     <td />
   </tr>
 );
 
-export const CustomerSearch = ()=>{
+export type CustomerSearchProps = {renderCustomerActions: () => ReactNode}
+export const CustomerSearch = ({
+  renderCustomerActions = ()=><></>
+  }:CustomerSearchProps )=>{
   const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
   const [lastRowIds, setLastRowIds] = useState<(string )[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -92,7 +100,11 @@ export const CustomerSearch = ()=>{
         <tbody>
           {Array.isArray(customers) 
             ? customers.map((customer: Customer) => (
-                <CustomerRow key={customer.id} customer={customer} />
+                <CustomerRow 
+                  key={customer.id} 
+                  customer={customer} 
+                  renderCustomerActions={renderCustomerActions}
+                />
               ))
             : null}
         </tbody>
