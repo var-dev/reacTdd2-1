@@ -7,6 +7,7 @@ import { render, screen, cleanup, within, waitFor, waitForElementToBeRemoved, ac
 import userEvent from "@testing-library/user-event";
 import type { Customer } from "../src/types.js";
 import {CustomerSearch, type CustomerSearchProps} from '../src/CustomerSearch.js'
+import { App } from "../src/App.js";
 
 
 const originalFetch = globalThis.fetch;
@@ -247,5 +248,20 @@ describe('CustomerSearch', async () => {
     const actualArguments = actionSpy.mock.calls[actionsCount-1].arguments
 
     assert.deepStrictEqual(actualArguments, [twoCustomers[1]], `Expected renderCustomerActions to be called with the customer as an argument, but it was called with ${JSON.stringify(actualArguments)}`)
+  })
+  it("clicking appointment button shows the appointment form for that customer", async () => {
+    const mockFetch = mock.method(global, 'fetch', (url: string) => {
+      if (url.startsWith('/customers')) return Promise.resolve({ ok: true, json: () => Promise.resolve(oneCustomer) });
+      if (url.startsWith('/availableTimeSlots')) return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+    });
+    render(<App/>);
+    const searchCustomersBtn = screen.getByText<HTMLButtonElement>('Search customers')
+    userEvent.click(searchCustomersBtn)
+    const createAppointmentButton = await waitFor(async ()=>screen.getByText('Create appointment'))
+    assert.ok(createAppointmentButton.tagName === 'BUTTON', 'Create appointment button not found')
+    userEvent.click(createAppointmentButton)
+    const appointmentForm = await waitFor(()=>screen.getByLabelText('Appointment form'))
+    assert.ok(appointmentForm.tagName==='FORM', 'Appointment form not found')
   })
 })

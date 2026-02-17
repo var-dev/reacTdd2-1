@@ -97,7 +97,7 @@ describe('App', ()=>{
     await evt.click(button)
     await screen.findByTestId('mockCustomerForm')
     const onSaveCustomerForm = mockCustomerForm.mock.calls[mockCustomerForm.mock.callCount()-1].arguments[0].onSave
-    const customerId = {id: 123}
+    const customerId = {id: '123'}
     await waitFor(()=>onSaveCustomerForm({...blankCustomer, ...customerId}))
     const AppointmentFormLoaderElement = await screen.findByTestId('mockAppointmentFormLoader')
     
@@ -126,8 +126,17 @@ describe('App', ()=>{
     await screen.findByTestId('mockCustomerSearch')
     assert.ok(screen.getByTestId('mockCustomerSearch'))
     assert.equal(mockCustomerSearch.mock.callCount(), 1, 'CustomerSearch expected to be called once on App render')
-    // const actualArguments = JSON.stringify(mockCustomerSearch.mock.calls[0].arguments)
-    // const expectedArguments = JSON.stringify([{}])
-    // assert.strictEqual(actualArguments, expectedArguments, 'CustomerSearch called with expected arguments')
+  })
+  it("passes a button to the CustomerSearch named Create appointment", async () => {
+    render(<App/>)
+    const button = screen.getByText('Search customers')
+    await userEvent.click(button)
+    await waitFor(()=>screen.getByTestId('mockCustomerSearch')) 
+    const lastCall = mockCustomerSearch.mock.callCount()
+    const RenderCustomerActions = mockCustomerSearch.mock.calls[lastCall-1].arguments[0].renderCustomerActions
+
+    render(<RenderCustomerActions/>)
+    const createAppointmentBtn = screen.getByText('Create appointment');
+    assert.ok(createAppointmentBtn.tagName === 'BUTTON', 'Create appointment button not found')
   })
 })

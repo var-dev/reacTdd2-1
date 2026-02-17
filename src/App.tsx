@@ -7,15 +7,18 @@ import type { Customer } from "./types.js";
 import { CustomerSearch } from "./CustomerSearch.js";
 import { blankAppointment, blankCustomer } from "./sampleDataStatic.js";
 
-export type AppProps = {
 
-}
 export const App = (
   {
-    
-  }: AppProps) => {
+  }) => {
   const [view, setView] = useState("dayView");
   const [customer, setCustomer] = useState<Customer>();
+  const searchActions = (customer: Customer) => (
+    <button 
+      type="button"
+      onClick={()=>transitionToAddAppointment(customer)}
+    >Create appointment</button>
+  );
   const transitionToAddCustomer = useCallback(
     () => setView("addCustomer"),
     []
@@ -44,7 +47,7 @@ export const App = (
           onSave={transitionToDayView}/>
       )
     case "searchCustomers":
-      return (<CustomerSearch/>)
+      return (<CustomerSearch renderCustomerActions={searchActions}/>)
     default:
       return (
         <>

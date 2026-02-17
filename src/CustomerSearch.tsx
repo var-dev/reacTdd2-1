@@ -46,7 +46,7 @@ const CustomerRow = ({
   </tr>
 );
 
-export type CustomerSearchProps = {renderCustomerActions: () => ReactNode}
+export type CustomerSearchProps = {renderCustomerActions: (customer: Customer) => ReactNode}
 export const CustomerSearch = ({
   renderCustomerActions = ()=><></>
   }:CustomerSearchProps )=>{
