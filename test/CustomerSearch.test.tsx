@@ -257,11 +257,53 @@ describe('CustomerSearch', async () => {
     });
     render(<App/>);
     const searchCustomersBtn = screen.getByText<HTMLButtonElement>('Search customers')
-    userEvent.click(searchCustomersBtn)
+    await waitFor(async ()=>userEvent.click(searchCustomersBtn))
     const createAppointmentButton = await waitFor(async ()=>screen.getByText('Create appointment'))
     assert.ok(createAppointmentButton.tagName === 'BUTTON', 'Create appointment button not found')
     userEvent.click(createAppointmentButton)
     const appointmentForm = await waitFor(()=>screen.getByLabelText('Appointment form'))
     assert.ok(appointmentForm.tagName==='FORM', 'Appointment form not found')
+  })
+  it('disables Prev button when navigation is not possible', async ()=>{
+    const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, anotherTenCustomers))
+    render(<CustomerSearch {...testProps }/>);
+    const buttonPrev = await waitFor(()=>screen.getByRole<HTMLButtonElement>('button', {name: /previous/i}))
+    const buttonNext = await waitFor(()=>screen.getByRole<HTMLButtonElement>('button', {name: /next/i}))
+    assert.ok(buttonPrev.tagName === 'BUTTON', 'Previous button not found')
+    assert.ok(buttonPrev.disabled, 'Previous button should be disabled on first page')
+
+    await waitFor(async ()=>{ await userEvent.click(buttonNext)})
+    assert.ok(!buttonPrev.disabled, 'Previous button should be clickable on next page')
+  })
+  it('disables Next button if customers hold less than 10 entries', async ()=>{
+    const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, twoCustomers))
+    render(<CustomerSearch {...testProps }/>);
+    const buttonNext = await waitFor(()=>screen.getByRole<HTMLButtonElement>('button', {name: /next/i}))
+
+    await waitFor(async ()=>{ await userEvent.click(buttonNext)})
+    assert.ok(buttonNext.disabled, 'Next button should be disabled if less than 10 customers are displayed')
+  })
+  it('displays limit input field', async ()=>{
+    mock.method(global, 'fetch', mockFetchOk)
+    render (<CustomerSearch {...testProps }/>);
+    const limitField = await waitFor(()=>screen.getByLabelText(/records per page/i))
+
+    assert.ok(limitField.tagName==='INPUT', 'Limit field not found')
+  })
+  it('displays limit in the query', async ()=>{
+    const mockFetch = mock.method(global, 'fetch', mockFetchOk)
+    render (<CustomerSearch {...testProps }/>);
+    const limitField = await waitFor(()=>screen.getByLabelText(/records per page/i))
+    await userEvent.type(limitField, "{Control>}{a}{/Control}5")
+    // await userEvent.type(limitField, "{Meta>}{a}{/Meta}5")
+    await userEvent.tab();
+    assert.ok(
+      mockFetch.mock.callCount() === 2,
+      `Expected fetch to be called twice, but it was called ${mockFetch.mock.callCount()} times`
+    )
+
+    const actual1 = mockFetch.mock.calls[1].arguments[0]
+    const expected1 = '/customers?limit=5'
+    assert.strictEqual(actual1, expected1, `Expected Fetch URL '/customers?limit=5'`);
   })
 })
