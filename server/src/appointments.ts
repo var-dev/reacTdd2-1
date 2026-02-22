@@ -1,6 +1,6 @@
 import {stylists} from '../../src/sampleDataStatic.js'
 
-import type {Customer, AvailableTimeSlot, Appointment, RealStylist, Service} from '../../src/types.js'
+import type {Customer, AvailableTimeSlot, AppointmentApi, RealStylist, Service} from '../../src/types.js'
 
 declare global {
   interface Array<T> {
@@ -64,12 +64,12 @@ export function generateFakeAppointments(
   customers: Customer[],
   timeSlots: AvailableTimeSlot[]
 ) {
-  const appointments: Appointment[] = [];
+  const appointments: AppointmentApi[] = [];
   timeSlots.forEach((timeSlot) => {
     const stylist = timeSlot.stylists.pickRandom();
     if (shouldFillTimeSlot()) {
       appointments.push({
-        customer: customers.pickRandom().id!,
+        customerId: customers.pickRandom().id!,
         startsAt: timeSlot.startsAt,
         stylist,
         service: stylistServices[(stylist as RealStylist)].pickRandom(),
@@ -80,10 +80,10 @@ export function generateFakeAppointments(
 }
 
 export class Appointments {
-  private appointments: Appointment[];
+  private appointments: Required<AppointmentApi>[];
   private timeSlots: AvailableTimeSlot[];
   constructor(
-    initialAppointments: Appointment[] = [],
+    initialAppointments: Required<AppointmentApi>[] = [],
     initialTimeSlots: AvailableTimeSlot[] = []
   ) {
     this.appointments = [];
@@ -92,7 +92,7 @@ export class Appointments {
     initialAppointments.forEach(this.add);
   }
 
-  add(appointment: Appointment) {
+  add(appointment: Required<AppointmentApi>) {
     this.timeSlots = this.timeSlots
       .map((timeSlot) => {
         if (
@@ -135,7 +135,7 @@ export class Appointments {
       })
       .map((appointment) => {
         return Object.assign({}, appointment, {
-          customer: customers[appointment.customer],
+          customer: customers[appointment.customerId],
         });
       })
       .sort((a, b) => a.startsAt - b.startsAt);
@@ -144,7 +144,7 @@ export class Appointments {
   forCustomer(customerId: number) {
     return this.appointments.filter(
       (appointment) =>
-        appointment.customer === customerId
+        appointment.customerId === customerId
     );
   }
 
@@ -152,14 +152,14 @@ export class Appointments {
     return this.timeSlots;
   }
 
-  isValid(appointment: Appointment) {
+  isValid(appointment: AppointmentApi) {
     return (
       Object.keys(this.errors(appointment)).length ===
       0
     );
   }
 
-  errors(appointment: Appointment) {
+  errors(appointment: AppointmentApi) {
     let errors = {};
     let key = {
       startsAt: appointment.startsAt,

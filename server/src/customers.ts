@@ -22,7 +22,7 @@ Array.prototype.flatMap = function (f) {
   );
 };
 
-function generateFakeCustomer(id:string) {
+function generateFakeCustomer(id:number) {
   return {
     id,
     firstName: faker.person.firstName(),
@@ -34,13 +34,13 @@ function generateFakeCustomer(id:string) {
 export function generateFakeCustomers() {
   const customers:Customer[] = [];
   for (let i = 0; i < 1500; ++i) {
-    customers.push(generateFakeCustomer(String(i)));
+    customers.push(generateFakeCustomer(i));
   }
   return customers;
 }
 
 export class Customers {
-  private customers: { [key: number]: CustomerWithId };
+  private customers: { [key: number]: Customer & { id: number } };
   private nextId: number;
   constructor(initialCustomers: Customer[] = []) {
     this.customers = {};
@@ -52,7 +52,7 @@ export class Customers {
     initialCustomers.forEach(this.add);
   }
 
-  add(customer: Customer): Customer {
+  add(customer: Customer): Customer & { id: number } {
     const customerWithId = Object.assign(
       {},
       customer,

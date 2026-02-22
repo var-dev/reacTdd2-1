@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react"
 
 import type { AppointmentProps } from "./AppointmentsDayView.js"
-import type { Service, Stylist, AvailableTimeSlot, ServiceStylistRecord } from "./types.js"
+import type { Service, Stylist, AvailableTimeSlot, ServiceStylistRecord, AppointmentApi } from "./types.js"
 import { serviceStylists as serviceStylistRecord, selectableServicesList, stylists} from "./sampleDataStatic.js"
 
 const timeIncrements = 
@@ -142,7 +142,7 @@ export type AppointmentFormProps = {
   serviceStylists?: ServiceStylistRecord,
   salonOpensAt?: number,
   salonClosesAt?: number,
-  appointment?: AppointmentProps,
+  appointment?: AppointmentApi,
   availableTimeSlots: AvailableTimeSlot[],
   today?: Date,
   onSave?: ()=>void
@@ -160,7 +160,7 @@ export const AppointmentForm =
     today = new Date(1970, 1, 1) ,
     onSave = ()=>{}
   }: AppointmentFormProps) =>{
-  const [appointmentState, setAppointmentState] = useState<AppointmentProps>(appointment)
+  const [appointmentState, setAppointmentState] = useState<AppointmentApi>(appointment)
   const serviceRef = useRef<HTMLSelectElement>(null)
   const stylistRef = useRef<HTMLSelectElement>(null)
 
@@ -178,7 +178,7 @@ export const AppointmentForm =
       };
   const handleStartsAtChange = useCallback(
     ({ target: { value } }: React.ChangeEvent<HTMLInputElement>) =>
-      setAppointmentState((appointmentState: AppointmentProps) => ({
+      setAppointmentState((appointmentState: AppointmentApi) => ({
         ...appointmentState,
         startsAt: parseInt(value),
       })),
@@ -186,25 +186,25 @@ export const AppointmentForm =
   );
   const handleChange = 
     ({ target: { name, value } }: React.ChangeEvent<HTMLSelectElement>) =>
-      setAppointmentState((appointmentState: AppointmentProps) => ({
+      setAppointmentState((appointmentState: AppointmentApi) => ({
         ...appointmentState,
         [name]: value
-      } as AppointmentProps))
+      } as AppointmentApi))
 
   useEffect(() => {
     if (!appointmentState.service) {
-      setAppointmentState((appointmentState: AppointmentProps) => ({
+      setAppointmentState((appointmentState: AppointmentApi) => ({
         ...appointmentState,
         service: serviceRef.current!.value ?? ''
-      } as AppointmentProps))
+      } as AppointmentApi))
     }
   }, [])
   useEffect(() => {
     if (!appointmentState.stylist) {
-      setAppointmentState((appointmentState: AppointmentProps) => ({
+      setAppointmentState((appointmentState: AppointmentApi) => ({
         ...appointmentState,
         stylist: stylistRef.current?.value ?? ''
-      } as AppointmentProps))
+      } as AppointmentApi))
     }
   }, [])
 
@@ -245,7 +245,7 @@ export const AppointmentForm =
         onChange={handleChange}
         ref={stylistRef}
       >
-        {stylistsForService.map((stylist: string) => (
+        {stylistsForService.map((stylist: Stylist) => (
           <option key={stylist}>{stylist}</option>
         ))}
       </select>

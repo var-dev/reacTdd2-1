@@ -20,14 +20,14 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const schemaText = fs.readFileSync(path.join(__dirname, "../../src/schema.graphql"), "utf-8");
 
-import type { AvailableTimeSlot, Customer, CustomerWithId, Appointment } from "../../src/types.js";
+import type { AvailableTimeSlot, Customer, CustomerWithId, AppointmentApi } from "../../src/types.js";
 
 
 const schema = buildSchema(schemaText);
 
 export function buildApp(
   customerData: Customer[],
-  appointmentData: Appointment[],
+  appointmentData: AppointmentApi[],
   timeSlots: AvailableTimeSlot[]
 ) {
   const app = express();
@@ -157,7 +157,7 @@ export function buildApp(
         request,
         schema,
         rootValueFactory: () => ({
-          customer: ({ id }:CustomerWithId): { appointments: Appointment[]; firstName?: string; lastName?: string; phoneNumber?: string; stylist?: string; service?: string; notes?: string; id: number; } => {
+          customer: ({ id }:CustomerWithId): { appointments: AppointmentApi[]; firstName?: string; lastName?: string; phoneNumber?: string; stylist?: string; service?: string; notes?: string; id: number; } => {
             const customer = customers.all()[id] as CustomerWithId
             return {
               ...customer,

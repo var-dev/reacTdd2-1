@@ -1,5 +1,5 @@
 import type { AppointmentProps } from "./AppointmentsDayView.js";
-import type { Customer } from "./types.js";
+import type { AppointmentApi, Customer } from "./types.js";
 import { type Service, type Stylist } from "./types.js";
 
 const today = new Date();
@@ -34,9 +34,9 @@ export const validCustomer:Customer = {
   lastName: "last",
   phoneNumber: "123456789"
 };
-export const blankAppointment: AppointmentProps = {
+export const blankAppointment: AppointmentApi = {
   service: "Cut",
-  stylist: "",
+  stylist: "noOne",
   startsAt: 0,
 };
 

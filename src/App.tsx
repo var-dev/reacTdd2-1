@@ -7,11 +7,11 @@ import type { Customer } from "./types.js";
 import { CustomerSearch } from "./CustomerSearch.js";
 import { blankAppointment, blankCustomer } from "./sampleDataStatic.js";
 
-
+type View = 'dayView' | 'addCustomer' | 'addAppointment' | 'searchCustomers'
 export const App = (
   {
   }) => {
-  const [view, setView] = useState("dayView");
+  const [view, setView] = useState<View>("dayView");
   const [customer, setCustomer] = useState<Customer>();
   const searchActions = (customer: Customer) => (
     <button 
@@ -19,6 +19,29 @@ export const App = (
       onClick={()=>transitionToAddAppointment(customer)}
     >Create appointment</button>
   );
+  const MainScreen = ()=>( 
+    <>
+      <menu aria-label="menu">
+        <li>
+          <button type="button"
+            onClick={transitionToAddCustomer}
+          >
+            Add customer and appointment
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            onClick={transitionToSearchCustomers}
+          >
+            Search customers
+          </button>
+        </li>
+      </menu>
+      <AppointmentsDayViewLoader today={new Date()} />
+    </>
+  );
+  
   const transitionToAddCustomer = useCallback(
     () => setView("addCustomer"),
     []
@@ -43,33 +66,12 @@ export const App = (
       return (
         <AppointmentFormLoader 
           today={new Date()}
-          appointment={{...blankAppointment, customer: customer!}}
+          appointment={{...blankAppointment, customerId: customer?.id!}}
           onSave={transitionToDayView}/>
       )
     case "searchCustomers":
       return (<CustomerSearch renderCustomerActions={searchActions}/>)
     default:
-      return (
-        <>
-          <menu aria-label="menu">
-            <li>
-              <button type="button"
-                onClick={transitionToAddCustomer}
-              >
-                Add customer and appointment
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                onClick={transitionToSearchCustomers}
-              >
-                Search customers
-              </button>
-            </li>
-          </menu>
-          <AppointmentsDayViewLoader today={new Date()}/>
-        </> 
-      )
+      return (<MainScreen />)
   }
 }

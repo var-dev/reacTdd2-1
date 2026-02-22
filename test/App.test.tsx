@@ -97,7 +97,7 @@ describe('App', ()=>{
     await evt.click(button)
     await screen.findByTestId('mockCustomerForm')
     const onSaveCustomerForm = mockCustomerForm.mock.calls[mockCustomerForm.mock.callCount()-1].arguments[0].onSave
-    const customerId = {id: '123'}
+    const customerId = {id: 123}
     await waitFor(()=>onSaveCustomerForm({...blankCustomer, ...customerId}))
     const AppointmentFormLoaderElement = await screen.findByTestId('mockAppointmentFormLoader')
     
@@ -106,7 +106,7 @@ describe('App', ()=>{
       mockAppointmentFormLoader.mock.calls[mockAppointmentFormLoader.mock.callCount()-1]
         .arguments[0]
         .appointment)
-    const expectedArguments = JSON.stringify({...blankAppointment, customer:{...blankCustomer,...customerId}})
+    const expectedArguments = JSON.stringify({...blankAppointment, customerId: 123})
 
     assert.strictEqual(
       actualArguments, 

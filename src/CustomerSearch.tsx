@@ -57,7 +57,7 @@ export const CustomerSearch = ({
   renderCustomerActions = ()=><></>
   }:CustomerSearchProps )=>{
   const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
-  const [lastRowIds, setLastRowIds] = useState<(string )[]>([]);
+  const [lastRowIds, setLastRowIds] = useState<(number )[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [pageLimit, setPageLimit] = useState(10)
   const handleNext = useCallback(async () => {
@@ -76,7 +76,7 @@ export const CustomerSearch = ({
     setPageLimit(limit);
   }
   const fetchData = async () => {
-    const after = lastRowIds[lastRowIds.length - 1] ?? '';
+    const after = String(lastRowIds[lastRowIds.length - 1] ?? '');
     const limit = pageLimit === 10 ? '' : String(pageLimit)
     const query = searchParams({after, searchTerm, limit});
     const result = await globalThis.fetch(`/customers${query}`, {
