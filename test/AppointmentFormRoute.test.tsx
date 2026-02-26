@@ -49,15 +49,16 @@ describe('AppointmentFormRoute', async ()=>{
     mModule.restore()
     render(
       <MemoryRouter initialEntries={["/addAppointment?customerId=123"]}>
-        <AppointmentFormRoute />
+        <AppointmentFormRoute onSave={()=>{}}/>
       </MemoryRouter>
     );
     await waitFor(()=>{screen.getByTestId('appointmentForm')})
 
     const count = mockAppointmentForm.mock.callCount()
-    assert.strictEqual(count, 2, 'AppointmentForm called more than once')
-    const actual = mockAppointmentForm.mock.calls[count-1].arguments[0].appointment.customerId
+    assert.strictEqual(count, 2, 'AppointmentForm not called two times')
+    const actual = mockAppointmentForm.mock.calls[count-1].arguments[0]
     const expected = 123
-    assert.strictEqual(actual, expected, 'AppointmentForm called with wrong args')
+    assert.strictEqual(actual.appointment.customerId, expected, 'AppointmentForm called with wrong args')
+    assert.strictEqual(typeof actual.onSave, 'function', 'AppointmentForm onSave not a function')
   })
 })

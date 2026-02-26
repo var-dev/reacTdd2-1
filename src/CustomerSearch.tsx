@@ -56,10 +56,18 @@ export type CustomerSearchProps = {renderCustomerActions: (customer: Customer) =
 export const CustomerSearch = ({
   renderCustomerActions = ()=><></>
   }:CustomerSearchProps )=>{
-  const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
+  
   const [lastRowIds, setLastRowIds] = useState<(number )[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [pageLimit, setPageLimit] = useState(10)
+  const handlePageLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const limit = Number(event.target.value) || 10
+    setPageLimit(limit);
+  }
+  const handleSearchTextChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  }
+  const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
   const handleNext = useCallback(async () => {
     if (!Array.isArray(customers) || customers.length === 0) return;
     const currentLastRowId = customers[customers.length - 1]!.id!;
@@ -68,13 +76,8 @@ export const CustomerSearch = ({
   const handlePrevious = useCallback(async () => {
     setLastRowIds(lastRowIds.slice(0, -1))
   }, [lastRowIds]);
-  const handleSearchTextChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  }
-  const handlePageLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const limit = Number(event.target.value) || 10
-    setPageLimit(limit);
-  }
+
+
   const fetchData = async () => {
     const after = String(lastRowIds[lastRowIds.length - 1] ?? '');
     const limit = pageLimit === 10 ? '' : String(pageLimit)
