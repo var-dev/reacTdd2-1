@@ -27,7 +27,7 @@ describe('CustomerSearchRoute', ()=>{
   it('renders mock without crashing', async ()=>{
     render(
       <MemoryRouter initialEntries={["/searchCustomers?searchTerm=qwe&limit=11&lastRowIds=123,654"]}>
-        <CustomerSearchRoute renderCustomerActions={()=><></>} navigate={()=>{}}/>
+        <CustomerSearchRoute renderCustomerActions={()=><></>}/>
       </MemoryRouter>
     );
     await waitFor(()=>{screen.getByTestId('customerSearch')})

@@ -18,7 +18,8 @@ const CustomerRow = ({
 
 export type CustomerSearchProps = {
   renderCustomerActions: (customer: Customer) => ReactNode
-  navigate: (params:URLSearchParams)=>void
+  navigate: (obj: Record<string, string | string[]>)=>void
+  setParams: (obj: Record<string, string | string[]>)=>void
   searchTerm?: string | undefined
   limit?: number | undefined
   lastRowIds?: string[] | undefined
@@ -26,17 +27,18 @@ export type CustomerSearchProps = {
 export const CustomerSearch = ({
   renderCustomerActions = ()=><></>,
   navigate = () => {},
+  setParams = () => {},
   searchTerm = '',
-  limit = 10,
-  lastRowIds = [],
+  limit,
+  lastRowIds,
 }:CustomerSearchProps )=>{
   const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
   const handleSearchTextChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // setSearchTerm(event.target.value);
+    setParams({searchTerm: event.target.value, limit: String(limit)})
   }
   const fetchData = async () => {
-    const after = lastRowIds[lastRowIds.length - 1] ?? '';
-    const query = searchParams({after, searchTerm, limit: limit === 10 ? '' : String(limit)});
+    const after = Array.isArray(lastRowIds) ? lastRowIds[lastRowIds.length - 1] : '';
+    const query = searchParams({after: after ?? '', searchTerm, limit: limit === 10 ? '' : String(limit)});
     const result = await globalThis.fetch(`/customers${query}`, {
         method: "GET",
         credentials: "same-origin",
@@ -49,7 +51,7 @@ export const CustomerSearch = ({
   useEffect(() => {
       fetchData();
     },
-    [lastRowIds, searchTerm, limit]);
+    [searchTerm, limit, lastRowIds]);
     return (
       <>
         <input 

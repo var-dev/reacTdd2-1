@@ -6,6 +6,8 @@ import * as React from "react";
 import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import type { Customer } from "../src/types.js";
+import {CustomerSearchRoute} from '../src/CustomerSearchRoute.js'
+import userEvent from "@testing-library/user-event";
 
 
 const today = new Date(2018, 11, 1);
@@ -62,15 +64,32 @@ const mockFetchCustomers = (...args: any[]) => Promise.resolve({ ok: true, json:
 describe('CustomerSearchRoute', ()=>{
   it('renders CustomerSearch initially and retrieves customers', async ()=>{
     const mockFetch = mock.method(globalThis, 'fetch', mockFetchOkFactory(twoCustomers))
-    const {CustomerSearchRoute} = await import('../src/CustomerSearchRoute.tsx')
     render(
       <MemoryRouter initialEntries={["/searchCustomers?searchTerm=qwe&limit=11&lastRowIds=123,654"]}>
-        <CustomerSearchRoute renderCustomerActions={()=><></>} navigate={()=>{}}/>
+        <CustomerSearchRoute renderCustomerActions={()=><></>}/>
       </MemoryRouter>
     );
     await waitFor(()=>{screen.getByLabelText('customer search table')})
     const count = mockFetch.mock.callCount()
     assert.strictEqual(count, 1, 'globalFetch mock not called 1 time')
     assert.strictEqual(screen.getByText('BNM').tagName, 'TD')
+  })
+  it('fetch based on searchTerm update', async ()=>{
+    const mockFetch =  mock.method(globalThis, 'fetch', mockFetchOkFactory(twoCustomers))
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={["/searchCustomers?searchTerm=qwe&limit=11&lastRowIds=123,654"]}>
+        <CustomerSearchRoute renderCustomerActions={()=><></>}/>
+      </MemoryRouter>
+    );
+    const searchInput = await waitFor(()=>screen.getByLabelText<HTMLInputElement>('Search for customers'))
+    await user.clear(searchInput)
+    await user.type(searchInput, 'a')
+    const count = mockFetch.mock.callCount()
+    const actual = mockFetch.mock.calls[count-1].arguments[0]
+    assert.strictEqual(count, 3, 'globalFetch mock not called 3 time')
+    const calls = mockFetch.mock.calls
+    assert.strictEqual(calls[1].arguments[0], '/customers?limit=11', 'not /customers?limit=11')
+    assert.strictEqual(calls[2].arguments[0], '/customers?searchTerm=a&limit=11', 'not /customers?searchTerm=a&limit=11')
   })
 })
