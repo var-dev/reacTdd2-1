@@ -26,5 +26,23 @@ export const convertParams = (params: URLSearchParams) => {
       .split(",")
       .filter((id) => id !== "");
   }
+  // if (params.has("lastRowIds")) {
+  //   obj.lastRowIds = params
+  //     .get("lastRowIds")!
+  // }
   return obj;
 };
+
+export const commaStringPush = (commaString: string|undefined, stringToAdd: string) => {
+  if (!commaString) return stringToAdd
+  if (commaString.length === 0) return stringToAdd
+  return `${commaString},${stringToAdd}`
+}
+export const commaStringPop = (commaString: string|undefined):[string, string] => {
+  if (!commaString) return ['','']
+  if (commaString.length === 0) return ['','']
+  const parts = commaString.split(",")
+  if (parts.length === 1) return ['', parts.pop()!]
+  const right = parts.pop() as string
+  return [parts.join(","), right]
+}

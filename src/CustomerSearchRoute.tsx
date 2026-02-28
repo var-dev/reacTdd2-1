@@ -1,6 +1,6 @@
 import React, {type ReactNode} from "react";
 import type { Customer } from "./types.js";
-import { useParams, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { CustomerSearch, type CustomerSearchProps } from "./CustomerSearch/CustomerSearch.js";
 import { convertParams } from "./searchParams.js";
 

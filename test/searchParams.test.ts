@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { searchParams } from "../src/searchParams.js";
+import { searchParams, commaStringPop, commaStringPush } from "../src/searchParams.js";
 
 describe('searchParams', ()=>{
   it('returns empty string if no params', ()=>{
@@ -23,3 +23,32 @@ describe('searchParams', ()=>{
     assert.equal(searchParams({ after: "abc/def", searchTerm: "hello world🙂" }), "?after=abc%2Fdef&searchTerm=hello%20world%F0%9F%99%82");
   })
 })
+describe('commaStringPop', ()=>{
+  it('returns empty tuple if input is empty', ()=>{
+    assert.deepEqual(commaStringPop(""), ["", ""]);
+  })
+  it('returns empty string and input if input has no comma', ()=>{
+    assert.deepEqual(commaStringPop("abc"), ["", "abc"]);
+  })
+  it('returns tuple of two strings if input has one comma', ()=>{
+    assert.deepEqual(commaStringPop("abc,def"), ["abc", "def"]);
+  })
+  it('returns tuple of two strings if input has more than one comma', ()=>{
+    assert.deepEqual(commaStringPop("abc,def,ghi"), ["abc,def", "ghi"]);
+  })
+  it('handles undefined correctly', ()=>{
+    assert.deepEqual(commaStringPop(undefined), ["", ""])
+  })
+})
+describe('commaStringPush', ()=>{
+  it('returns second param if first is empty', ()=>{
+    assert.equal(commaStringPush("", "abc"), "abc");
+  })
+  it('returns joined strings if first is not empty', ()=>{
+    assert.equal(commaStringPush("abc", "def"), "abc,def");
+  })
+  it('handles undefined first param correctly', ()=>{
+    assert.equal(commaStringPush(undefined, "abc"), "abc");
+  })
+})
+
