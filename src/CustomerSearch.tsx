@@ -1,7 +1,6 @@
 import React, {useEffect, useState, useCallback, type ReactNode} from "react";
-import { useSearchParams } from "react-router";
 import type { Customer } from "./types.js";
-import { searchParams, commaStringPop, commaStringPush} from "./searchParams.js";
+import { searchParams } from "./searchParams.js";
 
 type SearchButtonsProps = {
   handleNext: ()=>void
@@ -58,59 +57,59 @@ export const CustomerSearch = ({
   renderCustomerActions = ()=><></>
   }:CustomerSearchProps )=>{
   
-  const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
-  const [params, setParams] = useSearchParams();
+  const [lastRowIds, setLastRowIds] = useState<(number )[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [pageLimit, setPageLimit] = useState(10)
   const handlePageLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
-    params.set('limit', event.target.value ?? 10)
-    setParams(params)
+    const limit = Number(event.target.value) || 10
+    setPageLimit(limit);
   }
   const handleSearchTextChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
-    params.set('searchTerm', event.target.value)
-    setParams(params)
+    setSearchTerm(event.target.value);
   }
+  const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
   const handleNext = useCallback(async () => {
     if (!Array.isArray(customers) || customers.length === 0) return;
     const currentLastRowId = customers[customers.length - 1]!.id!;
-    params.set('lastRowIds', commaStringPush(params.get('lastRowIds'), String(currentLastRowId)))
-    setParams(params)
-  }, [customers, params]);
+    setLastRowIds([...lastRowIds, currentLastRowId]);
+  }, [customers, lastRowIds]);
   const handlePrevious = useCallback(async () => {
-    const [prevLastRowIds, _] = commaStringPop(params.get('lastRowIds'))
-    params.set('lastRowIds', prevLastRowIds)
-    setParams(params)
-  }, [params]);
+    setLastRowIds(lastRowIds.slice(0, -1))
+  }, [lastRowIds]);
+
 
   const fetchData = async () => {
-    const [, after] = commaStringPop(params.get('lastRowIds'))
-    const query = searchParams({after, searchTerm: params.get('searchTerm') ?? '', limit: params.get('limit') ?? '' });
+    const after = String(lastRowIds[lastRowIds.length - 1] ?? '');
+    const limit = pageLimit === 10 ? '' : String(pageLimit)
+    const query = searchParams({after, searchTerm, limit});
     const result = await globalThis.fetch(`/customers${query}`, {
-      method: "GET",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json"
-      },
-    });
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json"
+        },
+      });
     setCustomers(await result.json());
   };
   useEffect(() => {
     fetchData();
-  }, [params]);
+  }, [lastRowIds, searchTerm, pageLimit]);
   return (
     <>
       <input 
         aria-label="Search for customers"
         placeholder="Enter filter text"
         type="text"
-        value={params.get('searchTerm') ?? ''}
+        value={searchTerm}
         onChange={handleSearchTextChanged}
       />
       <SearchButtons 
         handleNext={handleNext} 
-        disabledNext={Array.isArray(customers) ? customers.length < parseInt(params.get('limit') ?? '10') : true}
+        disabledNext={Array.isArray(customers) ? customers.length < pageLimit : true}
         handlePrevious={handlePrevious}
-        disabledPrevious={(params.get('lastRowIds') ?? '').length === 0}
+        disabledPrevious={lastRowIds.length === 0}
         handlePageLimit={handlePageLimit}
-        pageLimit={parseInt(params.get('limit') ?? '10')}
+        pageLimit={pageLimit}
       />
       <table aria-label="customer search table">
         <thead>
