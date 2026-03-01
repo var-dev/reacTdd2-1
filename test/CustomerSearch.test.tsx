@@ -248,6 +248,11 @@ describe('CustomerSearch', async () => {
     const searchbox = await waitFor(()=>screen.getByLabelText(/search for customers/i))
     const buttonNext = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
     await userEvent.type(searchbox, "asdf")
+
+    const actual2 = mockFetch.mock.calls[mockFetch.mock.callCount()-1].arguments[0]
+    const expected2 = '/customers?searchTerm=asdf'
+    assert.strictEqual(actual2, expected2, `temp Expected Fetch URL '/customers?searchTerm=asdf'`);
+
     await userEvent.click(buttonNext)
     assert.ok(
       mockFetch.mock.callCount() === 6, 

@@ -33,12 +33,12 @@ export const convertParams = (params: URLSearchParams) => {
   return obj;
 };
 
-export const commaStringPush = (commaString: string|undefined, stringToAdd: string) => {
+export const commaStringPush = (commaString: string|undefined|null, stringToAdd: string) => {
   if (!commaString) return stringToAdd
   if (commaString.length === 0) return stringToAdd
   return `${commaString},${stringToAdd}`
 }
-export const commaStringPop = (commaString: string|undefined):[string, string] => {
+export const commaStringPop = (commaString: string|undefined|null):[string, string] => {
   if (!commaString) return ['','']
   if (commaString.length === 0) return ['','']
   const parts = commaString.split(",")

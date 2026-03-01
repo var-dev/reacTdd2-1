@@ -1,7 +1,7 @@
 import React, {useEffect, useState, useCallback, type ReactNode} from "react";
 import { useSearchParams } from "react-router";
 import type { Customer } from "./types.js";
-import { searchParams, convertParams, commaStringPop, commaStringPush} from "./searchParams.js";
+import { searchParams, commaStringPop, commaStringPush} from "./searchParams.js";
 
 type SearchButtonsProps = {
   handleNext: ()=>void
@@ -58,53 +58,43 @@ export const CustomerSearch = ({
   renderCustomerActions = ()=><></>
   }:CustomerSearchProps )=>{
   
+  const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
   const [params, setParams] = useSearchParams();
-  // const [params, setParams] = useSearchParams({
-  //   after: '',
-  //   searchTerm: '',
-  //   limit: '10'});  
-  const [lastRowIds, setLastRowIds] = useState<string>('');
-  // const [searchTerm, setSearchTerm] = useState("");
-  // const [limit, setPageLimit] = useState(10)
   const handlePageLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const limit = event.target.value ?? '10'
-    setParams({...convertParams(params), limit});
+    params.set('limit', event.target.value ?? 10)
+    setParams(params)
   }
   const handleSearchTextChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // setParams({
-    // after: params.get('after') ?? '',
-    // searchTerm: event.target.value,
-    // limit: params.get('limit') ?? ''}
-    //   );
-    setParams({...convertParams(params), searchTerm: event.target.value})
+    params.set('searchTerm', event.target.value)
+    setParams(params)
   }
-  const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
   const handleNext = useCallback(async () => {
     if (!Array.isArray(customers) || customers.length === 0) return;
     const currentLastRowId = customers[customers.length - 1]!.id!;
-    setLastRowIds(commaStringPush(lastRowIds, String(currentLastRowId)));
-  }, [customers, lastRowIds]);
+    params.set('lastRowIds', commaStringPush(params.get('lastRowIds'), String(currentLastRowId)))
+    setParams(params)
+  }, [customers, params]);
   const handlePrevious = useCallback(async () => {
-    const [commaString, last] = commaStringPop(lastRowIds)
-    setLastRowIds(commaString)
-  }, [lastRowIds]);
-
+    const [prevLastRowIds, _] = commaStringPop(params.get('lastRowIds'))
+    params.set('lastRowIds', prevLastRowIds)
+    setParams(params)
+  }, [params]);
 
   const fetchData = async () => {
-    const [, after] = commaStringPop(lastRowIds)
-    const query = searchParams({after, searchTerm: params.get('searchTerm') ?? '', limit: String(convertParams(params).limit ?? '') });
+    const [, after] = commaStringPop(params.get('lastRowIds'))
+    const query = searchParams({after, searchTerm: params.get('searchTerm') ?? '', limit: params.get('limit') ?? '' });
     const result = await globalThis.fetch(`/customers${query}`, {
-        method: "GET",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json"
-        },
-      });
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json"
+      },
+    });
     setCustomers(await result.json());
   };
   useEffect(() => {
     fetchData();
-  }, [lastRowIds, params.get('searchTerm'), convertParams(params).limit]);
+  }, [params]);
   return (
     <>
       <input 
@@ -116,11 +106,11 @@ export const CustomerSearch = ({
       />
       <SearchButtons 
         handleNext={handleNext} 
-        disabledNext={Array.isArray(customers) ? customers.length < (convertParams(params).limit ?? 10) : true}
+        disabledNext={Array.isArray(customers) ? customers.length < parseInt(params.get('limit') ?? '10') : true}
         handlePrevious={handlePrevious}
-        disabledPrevious={lastRowIds.length === 0}
+        disabledPrevious={(params.get('lastRowIds') ?? '').length === 0}
         handlePageLimit={handlePageLimit}
-        pageLimit={convertParams(params).limit ?? 10}
+        pageLimit={parseInt(params.get('limit') ?? '10')}
       />
       <table aria-label="customer search table">
         <thead>
