@@ -1,31 +1,53 @@
-import React, {useEffect, useState, useCallback, type ReactNode} from "react";
-import { useSearchParams } from "react-router";
+import React, {useEffect, useState, type ReactNode} from "react";
+import { useSearchParams, Link, useNavigate } from "react-router";
 import type { Customer } from "./types.js";
 import { searchParams, commaStringPop, commaStringPush} from "./searchParams.js";
 
 type SearchButtonsProps = {
-  handleNext: ()=>void
-  disabledNext: boolean
-  handlePrevious: ()=>void
-  disabledPrevious: boolean
-  handlePageLimit: (event: React.ChangeEvent<HTMLInputElement>)=>void
-  pageLimit: number
+  customers: Customer[]
 }
-const SearchButtons = ({handleNext, disabledNext, handlePrevious, disabledPrevious, handlePageLimit, pageLimit}: SearchButtonsProps) => (
-  <menu>
+const SearchButtons = (
+  {
+    customers,
+  }: SearchButtonsProps) => 
+  { 
+    const navigate = useNavigate()
+    const [params, setParams] = useSearchParams()
+    const pageLimit= parseInt(params.get('limit') ?? '10')
+    const disabledNext=Array.isArray(customers) ? customers.length < pageLimit : true
+    const disabledPrevious = (params.get('lastRowIds') ?? '').length === 0
+    const previousPageParams = ()=>{
+      const paramsClone = new URLSearchParams(params)
+      const [prevLastRowIds, _] = commaStringPop(params.get('lastRowIds'))
+      paramsClone.set('lastRowIds', prevLastRowIds)
+      return paramsClone.toString()
+    }
+    const nextPageParams = ()=>{
+      const paramsClone = new URLSearchParams(params)
+      if (!Array.isArray(customers) || customers.length === 0) return paramsClone.toString();
+      const currentLastRowId = customers[customers.length - 1]!.id!;
+      paramsClone.set('lastRowIds', commaStringPush(params.get('lastRowIds'), String(currentLastRowId)))
+      return paramsClone.toString()
+    }
+    const handlePageLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const paramsClone = new URLSearchParams(params)
+      paramsClone.set('limit', event.target.value ?? 10)
+      navigate(`/searchCustomers?${paramsClone.toString()}`)
+    }
+    return (<menu>
     <li>
-      <button 
-        type="button"
-        onClick={handlePrevious}
-        disabled={disabledPrevious}
-      >Previous</button >
+      <Link 
+        aria-label="Go to previous page"
+        to={`/searchCustomers?${previousPageParams()}`}
+        className={disabledPrevious ? 'disabled' : ''}
+      >Previous</Link >
     </li>
     <li>
-      <button 
-        type="button"
-        onClick={handleNext}
-        disabled={disabledNext}
-      >Next</button >
+      <Link 
+        aria-label="Go to next page"
+        to={`/searchCustomers?${nextPageParams()}`}
+        className={disabledNext ? 'disabled' : ''}
+      >Next</Link >
     </li>
     <li>
       <input
@@ -37,7 +59,7 @@ const SearchButtons = ({handleNext, disabledNext, handlePrevious, disabledPrevio
       /> 
     </li>
   </menu>
-);
+)};
 
 type CustomerRowProps = {customer: Customer, renderCustomerActions: (customer: Customer)=>ReactNode}
 const CustomerRow = ({ 
@@ -60,26 +82,10 @@ export const CustomerSearchRoute = ({
   
   const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
   const [params, setParams] = useSearchParams();
-  const handlePageLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
-    params.set('limit', event.target.value ?? 10)
-    setParams(params)
-  }
   const handleSearchTextChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
     params.set('searchTerm', event.target.value)
     setParams(params)
   }
-  const handleNext = useCallback(async () => {
-    if (!Array.isArray(customers) || customers.length === 0) return;
-    const currentLastRowId = customers[customers.length - 1]!.id!;
-    params.set('lastRowIds', commaStringPush(params.get('lastRowIds'), String(currentLastRowId)))
-    setParams(params)
-  }, [customers, params]);
-  const handlePrevious = useCallback(async () => {
-    const [prevLastRowIds, _] = commaStringPop(params.get('lastRowIds'))
-    params.set('lastRowIds', prevLastRowIds)
-    setParams(params)
-  }, [params]);
-
   const fetchData = async () => {
     const [, after] = commaStringPop(params.get('lastRowIds'))
     const query = searchParams({after, searchTerm: params.get('searchTerm') ?? '', limit: params.get('limit') ?? '' });
@@ -105,12 +111,7 @@ export const CustomerSearchRoute = ({
         onChange={handleSearchTextChanged}
       />
       <SearchButtons 
-        handleNext={handleNext} 
-        disabledNext={Array.isArray(customers) ? customers.length < parseInt(params.get('limit') ?? '10') : true}
-        handlePrevious={handlePrevious}
-        disabledPrevious={(params.get('lastRowIds') ?? '').length === 0}
-        handlePageLimit={handlePageLimit}
-        pageLimit={parseInt(params.get('limit') ?? '10')}
+        customers={customers!}
       />
       <table aria-label="customer search table">
         <thead>
@@ -135,27 +136,3 @@ export const CustomerSearchRoute = ({
       </table>
     </>
 )}
-
-
-
-
-
-// import React, {type ReactNode} from "react";
-// import type { Customer } from "./types.js";
-// import { useSearchParams } from "react-router";
-// import { CustomerSearch, type CustomerSearchProps } from "./CustomerSearch/CustomerSearch.js";
-// import { convertParams } from "./searchParams.js";
-
-// type CustomerSearchRouteProps = {
-//   renderCustomerActions: (customer: Customer) => ReactNode;
-// }
-
-// export const CustomerSearchRoute = ({
-//   renderCustomerActions
-// }: CustomerSearchRouteProps) => {
-//   const [params, setParams] = useSearchParams();
-//   return (
-//     <CustomerSearch renderCustomerActions={renderCustomerActions} navigate={setParams} setParams={setParams} {...convertParams(params)}/>
-//   );
-// };
-

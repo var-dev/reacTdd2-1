@@ -120,8 +120,8 @@ describe('CustomerSearchRoute', async () => {
       <MemoryRouter initialEntries={["/searchCustomers"]}>
         <CustomerSearchRoute {...testProps }/>
       </MemoryRouter>);
-    const button = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
-    assert.ok(button.tagName === 'BUTTON', 'Next button not found')
+    const button = await waitFor(()=>screen.getByLabelText('Go to next page'))
+    assert.ok(button.ariaLabel === 'Go to next page', 'Next button not found')
   })
   it('requests next page of data when next button is clicked', async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers))
@@ -129,7 +129,7 @@ describe('CustomerSearchRoute', async () => {
       <MemoryRouter initialEntries={["/searchCustomers"]}>
         <CustomerSearchRoute {...testProps }/>
       </MemoryRouter>);
-    const button = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
+    const button = await waitFor(()=>screen.getByLabelText('Go to next page'))
     await userEvent.click(button)
     const fetchCallsCounter = mockFetch.mock.callCount()
 
@@ -146,7 +146,7 @@ describe('CustomerSearchRoute', async () => {
       <MemoryRouter initialEntries={["/searchCustomers"]}>
         <CustomerSearchRoute {...testProps }/>
       </MemoryRouter>);
-    const button = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
+    const button = await waitFor(()=>screen.getByLabelText('Go to next page'))
 
     assert.ok(mockFetch.mock.callCount() === 1, `Expected fetch to be called one time, but it was called ${mockFetch.mock.callCount()} times`)
     const actualResultOne = mockFetch.mock.calls[0].result
@@ -174,9 +174,9 @@ describe('CustomerSearchRoute', async () => {
       <MemoryRouter initialEntries={["/searchCustomers"]}>
         <CustomerSearchRoute {...testProps }/>
       </MemoryRouter>);
-    const button = await waitFor(()=>screen.getByRole('button', {name: /previous/i}))
+    const button = await waitFor(()=>screen.getByLabelText('Go to previous page'))
 
-    assert.ok(button.tagName === 'BUTTON', 'Previous button not found')
+    assert.ok(button.ariaLabel === 'Go to previous page', 'Previous button not found')
   })
   it("moves back to first page when previous button is clicked", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, anotherTenCustomers, oneCustomer))
@@ -184,11 +184,11 @@ describe('CustomerSearchRoute', async () => {
       <MemoryRouter initialEntries={["/searchCustomers"]}>
         <CustomerSearchRoute {...testProps }/>
       </MemoryRouter>);
-    const buttonNext = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
-    const buttonPrev = await waitFor(()=>screen.getByRole('button', {name: /previous/i}))
+    const buttonNext = await waitFor(()=>screen.getByLabelText('Go to next page'))
+    const buttonPrev = await waitFor(()=>screen.getByLabelText('Go to previous page'))
 
-    assert.ok(buttonNext.tagName === 'BUTTON', 'Next button not found')
-    assert.ok(buttonPrev.tagName === 'BUTTON', 'Previous button not found')
+    assert.ok(buttonNext.ariaLabel === 'Go to next page', 'Next button not found')
+    assert.ok(buttonPrev.ariaLabel === 'Go to previous page', 'Previous button not found')
     await userEvent.click(buttonNext)
     await userEvent.click(buttonNext)
     await userEvent.click(buttonPrev)
@@ -246,7 +246,7 @@ describe('CustomerSearchRoute', async () => {
         <CustomerSearchRoute {...testProps }/>
       </MemoryRouter>);
     const searchbox = await waitFor(()=>screen.getByLabelText(/search for customers/i))
-    const buttonNext = await waitFor(()=>screen.getByRole('button', {name: /next/i}))
+    const buttonNext = await waitFor(()=>screen.getByLabelText('Go to next page'))
     await userEvent.type(searchbox, "asdf")
 
     const actual2 = mockFetch.mock.calls[mockFetch.mock.callCount()-1].arguments[0]
@@ -304,7 +304,6 @@ describe('CustomerSearchRoute', async () => {
       <MemoryRouter initialEntries={["/searchCustomers"]}>
         <App/>
       </MemoryRouter>);
-    // render(<App/>);
     const searchCustomersBtn = screen.getByText<HTMLButtonElement>('Search customers')
     await waitFor(async ()=>userEvent.click(searchCustomersBtn))
     const createAppointmentButton = await waitFor(async ()=>screen.getByText('Create appointment'))
@@ -319,13 +318,13 @@ describe('CustomerSearchRoute', async () => {
       <MemoryRouter initialEntries={["/searchCustomers"]}>
         <CustomerSearchRoute {...testProps }/>
       </MemoryRouter>);
-    const buttonPrev = await waitFor(()=>screen.getByRole<HTMLButtonElement>('button', {name: /previous/i}))
-    const buttonNext = await waitFor(()=>screen.getByRole<HTMLButtonElement>('button', {name: /next/i}))
-    assert.ok(buttonPrev.tagName === 'BUTTON', 'Previous button not found')
-    assert.ok(buttonPrev.disabled, 'Previous button should be disabled on first page')
+    const buttonPrev = await waitFor(()=>screen.getByLabelText<HTMLButtonElement>('Go to previous page'))
+    const buttonNext = await waitFor(()=>screen.getByLabelText('Go to next page'))
+    assert.ok(buttonPrev.ariaLabel === 'Go to previous page', 'Previous button not found')
+    assert.ok(buttonPrev.className.includes('disabled'), 'Previous button should be disabled on first page')
 
     await waitFor(async ()=>{ await userEvent.click(buttonNext)})
-    assert.ok(!buttonPrev.disabled, 'Previous button should be clickable on next page')
+    assert.ok(!buttonPrev.className.includes('disabled'), 'Previous button should be clickable on next page')
   })
   it('disables Next button if customers hold less than 10 entries', async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, twoCustomers))
@@ -333,10 +332,10 @@ describe('CustomerSearchRoute', async () => {
       <MemoryRouter initialEntries={["/searchCustomers"]}>
         <CustomerSearchRoute {...testProps }/>
       </MemoryRouter>);
-    const buttonNext = await waitFor(()=>screen.getByRole<HTMLButtonElement>('button', {name: /next/i}))
+    const buttonNext = await waitFor(()=>screen.getByLabelText<HTMLButtonElement>('Go to next page'))
 
     await waitFor(async ()=>{ await userEvent.click(buttonNext)})
-    assert.ok(buttonNext.disabled, 'Next button should be disabled if less than 10 customers are displayed')
+    assert.ok(buttonNext.className.includes('disabled'), 'Next button should be disabled if less than 10 customers are displayed')
   })
   it('displays limit input field', async ()=>{
     mock.method(global, 'fetch', mockFetchOk)
@@ -358,12 +357,13 @@ describe('CustomerSearchRoute', async () => {
     await userEvent.type(limitField, "{Control>}{a}{/Control}5")
     // await userEvent.type(limitField, "{Meta>}{a}{/Meta}5")
     await userEvent.tab();
+    const count = mockFetch.mock.callCount();
     assert.ok(
-      mockFetch.mock.callCount() === 2,
-      `Expected fetch to be called twice, but it was called ${mockFetch.mock.callCount()} times`
+      count === 2,
+      `Expected fetch to be called once, but it was called ${count} times`
     )
 
-    const actual1 = mockFetch.mock.calls[1].arguments[0]
+    const actual1 = mockFetch.mock.calls[count-1].arguments[0]
     const expected1 = '/customers?limit=5'
     assert.strictEqual(actual1, expected1, `Expected Fetch URL '/customers?limit=5'`);
   })
