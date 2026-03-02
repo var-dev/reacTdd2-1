@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react'
 
-import { AppointmentForm} from './AppointmentForm.js'
-import type { AppointmentFormProps } from './AppointmentForm.js'
+import { AppointmentForm, type AppointmentFormProps} from './AppointmentForm.js'
 import type { AvailableTimeSlot } from './types.js'
 export type AppointmentFormLoaderProps = Omit<AppointmentFormProps, 'availableTimeSlots'>
 export const AppointmentFormLoader = (

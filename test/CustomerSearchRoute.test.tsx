@@ -301,13 +301,13 @@ describe('CustomerSearchRoute', async () => {
       return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
     });
     render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
+      <MemoryRouter initialEntries={["/"]}>
         <App/>
       </MemoryRouter>);
     const searchCustomersBtn = screen.getByText<HTMLButtonElement>('Search customers')
     await waitFor(async ()=>userEvent.click(searchCustomersBtn))
-    const createAppointmentButton = await waitFor(async ()=>screen.getByText('Create appointment'))
-    assert.ok(createAppointmentButton.tagName === 'BUTTON', 'Create appointment button not found')
+    const createAppointmentButton = await waitFor<HTMLElement>(async ()=>screen.getByText('Create appointment'))
+    assert.strictEqual(createAppointmentButton.tagName, 'A', 'Create appointment button not found')
     userEvent.click(createAppointmentButton)
     const appointmentForm = await waitFor(()=>screen.getByLabelText('Appointment form'))
     assert.ok(appointmentForm.tagName==='FORM', 'Appointment form not found')
