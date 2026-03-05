@@ -137,10 +137,10 @@ describe('App', ()=>{
     const RenderCustomerActions = mockCustomerSearchRoute.mock.calls[lastCall-1].arguments[0].renderCustomerActions
     assert.strictEqual(RenderCustomerActions.name, 'searchActions')
     assert.strictEqual(typeof RenderCustomerActions, 'function', 'renderCustomerActions should be a function')
-    
+
     render(<MemoryRouter>{RenderCustomerActions({id: 1,})}</MemoryRouter>)
     const createAppointmentLnk = screen.getByText('Create appointment');
     assert.ok(createAppointmentLnk.tagName==='A', 'Create appointment A-link not found')
-    assert.strictEqual(createAppointmentLnk.getAttribute('href'), '/addAppointment?customer=1', 'Create appointment button should link to add appointment route with customer id query parameter')
+    assert.strictEqual(createAppointmentLnk.getAttribute('href'), '/addAppointment?customerId=1', 'Create appointment button should link to add appointment route with customer id query parameter')
   })
 })

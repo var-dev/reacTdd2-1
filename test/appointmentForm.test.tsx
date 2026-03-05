@@ -9,7 +9,7 @@ import userEvent from "@testing-library/user-event";
 
 import { AppointmentForm, type AppointmentFormProps } from "../src/AppointmentForm.js";
 import { serviceStylists as serviceStylistRecord, stylists} from "../src/sampleDataStatic.js"
-import type { AvailableTimeSlot, Service } from "../src/types.js";
+import type { AvailableTimeSlot, Service, AppointmentApi } from "../src/types.js";
 import type { AppointmentProps } from "../src/AppointmentsDayView.js";
 
 
@@ -36,7 +36,7 @@ function findOption(selectBox: HTMLSelectElement, textContent: string) {
     option => option.textContent === textContent
   );
 };
-const blankAppointment: AppointmentProps = {
+const blankAppointment: AppointmentApi = {
   service: "Cut",
   startsAt: 0
 };
@@ -80,7 +80,7 @@ describe('Appointment form', ()=>{
   })
   it("saves existing value when submitted", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetch201)
-    const appointment: AppointmentProps = {startsAt: availableTimeSlots[1].startsAt, service:'Cut', stylist: 'Ashley'};
+    const appointment: AppointmentApi = {startsAt: availableTimeSlots[1].startsAt, service:'Cut', stylist: 'Ashley'};
     const submitEvent = userEvent.setup();
     const mockEventListenerHandler = mock.fn((e: Event) => {})
     render(<AppointmentForm {...testProps} appointment={appointment}/> )
@@ -117,7 +117,7 @@ describe('Appointment form', ()=>{
       assert.deepStrictEqual(labelsOfAllOptions(select), services, `Expected array ${JSON.stringify(services)}`)
     })
     it("pre selects value", () => {
-      const appointment: AppointmentProps = { service: "Blow-dry", startsAt: 0 };
+      const appointment: AppointmentApi = { service: "Blow-dry", startsAt: 0 };
       render(<AppointmentForm {...testProps} appointment={appointment}/>)
       const select = screen.getByLabelText('Service') as HTMLSelectElement;
       const option = findOption(select, appointment.service!) as HTMLOptionElement
@@ -126,7 +126,7 @@ describe('Appointment form', ()=>{
     })
     it("saves existing selectBox value when submitted", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetch201)
-      const appointment: AppointmentProps = {};
+      const appointment: AppointmentApi = {};
       const submitEvent = userEvent.setup();
       render(<AppointmentForm {...testProps} appointment={appointment}/> )
       const submit = screen.getByLabelText('Submit') as HTMLFormElement;
@@ -138,7 +138,7 @@ describe('Appointment form', ()=>{
     })
     it("saves new selectBox value when submitted", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetch201)
-      const appointment: AppointmentProps = {};
+      const appointment: AppointmentApi = {};
       const submitEvent = userEvent.setup();
       render(<AppointmentForm {...testProps} appointment={appointment}/> )
       const submit = screen.getByLabelText('Submit') as HTMLFormElement;
@@ -218,7 +218,7 @@ describe('Appointment form', ()=>{
       assert.strictEqual(cells.length, 0)
     });
     it("renders radio buttons in the correct table cell positions", () => {
-      const appointment: AppointmentProps = { service: "Cut", startsAt: availableTimeSlots[1].startsAt } ;
+      const appointment: AppointmentApi = { service: "Cut", startsAt: availableTimeSlots[1].startsAt } ;
       render(
         <AppointmentForm
           {...testProps}
@@ -254,7 +254,7 @@ describe('Appointment form', ()=>{
     })
     it("saves new stylist box value when submitted", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetch201)
-      const appointment: AppointmentProps = {};
+      const appointment: AppointmentApi = {};
       const submitEvent = userEvent.setup();
       render(<AppointmentForm {...testProps} appointment={appointment}/> )
       const submit = screen.getByLabelText('Submit') as HTMLFormElement;

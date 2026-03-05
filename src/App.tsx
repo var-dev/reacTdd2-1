@@ -101,7 +101,7 @@ export const App = () => {
 
   const transitionToAddAppointment = (customer: Customer) =>
     navigate(
-      `/addAppointment?customer=${customer.id}`
+      `/addAppointment?customerId=${customer.id}`
     );
 
   const transitionToDayView = () => navigate("/");
@@ -109,7 +109,7 @@ export const App = () => {
   const searchActions = (customer: Customer) => (
     <Link
       role="button"
-      to={`/addAppointment?customer=${customer.id}`}
+      to={`/addAppointment?customerId=${customer.id}`}
     >
       Create appointment
     </Link>

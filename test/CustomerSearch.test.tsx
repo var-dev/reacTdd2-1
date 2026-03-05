@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import "./domSetup"; // must be imported before render/screen
 import React from "react";
+import { MemoryRouter } from "react-router";
 import { render, screen, cleanup, within, waitFor, waitForElementToBeRemoved, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Customer } from "../src/types.js";
@@ -249,21 +250,6 @@ describe('CustomerSearch', async () => {
 
     assert.deepStrictEqual(actualArguments, [twoCustomers[1]], `Expected renderCustomerActions to be called with the customer as an argument, but it was called with ${JSON.stringify(actualArguments)}`)
   })
-  it("clicking appointment button shows the appointment form for that customer", async () => {
-    const mockFetch = mock.method(global, 'fetch', (url: string) => {
-      if (url.startsWith('/customers')) return Promise.resolve({ ok: true, json: () => Promise.resolve(oneCustomer) });
-      if (url.startsWith('/availableTimeSlots')) return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
-      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
-    });
-    render(<App/>);
-    const searchCustomersBtn = screen.getByText<HTMLButtonElement>('Search customers')
-    await waitFor(async ()=>userEvent.click(searchCustomersBtn))
-    const createAppointmentButton = await waitFor(async ()=>screen.getByText('Create appointment'))
-    assert.ok(createAppointmentButton.tagName === 'BUTTON', 'Create appointment button not found')
-    userEvent.click(createAppointmentButton)
-    const appointmentForm = await waitFor(()=>screen.getByLabelText('Appointment form'))
-    assert.ok(appointmentForm.tagName==='FORM', 'Appointment form not found')
-  })
   it('disables Prev button when navigation is not possible', async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, anotherTenCustomers))
     render(<CustomerSearch {...testProps }/>);
@@ -274,6 +260,21 @@ describe('CustomerSearch', async () => {
 
     await waitFor(async ()=>{ await userEvent.click(buttonNext)})
     assert.ok(!buttonPrev.disabled, 'Previous button should be clickable on next page')
+  })
+  it("clicking appointment button shows the appointment form for that customer", async () => {
+    const mockFetch = mock.method(global, 'fetch', (url: string) => {
+      if (url.startsWith('/customers')) return Promise.resolve({ ok: true, json: () => Promise.resolve(oneCustomer) });
+      if (url.startsWith('/availableTimeSlots')) return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+    });
+    render(<MemoryRouter initialEntries={['/']}><App/></MemoryRouter>)
+    const searchCustomersBtn = screen.getByText<HTMLButtonElement>('Search customers')
+    await waitFor(async ()=>userEvent.click(searchCustomersBtn))
+    const createAppointmentLink = await waitFor(async ()=>screen.getByText('Create appointment'))
+    assert.ok(createAppointmentLink.tagName === 'A', 'Create appointment link not found')
+    userEvent.click(createAppointmentLink)
+    const appointmentForm = await waitFor(()=>screen.getByLabelText('Appointment form'))
+    assert.ok(appointmentForm.tagName==='FORM', 'Appointment form not found')
   })
   it('disables Next button if customers hold less than 10 entries', async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, twoCustomers))
