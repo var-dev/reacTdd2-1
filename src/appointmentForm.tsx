@@ -1,8 +1,11 @@
-import React, { useState, useCallback, useRef, useEffect } from "react"
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react"
 
 import type { AppointmentProps } from "./AppointmentsDayView.js"
 import type { Service, Stylist, AvailableTimeSlot, ServiceStylistRecord, AppointmentApi } from "./types.js"
 import { serviceStylists as serviceStylistRecord, selectableServicesList, stylists} from "./sampleDataStatic.js"
+import {pickEarliest, makeFlat, stylistsActual, servicesActual, timeSlotsForServiceStylist} from '../src/appointmentFormHelper.js'
+
+type AvailableTimeSlotFlat = { startsAt: number; stylist: Stylist; service: Service } | undefined
 
 const timeIncrements = 
   (
@@ -54,24 +57,21 @@ const mergeDateAndTime = (date: number, timeSlot: number) => {
 
 
 type RadioButtonIfAvailableProps = {
-  availableTimeSlots: AvailableTimeSlot[];
-  date: number;
-  timeSlot: number;
+  availableTimeSlots: AvailableTimeSlotFlat[];
+  startsAt: number;
   checkedTimeSlot: number;
   handleChange: ({target: { value }}: React.ChangeEvent<HTMLInputElement>) => void;
 };
 const RadioButtonIfAvailable = 
   ({
     availableTimeSlots,
-    date,
-    timeSlot,
+    startsAt,
     checkedTimeSlot,
     handleChange,
   }: RadioButtonIfAvailableProps) => {
-  const startsAt = mergeDateAndTime(date, timeSlot);
   const checkAvailableTimeSlots: boolean = availableTimeSlots.some(
-    (availableTimeSlot: AvailableTimeSlot) =>
-      availableTimeSlot.startsAt === startsAt
+    (availableTimeSlot: AvailableTimeSlotFlat) =>
+      availableTimeSlot?.startsAt === startsAt
   );
   if (checkAvailableTimeSlots)
     return (
@@ -92,7 +92,7 @@ type TimeSlotTableProps = {
   salonOpensAt: number;
   salonClosesAt: number;
   today: Date;
-  availableTimeSlots: AvailableTimeSlot[];
+  availableTimeSlots: AvailableTimeSlotFlat[];
   checkedTimeSlot: number;
   handleChange: ({target: { value }}: React.ChangeEvent<HTMLInputElement>) => void;
 };
@@ -122,8 +122,7 @@ const TimeSlotTable = (
             <td key={date}>
               <RadioButtonIfAvailable  
                 availableTimeSlots={availableTimeSlots} 
-                date={date} 
-                timeSlot={timeSlot} 
+                startsAt={mergeDateAndTime(date, timeSlot)}
                 checkedTimeSlot={checkedTimeSlot} 
                 handleChange={handleChange}
               />
@@ -134,7 +133,6 @@ const TimeSlotTable = (
     </tbody>
   </table>
 }
-
 
 export type AppointmentFormProps = {
   selectableServices?: Service[],
@@ -160,7 +158,18 @@ export const AppointmentForm =
     today = new Date(1970, 1, 1) ,
     onSave = ()=>{}
   }: AppointmentFormProps) =>{
+  const flatServiceStylistTime = useMemo(
+    () => makeFlat(selectableServices,availableTimeSlots,serviceStylists), 
+    [availableTimeSlots, serviceStylists, selectableServices]
+  )
   const [appointmentState, setAppointmentState] = useState<AppointmentApi>(appointment)
+  // const calculatedServices = servicesActual(flatServiceStylistTime)
+  // const calculatedStylists = stylistsActual(flatServiceStylistTime)
+  // const calculatedTimeSlots = timeSlotsForServiceStylist(
+  //   flatServiceStylistTime,
+  //   appointmentState.service!, 
+  //   appointmentState.stylist)
+
   const serviceRef = useRef<HTMLSelectElement>(null)
   const stylistRef = useRef<HTMLSelectElement>(null)
 
@@ -212,16 +221,19 @@ export const AppointmentForm =
     ? serviceStylists[appointmentState.service as Service]
     : selectableStylists;
 
-  const stylistAvailableTimeSlots = availableTimeSlots.map(
-    (timeSlot: AvailableTimeSlot): AvailableTimeSlot => {
-      if (
-        timeSlot.stylists.some((stylist) => stylist === appointmentState.stylist)
-      ) { 
-        return timeSlot; 
-      }
-      return { stylists: ["noOne"], startsAt: -1 };
-    }
-  );
+  const stylistAvailableTimeSlots = flatServiceStylistTime.map((timeSlot)=>{
+    if(timeSlot.stylist === appointmentState.stylist) return timeSlot
+    // return { stylists: "noOne", startsAt: -1 };
+  })
+  //   (timeSlot: AvailableTimeSlot): AvailableTimeSlot => {
+  //     if (
+  //       timeSlot.stylists === appointmentState.stylist)
+  //     ) { 
+  //       return timeSlot; 
+  //     }
+  //     return { stylists: ["noOne"], startsAt: -1 };
+  //   }
+  // );
 
   return (
     <form aria-label="Appointment form" onSubmit={handleSubmit}>

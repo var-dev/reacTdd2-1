@@ -130,6 +130,7 @@ export const App = () => {
         path="/addAppointment"
         element={
           <AppointmentFormRoute
+            today={new Date()}
             onSave={transitionToDayView}
           />
         }

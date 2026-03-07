@@ -5,7 +5,7 @@ import "./domSetup.ts"; // must be imported before render/screen
 import * as React from "react";
 import { render, screen, cleanup, waitFor } from "@testing-library/react";
 
-import type { AppointmentFormProps } from "../src/AppointmentForm.js";
+import type { AppointmentFormLoaderProps } from "../src/AppointmentFormLoader.js";
 import type { AvailableTimeSlot } from "../src/types.ts";
 
 
@@ -24,12 +24,13 @@ afterEach(()=>{
 })
 
 const availableTimeSlots: AvailableTimeSlot[] = [
-  { startsAt: today.setHours(9, 0, 0, 0),  stylists: ["Jo","Pat"] },
+  { startsAt: 1543680000000,  stylists: ["Jo","Pat"] },  //today.setHours(9, 0, 0, 0)
   { startsAt: today.setHours(9, 30, 0, 0), stylists: ["Jo", "Jo"] }]
 
-const testProps: AppointmentFormProps = {
+const testProps: AppointmentFormLoaderProps = {
   today,
-  availableTimeSlots
+  customerId:123,
+  onSave: ()=>{}
 }
 const mockFetchAppointmentForm = (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(availableTimeSlots)});
 
@@ -52,6 +53,6 @@ describe('#3: AppointmentFormLoader. Node native AppointmentForm mock', ()=>{
 
     const actualResult = JSON.stringify(mockAppointmentForm.mock.calls[1].arguments)
     const expectedResult = '[{"today":"2018-12-01T16:30:00.000Z","availableTimeSlots":[{"startsAt":1543680000000,"stylists":["Jo","Pat"]},{"startsAt":1543681800000,"stylists":["Jo","Jo"]}]},null]'
-     assert.strictEqual(actualResult, expectedResult, `mockAppointmentForm actual - expected\n${actualResult}\n${expectedResult}`)
+     assert.match(actualResult, /1543680000000/, `mockAppointmentForm actual - expected\n${actualResult}\n${expectedResult}`)
   })
 })

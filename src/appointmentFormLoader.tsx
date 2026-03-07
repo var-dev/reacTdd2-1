@@ -1,11 +1,17 @@
 import React, {useEffect, useState} from 'react'
 
-import { AppointmentForm, type AppointmentFormProps} from './AppointmentForm.js'
+import { AppointmentForm} from './AppointmentForm.js'
+import type { AppointmentFormRouteProps } from "./AppointmentFormRoute.js"
+import type { AppointmentApi } from './types.js'
 import type { AvailableTimeSlot } from './types.js'
-export type AppointmentFormLoaderProps = Omit<AppointmentFormProps, 'availableTimeSlots'>
+import { salonDefaults } from './sampleDataStatic.js'
+import { blankAppointment } from "./sampleDataStatic.js";
+export type AppointmentFormLoaderProps = AppointmentFormRouteProps & {customerId: number}
 export const AppointmentFormLoader = (
   {
-    ...props
+    today,
+    onSave,
+    customerId
   }: AppointmentFormLoaderProps) => {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<AvailableTimeSlot[]>([]);
   useEffect(() => {
@@ -22,5 +28,16 @@ export const AppointmentFormLoader = (
       .then(json=> setAvailableTimeSlots(json))
       .catch((e) =>  console.log('FETCH availableTimeSlots ERROR ',e))
   }, [])
-  return <AppointmentForm {...props} availableTimeSlots={availableTimeSlots} />
+  useEffect(()=>{
+    //TODO Fix {...blankAppointment, customerId}
+    // Fetch proper appointment for customer
+  }, [])
+  return <
+    AppointmentForm 
+      {...salonDefaults} 
+      today={today}
+      appointment={{...blankAppointment, customerId}} // FixMe
+      availableTimeSlots={availableTimeSlots} 
+      onSave={onSave}
+    />
 }

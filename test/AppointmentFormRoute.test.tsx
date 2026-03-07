@@ -49,7 +49,7 @@ describe('AppointmentFormRoute', async ()=>{
     mModule.restore()
     render(
       <MemoryRouter initialEntries={["/addAppointment?customerId=123"]}>
-        <AppointmentFormRoute onSave={()=>{}}/>
+        <AppointmentFormRoute today={new Date(1970)} onSave={()=>{}}/>
       </MemoryRouter>
     );
     await waitFor(()=>{screen.getByTestId('appointmentForm')})
