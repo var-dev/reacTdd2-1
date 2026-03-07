@@ -8,7 +8,7 @@ import { render, screen, cleanup, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { AppointmentForm, type AppointmentFormProps } from "../src/AppointmentForm.js";
-import { serviceStylists as serviceStylistRecord, stylists} from "../src/sampleDataStatic.js"
+import { serviceStylists as serviceStylistRecord, stylists, salonDefaults, sampleAvailableTimeSlots} from "../src/sampleDataStatic.js"
 import type { AvailableTimeSlot, Service, AppointmentApi } from "../src/types.js";
 import type { AppointmentProps } from "../src/AppointmentsDayView.js";
 
@@ -374,5 +374,29 @@ describe('Appointment form', ()=>{
       assert.strictEqual(mockOnSave.mock.calls.length, 0, `Expected NO onSave calls, but got ${mockOnSave.mock.calls.length}`)
     })
   })
+  it.skip('by default renders stylist and service that has available time slots', async ()=>{
+    const availableTimeSlots: AvailableTimeSlot[] = [
+      { startsAt: today.setHours(9, 0, 0, 0), stylists: ["Pat", "Jo"] },
+      { startsAt: today.setHours(9, 30, 0, 0), stylists: ["Jo", "Sam"] },
+      { startsAt: tomorrow.setHours(9, 30, 0, 0), stylists: ["Sam", "Pat"] },
+    ];
+    const mockFetch = mock.method(global, 'fetch', mockFetch201)
+    const user = userEvent.setup();
+    const mockOnSave = mock.fn(()=>{})
+    render(
+      <AppointmentForm
+        {...testProps}
+        availableTimeSlots={availableTimeSlots}
+        selectableServices={["Cut & color","Beard trim","Cut & beard trim","Extensions"]}
+        onSave={mockOnSave}
+      />);
+    const stylists = screen.getByLabelText('Stylist') as HTMLSelectElement;
+    const service = screen.getByLabelText('Service') as HTMLSelectElement;
+    const submit = screen.getByLabelText('Submit') as HTMLFormElement;
+
+    assert.strictEqual(stylists.value, 'Jo')
+    assert.strictEqual(service.value, 'Cut & color')
+  } )
 })
+
 

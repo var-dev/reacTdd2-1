@@ -18,6 +18,13 @@ export const serviceStylists =
 export const selectableServicesList = Object.keys(serviceStylists) as Service[]
 export const stylists = Array.from(new Set(Object.values(serviceStylists).flatMap((stylist)=>stylist))) as Stylist[]
 
+export const salonDefaults = {
+  selectableServices: Object.keys(serviceStylists) as Service[],
+  selectableStylists: Array.from(new Set(Object.values(serviceStylists).flatMap((stylist)=>stylist))) as Stylist[],
+  serviceStylists,
+  salonOpensAt: 9,
+  salonClosesAt: 19,
+};
 
 export const sampleAppointmentsShort: AppointmentProps[] = [
   { startsAt: at(12), customer: { firstName: "Ashley", lastName: "Doe", phoneNumber: "000000000000"}, stylist: "Mary", service: "cut", notes: "notes QWE" } ,
