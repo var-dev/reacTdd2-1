@@ -163,15 +163,8 @@ export const AppointmentForm =
     [availableTimeSlots, serviceStylists, selectableServices]
   )
   const [appointmentState, setAppointmentState] = useState<AppointmentApi>(appointment)
-  // const calculatedServices = servicesActual(flatServiceStylistTime)
-  // const calculatedStylists = stylistsActual(flatServiceStylistTime)
-  // const calculatedTimeSlots = timeSlotsForServiceStylist(
-  //   flatServiceStylistTime,
-  //   appointmentState.service!, 
-  //   appointmentState.stylist)
-
-  const serviceRef = useRef<HTMLSelectElement>(null)
-  const stylistRef = useRef<HTMLSelectElement>(null)
+  const calculatedServices = servicesActual(flatServiceStylistTime)
+  const calculatedStylists = stylistsActual(flatServiceStylistTime)
 
   const handleSubmit = async (event: React.FormEvent) => {
       event.preventDefault();
@@ -201,39 +194,30 @@ export const AppointmentForm =
       } as AppointmentApi))
 
   useEffect(() => {
-    if (!appointmentState.service) {
+    if (!appointmentState.service && calculatedServices.length > 0) {
       setAppointmentState((appointmentState: AppointmentApi) => ({
         ...appointmentState,
-        service: serviceRef.current!.value ?? ''
+        service: calculatedServices[0]
       } as AppointmentApi))
     }
-  }, [])
-  useEffect(() => {
-    if (!appointmentState.stylist) {
+    if (!appointmentState.stylist && calculatedStylists.length > 0) {
       setAppointmentState((appointmentState: AppointmentApi) => ({
         ...appointmentState,
-        stylist: stylistRef.current?.value ?? ''
+        stylist: calculatedStylists[0]
       } as AppointmentApi))
     }
-  }, [])
+  }, [availableTimeSlots, serviceStylists, selectableServices])
 
   const stylistsForService = appointmentState.service
     ? serviceStylists[appointmentState.service as Service]
     : selectableStylists;
 
   const stylistAvailableTimeSlots = flatServiceStylistTime.map((timeSlot)=>{
-    if(timeSlot.stylist === appointmentState.stylist) return timeSlot
-    // return { stylists: "noOne", startsAt: -1 };
+    if(
+      timeSlot.stylist === appointmentState.stylist &&
+      timeSlot.service === appointmentState.service
+      ) return timeSlot
   })
-  //   (timeSlot: AvailableTimeSlot): AvailableTimeSlot => {
-  //     if (
-  //       timeSlot.stylists === appointmentState.stylist)
-  //     ) { 
-  //       return timeSlot; 
-  //     }
-  //     return { stylists: ["noOne"], startsAt: -1 };
-  //   }
-  // );
 
   return (
     <form aria-label="Appointment form" onSubmit={handleSubmit}>
@@ -243,9 +227,9 @@ export const AppointmentForm =
         id="service"
         value={appointmentState.service}
         onChange={handleChange}
-        ref={serviceRef}
       >
-        {selectableServices.map((service: string) => (
+        {calculatedServices
+          .map((service: string) => (
           <option key={service}>{service}</option>
         ))}
       </select>
@@ -255,9 +239,9 @@ export const AppointmentForm =
         id="stylist"
         value={appointmentState.stylist}
         onChange={handleChange}
-        ref={stylistRef}
       >
-        {stylistsForService.map((stylist: Stylist) => (
+        {calculatedStylists
+          .map((stylist: Stylist) => (
           <option key={stylist}>{stylist}</option>
         ))}
       </select>

@@ -61,6 +61,10 @@ const availableTimeSlots: AvailableTimeSlot[] = [
   { startsAt: today.setHours(9, 30, 0, 0), stylists: ["Ashley", "Sam"] },
   { startsAt: tomorrow.setHours(9, 30, 0, 0), stylists: ["Ashley", "Jo"] },
 ];
+const availableTimeSlots1: AvailableTimeSlot[] = [
+  { startsAt: today.setHours(9, 0, 0, 0), stylists: ["Ashley", "Jo"] },
+  { startsAt: tomorrow.setHours(9, 30, 0, 0), stylists: ["Ashley", "Jo"] },
+];
 
 const mockFetch201 = (...args: any[]) => Promise.resolve({ ok: true, status: 201 });
 const mockFetchError = (...args: any[]) => Promise.resolve({ ok: false });
@@ -105,20 +109,38 @@ describe('Appointment form', ()=>{
       assert.strictEqual(select.tagName, 'SELECT', `Expected tag name select, but got ${select.tagName}`)
     })
     it('has a service item as a first value', ()=>{
-      render(<AppointmentForm {...testProps}/>)
+      render(
+        <AppointmentForm
+          {...testProps}
+          availableTimeSlots={availableTimeSlots}
+          today={today}
+        />);
       const select = screen.getByRole('combobox', {name: 'Service'}) as HTMLSelectElement;
 
       assert.strictEqual(labelsOfAllOptions(select)[0], 'Cut', `Expected service Cut`)
     })
     it("lists all salon services", () => {
-      render(<AppointmentForm {...testProps}/>)
+      render(
+        <AppointmentForm
+          {...testProps}
+          availableTimeSlots={availableTimeSlots}
+          selectableServices={["Cut", "Blow-dry", ]}
+          today={today}
+        />);
       const select = screen.getByLabelText('Service') as HTMLSelectElement;
 
       assert.deepStrictEqual(labelsOfAllOptions(select), services, `Expected array ${JSON.stringify(services)}`)
     })
     it("pre selects value", () => {
-      const appointment: AppointmentApi = { service: "Blow-dry", startsAt: 0 };
-      render(<AppointmentForm {...testProps} appointment={appointment}/>)
+      const appointment: AppointmentApi = { service: "Blow-dry", startsAt: today.setHours(9, 30, 0, 0) };
+      render(
+        <AppointmentForm
+          {...testProps}
+          appointment={appointment}
+          availableTimeSlots={availableTimeSlots}
+          selectableServices={["Beard trim", "Cut & beard trim", "Cut", "Blow-dry",]}
+          today={today}
+        />);
       const select = screen.getByLabelText('Service') as HTMLSelectElement;
       const option = findOption(select, appointment.service!) as HTMLOptionElement
 
@@ -126,9 +148,15 @@ describe('Appointment form', ()=>{
     })
     it("saves existing selectBox value when submitted", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetch201)
-      const appointment: AppointmentApi = {};
       const submitEvent = userEvent.setup();
-      render(<AppointmentForm {...testProps} appointment={appointment}/> )
+      render(
+        <AppointmentForm
+          {...testProps}
+          appointment={{}}
+          availableTimeSlots={availableTimeSlots}
+          selectableServices={["Beard trim", "Cut & beard trim", "Cut", "Blow-dry",]}
+          today={today}
+        />);
       const submit = screen.getByLabelText('Submit') as HTMLFormElement;
       await submitEvent.click(submit)
 
@@ -138,9 +166,15 @@ describe('Appointment form', ()=>{
     })
     it("saves new selectBox value when submitted", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetch201)
-      const appointment: AppointmentApi = {};
       const submitEvent = userEvent.setup();
-      render(<AppointmentForm {...testProps} appointment={appointment}/> )
+      render(
+        <AppointmentForm
+          {...testProps}
+          appointment={{}}
+          availableTimeSlots={availableTimeSlots}
+          selectableServices={["Beard trim", "Cut & beard trim", "Cut", "Blow-dry",]}
+          today={today}
+        />);
       const submit = screen.getByLabelText('Submit') as HTMLFormElement;
       const select = screen.getByLabelText('Service') as HTMLSelectElement;
       await submitEvent.selectOptions(select, 'Blow-dry')
@@ -245,18 +279,26 @@ describe('Appointment form', ()=>{
       assert.ok(stylist, 'No input found with aria-label "Stylist"');
       assert.strictEqual(stylist.tagName, 'SELECT', `Expected tag name input, but got ${stylist.tagName}`)
     })
-    it('lists all stylists', ()=>{
-      render(<AppointmentForm {...testProps}/>)
+    it('lists all stylists in availableTimeSlots', ()=>{
+      render(<AppointmentForm 
+        {...testProps}
+        {...salonDefaults}
+        availableTimeSlots={availableTimeSlots}
+      />)
       const stylists = screen.getByLabelText('Stylist') as HTMLSelectElement;
       const stylistNames = Array.from(stylists.childNodes, (option)=>{return option.textContent} )
 
-      assert.deepStrictEqual(stylistNames, ["Ashley","Jo","Pat","Sam"], `Expected ["Ashley","Jo","Pat","Sam"], but got ${JSON.stringify(stylistNames)}`)
+      assert.deepStrictEqual(stylistNames, ["Ashley","Jo","Sam"], `Expected ["Ashley","Jo","Sam"], but got ${JSON.stringify(stylistNames)}`)
     })
     it("saves new stylist box value when submitted", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetch201)
       const appointment: AppointmentApi = {};
       const submitEvent = userEvent.setup();
-      render(<AppointmentForm {...testProps} appointment={appointment}/> )
+      render(<AppointmentForm 
+        {...testProps}
+        {...salonDefaults}
+        availableTimeSlots={availableTimeSlots}
+        appointment={appointment}/> )
       const submit = screen.getByLabelText('Submit') as HTMLFormElement;
       const select = screen.getByLabelText('Stylist') as HTMLSelectElement;
       await submitEvent.selectOptions(select, 'Jo')
@@ -274,8 +316,8 @@ describe('Appointment form', ()=>{
         <AppointmentForm
           {...testProps}
           appointment={{service: 'Beard trim', startsAt:today.getTime()}}
-          selectableServices={['Beard trim']}
-          availableTimeSlots={availableTimeSlots}
+          selectableServices={['Cut & beard trim']}
+          availableTimeSlots={availableTimeSlots1}
         />);
       const radioButtons = screen.queryAllByRole('radio')
 
@@ -374,7 +416,7 @@ describe('Appointment form', ()=>{
       assert.strictEqual(mockOnSave.mock.calls.length, 0, `Expected NO onSave calls, but got ${mockOnSave.mock.calls.length}`)
     })
   })
-  it.skip('by default renders stylist and service that has available time slots', async ()=>{
+  it('by default renders stylist and service that has available time slots', async ()=>{
     const availableTimeSlots: AvailableTimeSlot[] = [
       { startsAt: today.setHours(9, 0, 0, 0), stylists: ["Pat", "Jo"] },
       { startsAt: today.setHours(9, 30, 0, 0), stylists: ["Jo", "Sam"] },
@@ -387,15 +429,15 @@ describe('Appointment form', ()=>{
       <AppointmentForm
         {...testProps}
         availableTimeSlots={availableTimeSlots}
-        selectableServices={["Cut & color","Beard trim","Cut & beard trim","Extensions"]}
+        selectableServices={["Cut & beard trim", "Extensions", "Cut & color", "Beard trim",]}
         onSave={mockOnSave}
       />);
     const stylists = screen.getByLabelText('Stylist') as HTMLSelectElement;
     const service = screen.getByLabelText('Service') as HTMLSelectElement;
     const submit = screen.getByLabelText('Submit') as HTMLFormElement;
 
-    assert.strictEqual(stylists.value, 'Jo')
-    assert.strictEqual(service.value, 'Cut & color')
+    assert.strictEqual(stylists.value, 'Pat')
+    assert.strictEqual(service.value, 'Cut & beard trim')
   } )
 })
 

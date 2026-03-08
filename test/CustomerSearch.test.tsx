@@ -272,7 +272,7 @@ describe('CustomerSearch', async () => {
     await waitFor(async ()=>userEvent.click(searchCustomersBtn))
     const createAppointmentLink = await waitFor(async ()=>screen.getByText('Create appointment'))
     assert.ok(createAppointmentLink.tagName === 'A', 'Create appointment link not found')
-    userEvent.click(createAppointmentLink)
+    await waitFor(async ()=>userEvent.click(createAppointmentLink))
     const appointmentForm = await waitFor(()=>screen.getByLabelText('Appointment form'))
     assert.ok(appointmentForm.tagName==='FORM', 'Appointment form not found')
   })

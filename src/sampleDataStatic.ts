@@ -41,10 +41,10 @@ export const validCustomer:Customer = {
   lastName: "last",
   phoneNumber: "123456789"
 };
-export const blankAppointment: AppointmentApi = {
-  service: "Cut",
-  stylist: "noOne",
-  startsAt: 0,
+export const blankAppointment = {
+  // service: "Cut",
+  // stylist: "Jo",
+  startsAt: at(9),
 };
 
 export const sampleAvailableTimeSlots = [
