@@ -18,11 +18,27 @@ export const makeFlat = (
     }))
     .filter((entry): entry is NonNullable<typeof entry> => !!entry)
 
-export const stylistsActual = (flatServiceSlotStylist:{service:Service, startsAt:number, stylist: Stylist}[])=>
+export const computeServices = (flatServiceSlotStylist:{service:Service, startsAt:number, stylist: Stylist}[])=>
+  [...new Set(flatServiceSlotStylist.map(entry=>entry.service))]
+
+export const computeStylists = (flatServiceSlotStylist:{service:Service, startsAt:number, stylist: Stylist}[])=>
   [...new Set(flatServiceSlotStylist.map(entry=>entry.stylist))]
 
-export const servicesActual = (flatServiceSlotStylist:{service:Service, startsAt:number, stylist: Stylist}[])=>
-  [...new Set(flatServiceSlotStylist.map(entry=>entry.service))]
+export const computeStylistsForService = (
+  flatServiceSlotStylist:{service:Service, startsAt:number, stylist: Stylist}[],
+  selectedService: Service | undefined
+)=>
+  [...new Set(flatServiceSlotStylist
+    .filter(entry=>(selectedService===undefined) || (selectedService===entry.service))
+    .map(entry=>entry.stylist))]
+
+export const computeServicesForStylist = (
+  flatServiceSlotStylist:{service:Service, startsAt:number, stylist: Stylist}[],
+  selectedStylist: Stylist | undefined
+)=>
+  [...new Set(flatServiceSlotStylist
+    .filter(entry=>(selectedStylist===undefined) || (selectedStylist===entry.stylist))
+    .map(entry=>entry.service))]
 
 export const timeSlotsForServiceStylist = (
   flatServiceSlotStylist:{service:Service, startsAt:number, stylist: Stylist}[],

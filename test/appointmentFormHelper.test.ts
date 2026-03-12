@@ -2,7 +2,14 @@ import {required, match, list, anyErrors, hasError, validateMany} from '../src/c
 import type {ValidatorName, Validators, ValidationErrors } from '../src/customerFormValidation.js'
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import {pickEarliest, makeFlat, stylistsActual, servicesActual, timeSlotsForServiceStylist} from '../src/appointmentFormHelper.js'
+import {
+  pickEarliest, 
+  makeFlat, 
+  computeStylistsForService, 
+  computeServicesForStylist,
+  computeServices, 
+  computeStylists,
+  timeSlotsForServiceStylist} from '../src/appointmentFormHelper.js'
 import type { AvailableTimeSlot, Service, Stylist } from '../src/types.js'
 
 const today = new Date(1970,1,1);
@@ -62,13 +69,21 @@ describe('makeFlat', () => {
     assert.equal(result.length, 6)
     assert.deepEqual(result, expectedFlat)
   })
-  it('produces list of stylists', () => {
-    const actual = stylistsActual(expectedFlat)
-    assert.deepEqual(actual, ['Pat', 'Jo', 'Sam'])
+  it('produces list of stylists for service', () => {
+    const actual = computeStylistsForService(expectedFlat, 'Beard trim')
+    assert.deepEqual(actual, ['Pat', 'Sam'])
+  })
+  it('produces list of services for stylist', () => {
+    const actual = computeServicesForStylist(expectedFlat, 'Pat')
+    assert.deepEqual(actual, ['Beard trim',])
   })
   it('produces list of services', () => {
-    const actual = servicesActual(expectedFlat)
+    const actual = computeServices(expectedFlat)
     assert.deepEqual(actual, ['Beard trim', 'Cut & color' ])
+  })
+  it('produces list of stylists', () => {
+    const actual = computeStylists(expectedFlat)
+    assert.deepEqual(actual, ['Pat', 'Jo', 'Sam'])
   })
   it('produces list of time slots for a given service and stylist', () => {
     const actual = timeSlotsForServiceStylist(expectedFlat, 'Cut & color', 'Jo')
@@ -79,6 +94,7 @@ describe('makeFlat', () => {
     assert.deepEqual(actual, [])
   })
 })
+
 
 describe('pickEarliest', () => {
   it('should return the earliest date', () => {

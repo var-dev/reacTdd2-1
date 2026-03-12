@@ -2,8 +2,8 @@ import React, { useState, useCallback, useRef, useEffect, useMemo } from "react"
 
 import type { AppointmentProps } from "./AppointmentsDayView.js"
 import type { Service, Stylist, AvailableTimeSlot, ServiceStylistRecord, AppointmentApi } from "./types.js"
-import { serviceStylists as serviceStylistRecord, selectableServicesList, stylists} from "./sampleDataStatic.js"
-import {pickEarliest, makeFlat, stylistsActual, servicesActual, timeSlotsForServiceStylist} from '../src/appointmentFormHelper.js'
+import { serviceStylists as serviceStylistRecord, selectableServicesList} from "./sampleDataStatic.js"
+import {pickEarliest, makeFlat, computeStylistsForService, computeServicesForStylist, computeServices, computeStylists, timeSlotsForServiceStylist} from '../src/appointmentFormHelper.js'
 
 type AvailableTimeSlotFlat = { startsAt: number; stylist: Stylist; service: Service } | undefined
 
@@ -146,10 +146,11 @@ export type AppointmentFormProps = {
   onSave?: ()=>void
 }
 
+type AppointmentFormMode = 'AppointmentProvidedInitially' | 'AppointmentNotProvidedInitially' | 'Regular'
 export const AppointmentForm = 
   ({
     selectableServices = selectableServicesList,
-    selectableStylists = stylists,
+    selectableStylists = [],
     serviceStylists = serviceStylistRecord,
     salonOpensAt = 9,
     salonClosesAt = 19,
@@ -160,11 +161,15 @@ export const AppointmentForm =
   }: AppointmentFormProps) =>{
   const flatServiceStylistTime = useMemo(
     () => makeFlat(selectableServices,availableTimeSlots,serviceStylists), 
-    [availableTimeSlots, serviceStylists, selectableServices]
+    [availableTimeSlots]
   )
+  const services = useMemo(()=>computeServices(flatServiceStylistTime),[flatServiceStylistTime])
+  // if (!services || services.length === 0) {
+  //   return <p>Loading schedule...</p>; // Or return null;
+  // }
+
+  const [formMode, setFormMode] = useState<AppointmentFormMode>(!!appointment.customerId && !!appointment.service && !!appointment.startsAt && !!appointment.stylist ? 'AppointmentProvidedInitially' : 'AppointmentNotProvidedInitially')
   const [appointmentState, setAppointmentState] = useState<AppointmentApi>(appointment)
-  const calculatedServices = servicesActual(flatServiceStylistTime)
-  const calculatedStylists = stylistsActual(flatServiceStylistTime)
 
   const handleSubmit = async (event: React.FormEvent) => {
       event.preventDefault();
@@ -186,38 +191,64 @@ export const AppointmentForm =
       })),
     []
   );
-  const handleChange = 
-    ({ target: { name, value } }: React.ChangeEvent<HTMLSelectElement>) =>
+  const handleServiceChange =
+    ({ target: { value } }: React.ChangeEvent<HTMLSelectElement>) =>{
       setAppointmentState((appointmentState: AppointmentApi) => ({
         ...appointmentState,
-        [name]: value
-      } as AppointmentApi))
+        service: value as Service,
+      }))
+      setFormMode('Regular')
+    };
+  const handleStylistChange = 
+    ({ target: { value } }: React.ChangeEvent<HTMLSelectElement>) =>{
+      setAppointmentState((appointmentState: AppointmentApi) => ({
+        ...appointmentState,
+        stylist: value as Stylist,
+      }))
+      setFormMode('Regular')
+    }
+  
+  useEffect(() => {
+    switch (formMode) {
+      case 'AppointmentProvidedInitially': {
+        setAppointmentState({
+          service: appointment.service,
+          stylist: appointment.stylist,
+          startsAt: appointment.startsAt,
+          customerId: appointment.customerId,
+          notes: appointment.notes
+        } as AppointmentApi)
+        return
+      }
+      case 'AppointmentNotProvidedInitially': {
+        setAppointmentState((appointmentState)=>({
+          ...appointmentState,
+          service: appointmentState.service ?? services[0]
+        } as AppointmentApi))
+        setAppointmentState((appointmentState)=>({
+          ...appointmentState,
+          stylist: appointmentState.stylist ?? computeStylistsForService(flatServiceStylistTime, appointmentState.service)[0]
+        } as AppointmentApi))
+        return
+      }
+      case 'Regular': {
+        return
+      }
+      default:
+        const _exhaustive: never = formMode;
+        throw new Error(`Unhandled case: ${_exhaustive}`);
+    }
+  }, [ flatServiceStylistTime])
 
   useEffect(() => {
-    if (!appointmentState.service && calculatedServices.length > 0) {
-      setAppointmentState((appointmentState: AppointmentApi) => ({
+    const stylists = computeStylistsForService(flatServiceStylistTime, appointmentState.service)
+    if (formMode == 'Regular') {
+      setAppointmentState((appointmentState)=>({
         ...appointmentState,
-        service: calculatedServices[0]
-      } as AppointmentApi))
+        stylist: stylists.some(stylist=>stylist===appointmentState.stylist) ? appointmentState.stylist : stylists[0]
+      }))
     }
-    if (!appointmentState.stylist && calculatedStylists.length > 0) {
-      setAppointmentState((appointmentState: AppointmentApi) => ({
-        ...appointmentState,
-        stylist: calculatedStylists[0]
-      } as AppointmentApi))
-    }
-  }, [availableTimeSlots, serviceStylists, selectableServices])
-
-  const stylistsForService = appointmentState.service
-    ? serviceStylists[appointmentState.service as Service]
-    : selectableStylists;
-
-  const stylistAvailableTimeSlots = flatServiceStylistTime.map((timeSlot)=>{
-    if(
-      timeSlot.stylist === appointmentState.stylist &&
-      timeSlot.service === appointmentState.service
-      ) return timeSlot
-  })
+  }, [appointmentState.service])
 
   return (
     <form aria-label="Appointment form" onSubmit={handleSubmit}>
@@ -226,10 +257,9 @@ export const AppointmentForm =
         name="service"
         id="service"
         value={appointmentState.service}
-        onChange={handleChange}
+        onChange={handleServiceChange}
       >
-        {calculatedServices
-          .map((service: string) => (
+        {services.map((service: string) => (
           <option key={service}>{service}</option>
         ))}
       </select>
@@ -238,10 +268,9 @@ export const AppointmentForm =
         name="stylist"
         id="stylist"
         value={appointmentState.stylist}
-        onChange={handleChange}
+        onChange={handleStylistChange}
       >
-        {calculatedStylists
-          .map((stylist: Stylist) => (
+        {computeStylistsForService(flatServiceStylistTime, appointmentState.service).map((stylist: Stylist) => (
           <option key={stylist}>{stylist}</option>
         ))}
       </select>
@@ -250,7 +279,7 @@ export const AppointmentForm =
         salonOpensAt={salonOpensAt}
         salonClosesAt={salonClosesAt}
         today={today}
-        availableTimeSlots={stylistAvailableTimeSlots}
+        availableTimeSlots={flatServiceStylistTime.filter((timeSlot)=>timeSlot.stylist === appointmentState.stylist && timeSlot.service === appointmentState.service)}
         checkedTimeSlot={appointmentState.startsAt!}
         handleChange={handleStartsAtChange}
       />
