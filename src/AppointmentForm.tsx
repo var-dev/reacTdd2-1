@@ -1,9 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react"
 
-import type { AppointmentProps } from "./AppointmentsDayView.js"
 import type { Service, Stylist, AvailableTimeSlot, ServiceStylistRecord, AppointmentApi } from "./types.js"
 import { serviceStylists as serviceStylistRecord, selectableServicesList} from "./sampleDataStatic.js"
-import {pickEarliest, makeFlat, computeStylistsForService, computeServicesForStylist, computeServices, computeStylists, timeSlotsForServiceStylist} from '../src/appointmentFormHelper.js'
+import { makeFlat, computeStylistsForService, computeServices} from '../src/appointmentFormHelper.js'
 
 type AvailableTimeSlotFlat = { startsAt: number; stylist: Stylist; service: Service } | undefined
 
@@ -115,7 +114,7 @@ const TimeSlotTable = (
       </tr>
     </thead>
     <tbody>
-      {timeSlots.map((timeSlot: number, index: number) => (
+      {timeSlots.map((timeSlot: number,) => (
         <tr key={timeSlot}>
           <th>{toTimeValue(timeSlot)}</th>
           {dates.map((date: number) => (
@@ -163,12 +162,19 @@ export const AppointmentForm =
     () => makeFlat(selectableServices,availableTimeSlots,serviceStylists), 
     [availableTimeSlots]
   )
-  const services = useMemo(()=>computeServices(flatServiceStylistTime),[flatServiceStylistTime])
-  // if (!services || services.length === 0) {
-  //   return <p>Loading schedule...</p>; // Or return null;
-  // }
+  const services = useMemo(
+    ()=>computeServices(flatServiceStylistTime),
+    [flatServiceStylistTime]
+  )
 
-  const [formMode, setFormMode] = useState<AppointmentFormMode>(!!appointment.customerId && !!appointment.service && !!appointment.startsAt && !!appointment.stylist ? 'AppointmentProvidedInitially' : 'AppointmentNotProvidedInitially')
+  const [formMode, setFormMode] = useState<AppointmentFormMode>(
+    !!appointment.customerId 
+    && !!appointment.service 
+    && !!appointment.startsAt 
+    && !!appointment.stylist 
+      ? 'AppointmentProvidedInitially' 
+      : 'AppointmentNotProvidedInitially')
+
   const [appointmentState, setAppointmentState] = useState<AppointmentApi>(appointment)
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -221,14 +227,13 @@ export const AppointmentForm =
         return
       }
       case 'AppointmentNotProvidedInitially': {
-        setAppointmentState((appointmentState)=>({
+        const service = appointmentState.service ?? services[0]
+        const stylist = appointmentState.stylist ?? computeStylistsForService(flatServiceStylistTime, service)[0]
+        setAppointmentState({
           ...appointmentState,
-          service: appointmentState.service ?? services[0]
-        } as AppointmentApi))
-        setAppointmentState((appointmentState)=>({
-          ...appointmentState,
-          stylist: appointmentState.stylist ?? computeStylistsForService(flatServiceStylistTime, appointmentState.service)[0]
-        } as AppointmentApi))
+          service,
+          stylist,
+        } as AppointmentApi)
         return
       }
       case 'Regular': {

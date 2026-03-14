@@ -217,7 +217,7 @@ describe('Appointment form', ()=>{
       assert.deepEqual(dates[3].textContent, 'Mon 03', `Expected column heading "Mon 03"`);
       assert.deepEqual(dates[4].textContent, 'Tue 04', `Expected column heading "Tue 04"`);
     });
-    it.skip("renders radio buttons in the correct table cell positions", () => {
+    it("renders radio buttons in the correct table cell positions", () => {
       render(
         <AppointmentForm
           {...testProps}
@@ -251,7 +251,7 @@ describe('Appointment form', ()=>{
 
       assert.strictEqual(cells.length, 0)
     });
-    it.skip("renders radio buttons in the correct table cell positions", () => {
+    it("renders radio buttons in the correct table cell positions #2", () => {
       const appointment: AppointmentApi = { service: "Cut", startsAt: availableTimeSlots[1].startsAt } ;
       render(
         <AppointmentForm
@@ -448,4 +448,54 @@ describe('Appointment form', ()=>{
   } )
 })
 
+describe('AppointmentForm found errors', async ()=>{
+  it('should render appointment radio buttons on first load', async () => {
+    const { rerender } = render(
+      <AppointmentForm
+        {...testProps}
+        availableTimeSlots={[]}
+        today={new Date(1768939200000)}
+      />);
+    setTimeout(() => {
+      rerender(
+        <AppointmentForm
+          {...testProps}
+          selectableServices={["Cut", "Blow-dry", "Cut & color", "Beard trim", "Cut & beard trim", "Extensions"]}
+          availableTimeSlots={sampleAvailableTimeSlots as AvailableTimeSlot[]}
+          today={new Date(1768435250089)}
+        />);
+    }, 800);
+    const stylist = screen.getByLabelText('Stylist') as HTMLSelectElement;
+    const service = screen.getByLabelText('Service') as HTMLSelectElement;
+    const radioButtons = await waitFor(() => screen.getAllByRole('radio'))
+    assert.strictEqual(stylist.value, 'Jo', `Expected stylist`)
+    assert.strictEqual(service.value, 'Cut', `Expected service`)
+    assert.strictEqual(radioButtons.length, 17, '17 radio buttons expected for available time slots');
+  });
+  it('same but change of service triggers change of stylist and new radios', async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <AppointmentForm
+        {...testProps}
+        availableTimeSlots={[]}
+        today={new Date(1768939200000)}
+      />);
+    setTimeout(() => {
+      rerender(
+        <AppointmentForm
+          {...testProps}
+          selectableServices={["Cut", "Blow-dry", "Cut & color", "Beard trim", "Cut & beard trim", "Extensions"]}
+          availableTimeSlots={sampleAvailableTimeSlots as AvailableTimeSlot[]}
+          today={new Date(1768435250089)}
+        />);
+    }, 500);
+    await waitFor(() => screen.getAllByRole('radio'))
+    const service = await waitFor(()=> screen.getByLabelText<HTMLSelectElement>('Service'))
+    await user.selectOptions(service, 'Beard trim')
+    const stylist = await waitFor(()=> screen.getByLabelText<HTMLSelectElement>('Stylist'))
+    const radioButtons = await waitFor(() => screen.getAllByRole('radio'))
 
+    assert.strictEqual(stylist.value, 'Pat', `Expected stylist Pat`)
+    assert.strictEqual(radioButtons.length, 9, '9 radio buttons expected for available time slots');
+  });
+});
