@@ -2,14 +2,13 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Customer } from '../types.js';
 
 interface CustomerState {
-  customer: Customer;
   status?: 'SUBMITTING' | 'SUCCESSFUL' | 'FAILED' | 'VALIDATION_FAILED';
   validationErrors?: {};
   error?: boolean;
 }
 
-const initialState: CustomerState = {
-  customer: {},
+const initialState: CustomerState & Customer= {
+  
 };
 
 const customerSlice = createSlice({
@@ -19,9 +18,9 @@ const customerSlice = createSlice({
     addCustomerSubmitting: (state: CustomerState) => {
       state.status = 'SUBMITTING';
     },
-    addCustomerSuccessful: (state: CustomerState, action: PayloadAction<{ customer: Customer }>) => {
+    addCustomerSuccessful: (state: CustomerState & Customer, action: PayloadAction<{ customer: Customer }>) => {
       state.status = 'SUCCESSFUL';
-      state.customer = action.payload.customer;
+      Object.assign(state, action.payload.customer)
     },
     addCustomerFailed: (state: CustomerState) => {
       state.status = 'FAILED';

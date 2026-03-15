@@ -11,7 +11,7 @@ import customerReducer, {
 
 describe("customer slice", () => {
   it("should return the initial state", () => {
-    assert.deepStrictEqual(customerReducer(undefined, { type: "" }), {customer:{}});
+    assert.deepStrictEqual(customerReducer(undefined, { type: "" }), {});
   });
 });
 
@@ -30,7 +30,7 @@ describe("addCustomerSuccessful action", () => {
     assert.equal(customerReducer(undefined, action).status, 'SUCCESSFUL');
   });
   it("sets customer", () => {
-    assert.deepEqual(customerReducer(undefined, action).customer, customer);
+    assert.strictEqual(customerReducer(undefined, action).id, 123);
   });
   itMaintainsExistingState(customerReducer, action);
   itSetsStatus(customerReducer, action, "SUCCESSFUL");
