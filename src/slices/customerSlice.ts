@@ -1,5 +1,7 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAction, type PayloadAction } from '@reduxjs/toolkit';
 import type { Customer } from '../types.js';
+
+export const addCustomerRequest = createAction('customer/addCustomerRequest');
 
 interface CustomerState {
   status?: 'SUBMITTING' | 'SUCCESSFUL' | 'FAILED' | 'VALIDATION_FAILED';
@@ -7,9 +9,7 @@ interface CustomerState {
   error?: boolean;
 }
 
-const initialState: CustomerState & Customer= {
-  
-};
+const initialState: CustomerState & Customer= {};
 
 const customerSlice = createSlice({
   name: 'customer',
