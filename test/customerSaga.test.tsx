@@ -1,16 +1,15 @@
 import { describe, it, beforeEach, afterEach, mock } from "node:test";
 import assert from "assert/strict"
-import "../domSetup.js"
+import "./domSetup.js"
 import React, {useEffect, ReactElement} from "react";
 import { render, screen, waitFor } from "@testing-library/react";
-import { put, takeLatest } from "redux-saga/effects";
 import { configureStore, UnknownAction, Middleware } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
 import { Provider, useDispatch } from "react-redux";
 
-import { rootSaga } from "../../src/store.js";
-import { addCustomerRequest, addCustomerSubmitting, addCustomerSuccessful } from "../../src/slices/customerSlice.js";
-import customerReducer from "../../src/slices/customerSlice.js";
+import { rootSaga } from "../src/rootSaga.js";
+import { addCustomerRequest, addCustomerSubmitting, addCustomerSuccessful } from "../src/customerSlice.js";
+import customerReducer from "../src/customerSlice.js";
 
 
 function renderWithStore(ui: ReactElement) {

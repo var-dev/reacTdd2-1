@@ -1,20 +1,28 @@
 import { it, describe, mock } from 'node:test';
+import './domSetup.js'
 import assert from 'node:assert';
 import { store } from '../src/store.js';
 import {
+  addCustomerRequest,
   addCustomerSubmitting,
   addCustomerSuccessful,
   addCustomerFailed,
   addCustomerValidationFailed,
-} from '../src/slices/customerSlice.js';
+} from '../src/customerSlice.js';
 import type { Customer } from '../src/types.js';
+import { waitFor } from '@testing-library/react';
 
-describe.skip('Store dispatching', () => {
-  it('dispatches addCustomerSubmitting action', () => {
-    store.dispatch(addCustomerSubmitting());
+describe('Store dispatching', () => {
+  it('dispatches addCustomerSubmitting action', async () => {
+    const mockFetch = mock.method(globalThis,'fetch',(...params: any[])=>{})
+    store.dispatch(addCustomerRequest());
     
     const state = store.getState();
     assert.strictEqual(state.customer.status, 'SUBMITTING');
+    await waitFor(()=>{
+      assert.strictEqual(mockFetch.mock.callCount(), 1)
+      assert.strictEqual(mockFetch.mock.calls[0].arguments[0], '/customers', 'expected fetch to be called with /customers')
+    })
   });
 
   it('dispatches addCustomerSuccessful action', () => {

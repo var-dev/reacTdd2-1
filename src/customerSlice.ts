@@ -1,5 +1,5 @@
 import { createSlice, createAction, type PayloadAction } from '@reduxjs/toolkit';
-import type { Customer } from '../types.js';
+import type { Customer } from './types.js';
 
 export const addCustomerRequest = createAction('customer/addCustomerRequest');
 

@@ -1,13 +1,23 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { itMaintainsExistingState, itSetsStatus } from "../reducers/reducerGenerators.js";
 import customerReducer, {
   addCustomerSubmitting,
   addCustomerSuccessful,
   addCustomerFailed,
   addCustomerValidationFailed,
-} from "../../src/slices/customerSlice.js";
+} from "../src/customerSlice.js";
+
+export const itMaintainsExistingState = (reducer: Function, action: any) => {
+  it("maintains existing state", () => {
+    assert.equal(reducer({ customer: { id: 123 } }, action).customer.id, 123);
+  });
+};
+export const itSetsStatus = (reducer: Function, action: any, value: string) => {
+  it(`sets status to ${value}`, () => {
+    assert.equal(reducer(undefined, action).status, value);
+  });
+}
 
 describe("customer slice", () => {
   it("should return the initial state", () => {
