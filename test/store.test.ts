@@ -14,17 +14,11 @@ import { waitFor } from '@testing-library/react';
 
 describe('Store dispatching', () => {
   it('dispatches addCustomerSubmitting action', async () => {
-    const mockFetch = mock.method(globalThis,'fetch',(...params: any[])=>{})
-    store.dispatch(addCustomerRequest());
-    
+    store.dispatch(addCustomerSubmitting());
+
     const state = store.getState();
     assert.strictEqual(state.customer.status, 'SUBMITTING');
-    await waitFor(()=>{
-      assert.strictEqual(mockFetch.mock.callCount(), 1)
-      assert.strictEqual(mockFetch.mock.calls[0].arguments[0], '/customers', 'expected fetch to be called with /customers')
-    })
-  });
-
+  })
   it('dispatches addCustomerSuccessful action', () => {
     const customer: Customer = { firstName: 'John', lastName: 'Doe' };
     
@@ -63,3 +57,35 @@ describe('Store dispatching', () => {
     mockDispatch.mock.restore()
   })
 });
+
+describe('addCustomerSaga with mockFetch', ()=>{
+  it('dispatches addCustomerRequest action', async () => {
+    const mockFetch = mock.method(globalThis,'fetch',(...params: any[])=>{})
+    store.dispatch(addCustomerRequest({}));
+    
+    const state = store.getState();
+    assert.strictEqual(state.customer.status, 'SUBMITTING');
+    await waitFor(()=>{
+      assert.strictEqual(mockFetch.mock.callCount(), 1)
+      assert.strictEqual(mockFetch.mock.calls[0].arguments[0], '/customers', 'expected fetch to be called with /customers')
+    })
+  });
+  it("calls fetch with correct configuration", async () =>{
+    const mockFetch = mock.method(globalThis,'fetch',(...params: any[])=>{})
+    const inputCustomer = { firstName: "Ashley" };
+    store.dispatch(addCustomerRequest(inputCustomer));
+    
+    const state = store.getState();
+    assert.strictEqual(state.customer.status, 'SUBMITTING');
+    await waitFor(()=>{
+      assert.strictEqual(mockFetch.mock.callCount(), 1)
+      assert.strictEqual(mockFetch.mock.calls[0].arguments[0], '/customers', 'expected fetch to be called with /customers')
+
+      const actual = JSON.stringify(mockFetch.mock.calls[0].arguments[1])
+      assert.match(actual, /"method":"POST"/, 'expected method POST')
+      assert.match(actual, /"credentials":"same-origin"/, 'expected credentials same-origin')
+      assert.match(actual, /"Content-Type":"application\/json"/, 'expected Content-Type:"application/json"')
+      assert.match(actual, /\\"firstName\\":\\"Ashley\\"/, 'expected Body')
+    })
+  })
+})

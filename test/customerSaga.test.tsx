@@ -68,14 +68,14 @@ function AutoDispatch({ action }: { action: UnknownAction }) {
 describe("addCustomer", async () => {
     const mockFetch = mock.method(globalThis, 'fetch', mockFetchOk);
     const { store, actionLog } = renderWithStore(
-      <AutoDispatch action={addCustomerRequest()} />
+      <AutoDispatch action={addCustomerRequest({})} />
     );
   it("sets current status to submitting", async () => {
 
     await waitFor(() => {
       assert.strictEqual(mockFetch.mock.callCount(), 1, 'expect fetch to be called once')
       assert.strictEqual(actionLog.length, 2, 'expect 2 actions');
-      assert.deepStrictEqual(actionLog[0], addCustomerRequest(),'expect addCustomerRequest() action');
+      assert.deepStrictEqual(actionLog[0], addCustomerRequest({}),'expect addCustomerRequest() action');
       assert.deepStrictEqual(actionLog[1], addCustomerSubmitting(),'expect addCustomerSubmitting() action');
       assert.deepStrictEqual(store.getState().customer.status, "SUBMITTING", 'expect SUBMITTING');
     });

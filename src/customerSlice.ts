@@ -1,7 +1,7 @@
 import { createSlice, createAction, type PayloadAction } from '@reduxjs/toolkit';
 import type { Customer } from './types.js';
 
-export const addCustomerRequest = createAction('customer/addCustomerRequest');
+export const addCustomerRequest = createAction<Customer>('customer/addCustomerRequest');
 
 interface CustomerState {
   status?: 'SUBMITTING' | 'SUCCESSFUL' | 'FAILED' | 'VALIDATION_FAILED';
