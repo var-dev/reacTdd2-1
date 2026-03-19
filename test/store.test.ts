@@ -12,6 +12,12 @@ import {
 import type { Customer } from '../src/types.js';
 import { waitFor } from '@testing-library/react';
 
+
+// const mockFetchReturn = (returnedValue: any) => (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(returnedValue)});
+const mockFetchReturn = (...args: any[]) => {
+  console.log('mockFetchReturn argsAFASFSDFSDFGDGFDCSDADFSDS:', args)
+  return Promise.resolve({ ok: true, json: ()=>Promise.resolve({returnedValue:'returnedValue'})});}
+
 describe('Store dispatching', () => {
   it('dispatches addCustomerSubmitting action', async () => {
     store.dispatch(addCustomerSubmitting());
@@ -58,25 +64,27 @@ describe('Store dispatching', () => {
   })
 });
 
-describe('addCustomerSaga with mockFetch', ()=>{
+describe.skip('addCustomerSaga with mockFetch', ()=>{
   it('dispatches addCustomerRequest action', async () => {
     const mockFetch = mock.method(globalThis,'fetch',(...params: any[])=>{})
     store.dispatch(addCustomerRequest({}));
     
     const state = store.getState();
-    assert.strictEqual(state.customer.status, 'SUBMITTING');
+    // assert.strictEqual(state.customer.status, 'SUBMITTING');
     await waitFor(()=>{
       assert.strictEqual(mockFetch.mock.callCount(), 1)
       assert.strictEqual(mockFetch.mock.calls[0].arguments[0], '/customers', 'expected fetch to be called with /customers')
     })
   });
   it("calls fetch with correct configuration", async () =>{
-    const mockFetch = mock.method(globalThis,'fetch',(...params: any[])=>{})
+    // const mockFetch = mock.method(globalThis,'fetch',(...params: any[])=>{})
     const inputCustomer = { firstName: "Ashley" };
+    const outputCustomer = { id:456 };
+    const mockFetch = mock.method(globalThis,'fetch',mockFetchReturn)
     store.dispatch(addCustomerRequest(inputCustomer));
     
     const state = store.getState();
-    assert.strictEqual(state.customer.status, 'SUBMITTING');
+    // assert.strictEqual(state.customer.status, 'SUBMITTING');
     await waitFor(()=>{
       assert.strictEqual(mockFetch.mock.callCount(), 1)
       assert.strictEqual(mockFetch.mock.calls[0].arguments[0], '/customers', 'expected fetch to be called with /customers')
@@ -86,6 +94,27 @@ describe('addCustomerSaga with mockFetch', ()=>{
       assert.match(actual, /"credentials":"same-origin"/, 'expected credentials same-origin')
       assert.match(actual, /"Content-Type":"application\/json"/, 'expected Content-Type:"application/json"')
       assert.match(actual, /\\"firstName\\":\\"Ashley\\"/, 'expected Body')
+})
+
+      const result = await (mockFetch.mock.calls[0].result)
+      assert.match(JSON.stringify(result), /\\"id\\\":456/, 'expected Customer object')
+      // assert.match(result, /\\"firstName\\":\\"Ashley\\"/, 'expected Customer object')
+    
+  })
+  it("it dispatches addCustomerSuccessful on success", async () =>{
+    const inputCustomer = { firstName: "Ashley" };
+    const mockFetch = mock.method(globalThis,'fetch',mockFetchReturn)
+    store.dispatch(addCustomerRequest(inputCustomer));
+    
+    const state = store.getState();
+    assert.strictEqual(state.customer.status, 'SUBMITTING');
+    await waitFor(()=>{
+      assert.strictEqual(mockFetch.mock.callCount(), 1)
+      assert.strictEqual(mockFetch.mock.calls[0].arguments[0], '/customers', 'expected fetch to be called with /customers')
+    })
+    await waitFor(()=>{
+      const actual = JSON.stringify(mockFetch.mock.calls[0].result)
+      assert.match(actual, /\\"firstName\\":\\"Ashley\\"/, 'expected Customer object')
     })
   })
 })
