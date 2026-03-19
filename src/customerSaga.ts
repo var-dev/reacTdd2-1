@@ -1,5 +1,5 @@
 import { put, call, takeLatest } from "redux-saga/effects";
-import { addCustomerSubmitting, addCustomerRequest, addCustomerFailed, addCustomerSuccessful } from "./customerSlice.js";
+import { addCustomerSubmitting, addCustomerRequest, addCustomerFailed, addCustomerSuccessful, addCustomerValidationFailed } from "./customerSlice.js";
 import type { Customer } from "./types.js";
 
 
@@ -23,6 +23,9 @@ export function* addCustomer({payload}:{payload: Customer}) {
   if(result.ok){
     const customer: Customer = yield call([result, result.json]);
     yield put(addCustomerSuccessful({customer}));
+  } else if (result.status === 422) {
+    const response: unknown = yield call([result, result.json]);
+    yield put(addCustomerValidationFailed({validationErrors: response as {}}))
   } else {
     yield put(addCustomerFailed())
   }
