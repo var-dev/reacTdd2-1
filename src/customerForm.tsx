@@ -26,13 +26,13 @@ export const CustomerForm = (
   const dispatch = useAppDispatch();
   const {
     error, 
+    status,
     validationErrors: serverValidationErrors,
   } = useAppSelector(({customer})=>customer)
   const [customerState, setCustomerState] = useState<Customer>(customer ?? {firstName: ""});
-  // const [error, setError] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState({} as ValidationErrors);
-  const [disableSubmit, setDisableSubmit] = useState(false)
+  const submitting = status === "SUBMITTING";
+  const disableSubmit = status === "SUCCESSFUL"
 
   const validators = {
     firstName: required("First name is required"),
@@ -45,17 +45,14 @@ export const CustomerForm = (
   } satisfies Validators;
 
   const doSave = async () => {
-    setDisableSubmit(true)
-    setSubmitting(true);
     const result = await globalThis.fetch("/customers", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(customerState),
-    }).finally(() => { setSubmitting(false) });
+    });
 
     if (result?.ok) {
-      // setError(false);
       const customerWithId = await result.json();
       onSave(customerWithId);
       return
@@ -63,9 +60,7 @@ export const CustomerForm = (
       const response = await result.json();
       setValidationErrors(response.errors);
     } else {
-      // setError(true);
     }
-    setDisableSubmit(false)
   }
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault() 

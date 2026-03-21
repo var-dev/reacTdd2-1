@@ -454,7 +454,7 @@ describe("validation", () => {
 describe("submitting indicator", () => {
   it("displays spinner when form is submitting", async () => {
     mock.method(global,'fetch', mockFetchOk)
-    renderWithStore(<CustomerForm {...testProps}/>);
+    const {store, actionLog} = renderWithStore(<CustomerForm {...testProps}/>);
     const submitButton = screen.getByRole('button', { name: /Add/i })
     const clickPromise = act(async () => {
       await userEvent.click(submitButton)
@@ -466,6 +466,12 @@ describe("submitting indicator", () => {
     })
     await clickPromise;
     assert.strictEqual(screen.queryByLabelText(/Submitting Indicator/i), null, 'Expected spinner to be removed');
+    const expectedActions: any[] = [
+      'customer/addCustomerRequest',
+      'customer/addCustomerSubmitting',
+      'customer/addCustomerSuccessful'
+    ]
+    assert.deepStrictEqual(actionLog.map(a => a.type), expectedActions, `Expected no actions dispatched after submit finished`)
   });
   it("initially does not display the submitting indicator", () => {
     renderWithStore(<CustomerForm {...testProps}/>);
