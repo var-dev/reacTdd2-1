@@ -1,18 +1,19 @@
 import React, { useState } from "react"
+import { useDispatch, useSelector } from "react-redux";
 import type { Customer, CustomerWithId } from "./types.js";
 import { required, list, match, anyErrors, hasError, type ValidatorName, type Validators, validateMany, type ValidationErrors } from "./customerFormValidation.js";
+import { addCustomerRequest } from "./customerSlice.js";
+import type { AppDispatch, RootState } from "./store.js";
+
+const useAppSelector = useSelector.withTypes<RootState>()
+const useAppDispatch = useDispatch.withTypes<AppDispatch>()
 
 type ErrorProps = {hasError:boolean}
 const Error = ({hasError}: ErrorProps) => (
   <p role="alert" >{hasError ? 'An error occurred during save.' : ''}</p>
 );  
 
-type RenderErrorProps = {fieldName: ValidatorName, errors: ValidationErrors}
-const RenderError = ({fieldName, errors}: RenderErrorProps) => (
-  <span id={`${fieldName}Error`} role="alert">
-    {hasError(fieldName, errors) ? errors[fieldName] : ""}
-  </span>
-)
+
 export type CustomerFormProps = {
   customer?: Customer | undefined
   onSave: (customer: Customer)=>void
@@ -22,8 +23,13 @@ export const CustomerForm = (
     customer, 
     onSave
   }: CustomerFormProps) =>{
+  const dispatch = useAppDispatch();
+  const {
+    error, 
+    validationErrors: serverValidationErrors,
+  } = useAppSelector(({customer})=>customer)
   const [customerState, setCustomerState] = useState<Customer>(customer ?? {firstName: ""});
-  const [error, setError] = useState(false);
+  // const [error, setError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState({} as ValidationErrors);
   const [disableSubmit, setDisableSubmit] = useState(false)
@@ -49,7 +55,7 @@ export const CustomerForm = (
     }).finally(() => { setSubmitting(false) });
 
     if (result?.ok) {
-      setError(false);
+      // setError(false);
       const customerWithId = await result.json();
       onSave(customerWithId);
       return
@@ -57,7 +63,7 @@ export const CustomerForm = (
       const response = await result.json();
       setValidationErrors(response.errors);
     } else {
-      setError(true);
+      // setError(true);
     }
     setDisableSubmit(false)
   }
@@ -69,6 +75,7 @@ export const CustomerForm = (
       return
     }
     await doSave();
+    dispatch(addCustomerRequest(customerState));
   }
   const handleChange = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
     setCustomerState((customerState) => ({ ...customerState, [target.name]: target.value}))
@@ -89,9 +96,19 @@ export const CustomerForm = (
       });
     }
   };
+const RenderError = ({fieldName}: {fieldName: ValidatorName}) => {
+  const allValidationErrors = {
+    ...validationErrors,
+    ...serverValidationErrors
+  };
+  return (
+    <span id={`${fieldName}Error`} role="alert">
+      {hasError(fieldName, allValidationErrors) ? allValidationErrors[fieldName] : ""}
+    </span>
+  )}
   
   return <form onSubmit = {handleSubmit} aria-label="Customer form">
-    <Error hasError={error} />
+    <Error hasError={error ?? false} />
     <label htmlFor="firstName">First Name</label>
     <input 
       type="text" 
@@ -102,7 +119,7 @@ export const CustomerForm = (
       onBlur={handleBlur}
       aria-describedby="firstNameError"
       />
-    <RenderError fieldName="firstName" errors={validationErrors}/>
+    <RenderError fieldName="firstName"/>
 
     <label htmlFor="lastName">Last Name</label>
     <input 
@@ -114,7 +131,7 @@ export const CustomerForm = (
       onBlur={handleBlur}
       aria-describedby="lastNameError"
       />
-    <RenderError fieldName="lastName" errors={validationErrors}/>
+    <RenderError fieldName="lastName"/>
 
     <label htmlFor="phoneNumber">Phone Number</label>
     <input 
@@ -126,7 +143,7 @@ export const CustomerForm = (
       onBlur={handleBlur}
       aria-describedby="phoneNumberError"
       />
-    <RenderError fieldName="phoneNumber" errors={validationErrors}/>
+    <RenderError fieldName="phoneNumber"/>
     <input 
       disabled={disableSubmit}
       type="submit" 
