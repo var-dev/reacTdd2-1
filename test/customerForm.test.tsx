@@ -3,8 +3,9 @@ import * as assert from 'node:assert/strict';
 
 import "./domSetup"; // must be imported before render/screen
 import React, { ReactElement} from "react";
+import { MemoryRouter } from "react-router";
 
-import { render, screen, cleanup, within, waitFor, waitForElementToBeRemoved, act } from "@testing-library/react";
+import { render, screen, cleanup, within, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { configureStore, UnknownAction, Middleware } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
@@ -71,7 +72,7 @@ function renderWithStore(ui: ReactElement) {
 
 describe('CustomerForm tests using render and screen', ()=>{
   it("types into firstName", async () => {
-    renderWithStore(<CustomerForm {...testProps}/>)
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>)
     const firstNameInput = screen.getByLabelText('First Name') as HTMLInputElement;
     await userEvent.clear(firstNameInput);
     await userEvent.type(firstNameInput, "Jamie")
@@ -81,11 +82,7 @@ describe('CustomerForm tests using render and screen', ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
     const submitEvent = userEvent.setup();
     const mockEventListenerHandler = mock.fn((e: Event) => {})
-    renderWithStore(
-      <CustomerForm 
-        {...testProps}
-      />
-    )
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>)
     const form = screen.getByRole("form", { name: /customer/i });
     form.addEventListener("submit", mockEventListenerHandler);
     const submitButton = screen.getByRole('button', { name: /Add/i })
@@ -95,17 +92,12 @@ describe('CustomerForm tests using render and screen', ()=>{
     assert.strictEqual(mockEventListenerHandler.mock.calls.length, 1, `mockEventListenerHandler was called ${mockEventListenerHandler.mock.calls.length} times instead of 1 time`);;
     assert.strictEqual(mockEventListenerHandler.mock.calls[0].arguments[0].type, "submit", 'Event is not of Submit type');
     assert.strictEqual(mockEventListenerHandler.mock.calls[0].arguments[0].defaultPrevented, true, 'PreventDefault was not set correctly');
-    // assert.strictEqual(mockFetch.mock.calls.length, 1, `mockFetch was called ${mockFetch.mock.calls.length} times instead of 1 time`);;
+    assert.strictEqual(mockFetch.mock.calls.length, 1, `mockFetch was called ${mockFetch.mock.calls.length} times instead of 1 time`);
   })
   it("sends request to POST /customers when submitting the form", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
     const submitEvent = userEvent.setup();
-    const mockOnSave = mock.fn((args:any)=>{})
-    const {store, actionLog} = renderWithStore(
-      <CustomerForm
-        {...testProps}
-        onSave={mockOnSave}
-      />);
+    const {store, actionLog} = renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
 
     const firstNameInput = screen.getByLabelText('First Name') as HTMLInputElement;
     await userEvent.clear(firstNameInput);
@@ -121,17 +113,11 @@ describe('CustomerForm tests using render and screen', ()=>{
         
     const expectedRequest = ["/customers",{"method":"POST","credentials":"same-origin","headers":{"Content-Type":"application/json"},"body":"{\"firstName\":\"Jamie\",\"lastName\":\"Doh\",\"phoneNumber\":\"555-1239\"}"}]
     const expectedResponse = [expectedRequest]
-    // assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
+    assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
     assert.deepStrictEqual(
       mockFetch.mock.calls[0].arguments
       , expectedRequest
       , `Expected fetch to be called with ${JSON.stringify(expectedRequest)}, but got ${JSON.stringify(mockFetch.mock.calls[0].arguments)}`)
-
-    assert.strictEqual(mockOnSave.mock.calls.length, 1, `Expected onSave to be called once, but got ${mockOnSave.mock.calls.length}`)
-    assert.deepStrictEqual(
-      mockOnSave.mock.calls[0].arguments
-      , expectedResponse
-      , `Expected fetch to return ${expectedResponse}, but got ${JSON.stringify( mockOnSave.mock.calls[0].arguments)}`)
     
     const expectedActions =
       [
@@ -164,10 +150,10 @@ describe('CustomerForm tests using render and screen', ()=>{
           type: 'customer/addCustomerSuccessful'
         }
       ]
-    assert.deepStrictEqual(actionLog,expectedActions, 'Expect logged action')
+    assert.deepStrictEqual(actionLog, expectedActions, 'Expect logged action')
   })
   it("renders an alert space", async () => {
-    renderWithStore(<CustomerForm {...testProps} />);
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
     const alerts = await screen.findAllByRole("alert", );
     const alertPiElements = alerts.filter(alert => alert.tagName === 'P');
     
@@ -176,7 +162,7 @@ describe('CustomerForm tests using render and screen', ()=>{
   it("initially has no error message", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
     const submitEvent = userEvent.setup();
-    renderWithStore(<CustomerForm {...testProps} />);
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
     const submitButton = screen.getByRole('button', { name: /Add/i })
     await submitEvent.click(submitButton)
     const alerts = await screen.findAllByRole("alert", );
@@ -189,7 +175,7 @@ describe('CustomerForm tests using render and screen', ()=>{
     mock.method(global,'fetch', mockFetchError)
     const user = userEvent.setup();
     const {store, actionLog} = renderWithStore(
-      <CustomerForm {...testProps} />
+      <MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>
     );
     const submitButton = screen.getByRole('button', { name: /Add/i })
     await user.click(submitButton)
@@ -197,12 +183,11 @@ describe('CustomerForm tests using render and screen', ()=>{
 
     const alert = await screen.findByText(/error occurred/i);
     assert.ok(alert.tagName === 'P', 'Expected alert to be an instance of HTMLParagraphElement')
-    // expect(element("[role=alert]")).toContainText(   "error occurred" );
   });
   it("Does not submit when there is an error", async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
     const user = userEvent.setup();
-    const {store, actionLog} = renderWithStore(<CustomerForm {...testProps} />)
+    const {store, actionLog} = renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>)
     const form = await screen.findByRole("form", {name:/Customer form/i} );
     const firstNameInput = within(form).getByLabelText<HTMLInputElement>('First Name');
     await userEvent.clear(firstNameInput);
@@ -218,7 +203,7 @@ describe('CustomerForm tests using render and screen', ()=>{
     it("renders error message", async () => {
       mock.method(global,'fetch', mockFetchError)
       const submitEvent = userEvent.setup();
-      renderWithStore(<CustomerForm {...testProps} />);
+      renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
       const submitButton = screen.getByRole<HTMLButtonElement>('button', { name: /Add/i })
       await submitEvent.click(submitButton)
 
@@ -235,15 +220,10 @@ describe('CustomerForm tests using render and screen', ()=>{
         return alertPiElements.every((el)=>el.textContent==='');
       }
     });
-    it("does not notify onSave", async () => {
+    it("compose fetch body for POST", async () => {
       const mockFetch = mock.method(global,'fetch', mockFetchError)
       const submitEvent = userEvent.setup();
-      const mockOnSave = mock.fn((args:any)=>{})
-      renderWithStore(
-        <CustomerForm
-          {...testProps}
-          onSave={mockOnSave}
-        />);
+      renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
       const firstNameInput = screen.getByLabelText('First Name') as HTMLInputElement;
       await userEvent.clear(firstNameInput);
       await userEvent.type(firstNameInput, "James")
@@ -256,14 +236,20 @@ describe('CustomerForm tests using render and screen', ()=>{
       const submitButton = screen.getByRole('button', { name: /Add/i })
       await submitEvent.click(submitButton)
     
-      const expectedRequest = ["/customers",{"method":"POST","credentials":"same-origin","headers":{"Content-Type":"application/json"},"body":"{\"firstName\":\"James\",\"lastName\":\"Duck\",\"phoneNumber\":\"777-1239\"}"}]
-      // assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
+      const expectedRequest = [
+        "/customers",
+        {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: '{"firstName":"James","lastName":"Duck","phoneNumber":"777-1239"}',
+        },
+      ];
+      assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
       assert.deepStrictEqual(
         mockFetch.mock.calls[0].arguments
         , expectedRequest
         , `Expected fetch to be called with ${JSON.stringify(expectedRequest)}, but got ${JSON.stringify(mockFetch.mock.calls[0].arguments)}`)
-
-      assert.strictEqual(mockOnSave.mock.calls.length, 0, `Expected NO onSave calls, but got ${mockOnSave.mock.calls.length}`)
     })
   })
 })
@@ -272,7 +258,7 @@ describe('CustomerForm tests using render and screen', ()=>{
 const itRendersAsATextBox = (
   label: string
   ) => it("renders as a text box with label", () => {
-    renderWithStore(<CustomerForm {...testProps}/>)
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>)
     const textBoxInputElement = screen.getByLabelText(label) as HTMLInputElement;
 
     assert.ok(textBoxInputElement instanceof HTMLInputElement, 'It should be instance of HTMLInputElement')
@@ -282,7 +268,7 @@ const itIncludesTheExistingValue = (
   label: string,
   existing: string
   ) => it("includes the existing value", () => {
-    renderWithStore(<CustomerForm {...testProps}/>)
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>)
     const textBoxInputElement = screen.getByLabelText(label) as HTMLInputElement;
 
     assert.strictEqual(textBoxInputElement.value, existing, `It should be ${existing}`)
@@ -294,11 +280,7 @@ const itSavesExistingValueWhenSubmitted = (
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
     const submitEvent = userEvent.setup();
     const mockEventListenerHandler = mock.fn((e: Event) => {})
-    renderWithStore(
-      <CustomerForm 
-        {...testProps}
-      />
-    )
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>)
     const form = screen.getByRole("form", { name: /customer/i });
     form.addEventListener("submit", mockEventListenerHandler);
     const submitButton = screen.getByRole('button', { name: /Add/i })
@@ -308,7 +290,7 @@ const itSavesExistingValueWhenSubmitted = (
     assert.strictEqual(mockEventListenerHandler.mock.calls.length, 1, `mockEventListenerHandler was called ${mockEventListenerHandler.mock.calls.length} times instead of 1 time`);;
     assert.strictEqual(mockEventListenerHandler.mock.calls[0].arguments[0].type, "submit", 'Event is not of Submit type');
     assert.strictEqual(mockEventListenerHandler.mock.calls[0].arguments[0].defaultPrevented, true, 'PreventDefault was not set correctly');
-    // assert.strictEqual(mockFetch.mock.calls.length, 1, `globalThis.fetch was called ${mockFetch.mock.calls.length} times instead of 1 time`);
+    assert.strictEqual(mockFetch.mock.calls.length, 1, `globalThis.fetch was called ${mockFetch.mock.calls.length} times instead of 1 time`);
     assert.match(mockFetch.mock.calls[0].arguments[1].body, matcher, `Request body is ${JSON.stringify(mockFetch.mock.calls[0].arguments[1].body)} has no match ${String(matcher)}`);
   })
 
@@ -319,18 +301,14 @@ const itSavesNewValueWhenSubmitted = (
   ) => it("saves new value when submitted", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
     const submitEvent = userEvent.setup();
-    renderWithStore(
-      <CustomerForm 
-        {...testProps}
-      />
-    )
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>)
     const submitButton = screen.getByRole('button', { name: /Add/i })
     const textBoxInputElement = screen.getByLabelText(label) as HTMLInputElement;
     await userEvent.clear(textBoxInputElement);
     await userEvent.type(textBoxInputElement, newValue)
     await submitEvent.click(submitButton)
 
-    // assert.strictEqual(mockFetch.mock.calls.length, 1, `globalThis.fetch was called ${mockFetch.mock.calls.length} times instead of 1 time`);
+    assert.strictEqual(mockFetch.mock.calls.length, 1, `globalThis.fetch was called ${mockFetch.mock.calls.length} times instead of 1 time`);
     assert.match(mockFetch.mock.calls[0].arguments[1].body, matcher, `Request body is ${JSON.stringify(mockFetch.mock.calls[0].arguments[1].body)} has no match ${String(matcher)}`);
   })
 
@@ -357,14 +335,14 @@ describe("phone number field", () => {
 
 describe("validation", () => {
   it("renders alert spaces for 3 input validation errors", async () => {
-    renderWithStore(<CustomerForm {...testProps} />);
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
     const form = await screen.findByRole("form", {name:/Customer form/i} );
     const alerts = await within(form).findAllByRole("alert", );
     const alertSpanElements = alerts.filter(alert => alert.tagName === 'SPAN');
     assert.ok(alertSpanElements.length===3, `Expected 3 tag name SPAN, but got ${JSON.stringify(alertSpanElements.map(el=>el.tagName))}`)
   });
   it("renders First Name input validation error", async () => {
-    renderWithStore(<CustomerForm {...testProps} />);
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
     const form = await screen.findByRole("form", {name:/Customer form/i} );
     const firstNameInput = within(form).getByLabelText<HTMLInputElement>('First Name');
     await userEvent.clear(firstNameInput);
@@ -377,7 +355,7 @@ describe("validation", () => {
     assert.throws( ()=> within(form).getByText(/first name is required/i), 'Expected to throw on no First Name error')
   });
   it("renders Last Name input validation error", async () => {
-    renderWithStore(<CustomerForm {...testProps} />);
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
     const form = await screen.findByRole("form", {name:/Customer form/i} );
     const lastNameInput = within(form).getByLabelText<HTMLInputElement>('Last Name');
     await userEvent.clear(lastNameInput);
@@ -390,7 +368,7 @@ describe("validation", () => {
     assert.throws( ()=> within(form).getByText(/last name is required/i), 'Expected to throw on no Last Name error')
   });
   it("renders Phone Number input validation error", async () => {
-    renderWithStore(<CustomerForm {...testProps} />);
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
     const form = await screen.findByRole("form", {name:/Customer form/i} );
     const phoneNumberInput = within(form).getByLabelText<HTMLInputElement>('Phone Number');
     await userEvent.clear(phoneNumberInput);
@@ -417,7 +395,7 @@ describe("validation", () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
     const submitEvent = userEvent.setup();
     const mockEventListenerHandler = mock.fn((e: Event) => {})
-    renderWithStore(<CustomerForm {...testProps} customer={blankCustomer}  />);
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps} customer={blankCustomer}/></MemoryRouter>);
     const form = screen.getByRole("form", { name: /customer/i });
     form.addEventListener("submit", (e: Event) => {});
     const submitButton = screen.getByRole('button', { name: /Add/i })
@@ -434,27 +412,46 @@ describe("validation", () => {
   })
   it("renders field validation errors from server", async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchErr422)
-    const {store, actionLog} = renderWithStore(<CustomerForm {...testProps}  />);
+    const {store, actionLog} = renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
     const submitButton = screen.getByRole('button', { name: /Add/i })
     await userEvent.click(submitButton)
-    // assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
+    assert.strictEqual(mockFetch.mock.calls.length, 1, `Expected fetch to be called once, but got ${mockFetch.mock.calls.length}`)
     const result = await mockFetch.mock.calls[0].result;
     assert.strictEqual(result?.status, 422, `Expected fetch status to be 422`)
 
     const errSpan = await screen.findByText(/Phone number already exists/i)
     assert.strictEqual(errSpan.tagName, 'SPAN', 'Expected a phone exist server error on submit')
     const expectedActions: any[] = [
-     'customer/addCustomerRequest',
-     'customer/addCustomerSubmitting',
-     'customer/addCustomerValidationFailed'
+      {
+        payload: {
+          firstName: 'first',
+          lastName: 'last',
+          phoneNumber: '123456789'
+        },
+        type: 'customer/addCustomerRequest'
+      },
+      {
+        payload: undefined,
+        type: 'customer/addCustomerSubmitting'
+      },
+      {
+        payload: {
+          validationErrors: {
+            errors: {
+              phoneNumber: 'Phone number already exists in the system'
+            }
+          }
+        },
+        type: 'customer/addCustomerValidationFailed'
+      }
     ]
-    assert.deepStrictEqual(actionLog.map(a => a.type), expectedActions, `Expected "customer/addCustomerValidationFailed" dispatched`)
+    assert.deepStrictEqual(actionLog, expectedActions, `Expected "customer/addCustomerValidationFailed" dispatched`)
   })
 });
 describe("submitting indicator", () => {
   it("displays spinner when form is submitting", async () => {
     mock.method(global,'fetch', mockFetchOk)
-    const {store, actionLog} = renderWithStore(<CustomerForm {...testProps}/>);
+    const {store, actionLog} = renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
     const submitButton = screen.getByRole('button', { name: /Add/i })
     const clickPromise = act(async () => {
       await userEvent.click(submitButton)
@@ -474,14 +471,14 @@ describe("submitting indicator", () => {
     assert.deepStrictEqual(actionLog.map(a => a.type), expectedActions, `Expected no actions dispatched after submit finished`)
   });
   it("initially does not display the submitting indicator", () => {
-    renderWithStore(<CustomerForm {...testProps}/>);
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
     assert.strictEqual(screen.queryByLabelText(/Submitting Indicator/i), null, 'Expected no spinner before submit')
   });
 });
 describe('p259 exercises', ()=>{
   it('disables Submit Button after submit', async ()=>{
     mock.method(global,'fetch', mockFetchOk)
-    renderWithStore(<CustomerForm {...testProps}/>);
+    renderWithStore(<MemoryRouter><CustomerForm {...testProps}/></MemoryRouter>);
     const submitButton = screen.getByRole<HTMLButtonElement>('button', { name: /Add/i })
     assert.ok(!submitButton.disabled, 'Expected button to be enabled initially');
     await userEvent.click(submitButton)

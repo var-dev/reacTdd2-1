@@ -1,6 +1,7 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
+import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import type { Customer, CustomerWithId } from "./types.js";
+import type { Customer } from "./types.js";
 import { required, list, match, anyErrors, hasError, type ValidatorName, type Validators, validateMany, type ValidationErrors } from "./customerFormValidation.js";
 import { addCustomerRequest } from "./customerSlice.js";
 import type { AppDispatch, RootState } from "./store.js";
@@ -13,26 +14,27 @@ const Error = ({hasError}: ErrorProps) => (
   <p role="alert" >{hasError ? 'An error occurred during save.' : ''}</p>
 );  
 
-
 export type CustomerFormProps = {
   customer?: Customer | undefined
-  onSave: (customer: Customer)=>void
 }
-export const CustomerForm = (
-  {
-    customer, 
-    onSave
-  }: CustomerFormProps) =>{
+export const CustomerForm = ({ customer }: CustomerFormProps) => {
   const dispatch = useAppDispatch();
   const {
-    error, 
+    error,
     status,
     validationErrors: serverValidationErrors,
-  } = useAppSelector(({customer})=>customer)
-  const [customerState, setCustomerState] = useState<Customer>(customer ?? {firstName: ""});
+  } = useAppSelector(({ customer }) => customer);
+  const navigate = useNavigate();
+  const [customerState, setCustomerState] = useState<Customer>(customer ?? { firstName: "" });
   const [validationErrors, setValidationErrors] = useState({} as ValidationErrors);
-  const submitting = status === "SUBMITTING";
-  const disableSubmit = status === "SUCCESSFUL"
+
+  useEffect(()=> {
+    if (status === "SUCCESSFUL") {
+    navigate(`/addAppointment?customerId=${customerState.id}`);
+    } else if (status === "VALIDATION_FAILED") {
+      setValidationErrors(serverValidationErrors!.errors );
+    }
+  }, [status, navigate])
 
   const validators = {
     firstName: required("First name is required"),
@@ -44,24 +46,6 @@ export const CustomerForm = (
       ),
   } satisfies Validators;
 
-  const doSave = async () => {
-    const result = await globalThis.fetch("/customers", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(customerState),
-    });
-
-    if (result?.ok) {
-      const customerWithId = await result.json();
-      onSave(customerWithId);
-      return
-    } else if (result.status === 422) {
-      const response = await result.json();
-      setValidationErrors(response.errors);
-    } else {
-    }
-  }
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault() 
     const validationResult = validateMany(validators, customerState);
@@ -69,7 +53,6 @@ export const CustomerForm = (
       setValidationErrors(validationResult);
       return
     }
-    await doSave();
     dispatch(addCustomerRequest(customerState));
   }
   const handleChange = ({ target }: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,10 +74,10 @@ export const CustomerForm = (
       });
     }
   };
-const RenderError = ({fieldName}: {fieldName: ValidatorName}) => {
-  const allValidationErrors = {
-    ...validationErrors,
-    ...serverValidationErrors
+  const RenderError = ({fieldName}: {fieldName: ValidatorName}) => {
+    const allValidationErrors = {
+      ...validationErrors,
+      ...serverValidationErrors
   };
   return (
     <span id={`${fieldName}Error`} role="alert">
@@ -140,11 +123,11 @@ const RenderError = ({fieldName}: {fieldName: ValidatorName}) => {
       />
     <RenderError fieldName="phoneNumber"/>
     <input 
-      disabled={disableSubmit}
+      disabled={status === "SUCCESSFUL"}
       type="submit" 
       value="Add" 
     />
-    {submitting ? (<span className="submittingIndicator" aria-label="Submitting Indicator"/>) : null}
+    {status === "SUBMITTING" ? (<span className="submittingIndicator" aria-label="Submitting Indicator"/>) : null}
   </form>
 }
 

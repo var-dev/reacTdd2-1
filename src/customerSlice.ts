@@ -1,11 +1,12 @@
 import { createSlice, createAction, type PayloadAction } from '@reduxjs/toolkit';
 import type { Customer } from './types.js';
+import type { ValidationErrors } from './customerFormValidation.js';
 
 export const addCustomerRequest = createAction<Customer>('customer/addCustomerRequest');
 
 interface CustomerState {
   status?: 'SUBMITTING' | 'SUCCESSFUL' | 'FAILED' | 'VALIDATION_FAILED';
-  validationErrors?: {};
+  validationErrors?: {errors: ValidationErrors};
   error?: boolean;
 }
 
@@ -26,7 +27,7 @@ const customerSlice = createSlice({
       state.status = 'FAILED';
       state.error = true;
     },
-    addCustomerValidationFailed: (state: CustomerState, action: PayloadAction<{ validationErrors: {} }>) => {
+    addCustomerValidationFailed: (state: CustomerState, action: PayloadAction<{ validationErrors: {errors: ValidationErrors} }>) => {
       state.status = 'VALIDATION_FAILED';
       state.validationErrors = action.payload.validationErrors;
     },
