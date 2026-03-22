@@ -212,7 +212,7 @@ describe('CustomerForm tests using render and screen', ()=>{
       mock.method(global,'fetch', mockFetchOk)
       await submitEvent.click(submitButton)
       
-      // assert.ok(await confirmNoAlerts(), `Expected empty string after clearing error`)
+      assert.ok(await confirmNoAlerts(), `Expected empty string after clearing error`)
 
       async function confirmNoAlerts() {
         const alerts = await screen.findAllByRole("alert");

@@ -4,7 +4,7 @@ import type { ValidationErrors } from './customerFormValidation.js';
 
 export const addCustomerRequest = createAction<Customer>('customer/addCustomerRequest');
 
-interface CustomerState {
+export type CustomerState = {
   status?: 'SUBMITTING' | 'SUCCESSFUL' | 'FAILED' | 'VALIDATION_FAILED';
   validationErrors?: {errors: ValidationErrors};
   error?: boolean;
@@ -21,6 +21,7 @@ const customerSlice = createSlice({
     },
     addCustomerSuccessful: (state: CustomerState & Customer, action: PayloadAction<{ customer: Customer }>) => {
       state.status = 'SUCCESSFUL';
+      state.error = false;
       Object.assign(state, action.payload.customer)
     },
     addCustomerFailed: (state: CustomerState) => {
