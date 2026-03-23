@@ -1,6 +1,8 @@
-import customerReducer, { addCustomerSubmitting } from "./customerSlice.js";
+import customerReducer from "./customerSlice.js";
+import navigationReducer from './navigationSlice.js'
 
 
 export const rootReducer = {
   customer: customerReducer,
+  navigation: navigationReducer,
 }

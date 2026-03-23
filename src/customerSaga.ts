@@ -27,7 +27,7 @@ export function* addCustomer({payload}:{payload: Customer}) {
     yield put(addCustomerSuccessful({customer}));
   } else if (result.status === 422) {
     const response: unknown = yield call([result, result.json]);
-    yield put(addCustomerValidationFailed({validationErrors: response as {errors: ValidationErrors}}))
+    yield put(addCustomerValidationFailed({validationErrors: (response as any).errors as ValidationErrors}))
   } else {
     yield put(addCustomerFailed())
   }

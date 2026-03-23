@@ -11,6 +11,7 @@ import {
 } from '../src/customerSlice.js';
 import type { Customer } from '../src/types.js';
 import { waitFor } from '@testing-library/react';
+import { ValidationErrors } from '../src/customerFormValidation.js';
 
 const originalFetch = globalThis.fetch;
 
@@ -59,7 +60,7 @@ describe('Store dispatching', () => {
   });
 
   it('dispatches addCustomerValidationFailed action', () => {
-    const validationErrors = { firstName: 'Required' };
+    const validationErrors = { firstName: 'Required' } as ValidationErrors;
     store.dispatch(addCustomerValidationFailed({ validationErrors }));
     const state = store.getState();
     assert.strictEqual(state.customer.status, 'VALIDATION_FAILED');
@@ -67,9 +68,9 @@ describe('Store dispatching', () => {
   });
 
   it('mock dispatches addCustomerValidationFailed', ()=>{
-    const validationErrors = { firstName: 'Required' };
+    const validationErrors = { firstName: 'Required' } as ValidationErrors;
     const mockDispatch = mock.method(store, 'dispatch', (arg: any)=>{})
-    mockDispatch(addCustomerValidationFailed({ validationErrors }));
+    mockDispatch(addCustomerValidationFailed({ validationErrors }))
     assert.strictEqual(mockDispatch.mock.callCount(), 1, 'mockDispatch should be called 1 time')
     const actual = mockDispatch.mock.calls[0].arguments[0]
     assert.strictEqual(actual.type, addCustomerValidationFailed({ validationErrors }).type,'expected customer/addCustomerValidationFailed')

@@ -6,7 +6,7 @@ export const addCustomerRequest = createAction<Customer>('customer/addCustomerRe
 
 export type CustomerState = {
   status?: 'SUBMITTING' | 'SUCCESSFUL' | 'FAILED' | 'VALIDATION_FAILED';
-  validationErrors?: {errors: ValidationErrors};
+  validationErrors?: ValidationErrors;
   error?: boolean;
 }
 
@@ -28,7 +28,7 @@ const customerSlice = createSlice({
       state.status = 'FAILED';
       state.error = true;
     },
-    addCustomerValidationFailed: (state: CustomerState, action: PayloadAction<{ validationErrors: {errors: ValidationErrors} }>) => {
+    addCustomerValidationFailed: (state: CustomerState, action: PayloadAction<{ validationErrors: ValidationErrors }>) => {
       state.status = 'VALIDATION_FAILED';
       state.validationErrors = action.payload.validationErrors;
     },

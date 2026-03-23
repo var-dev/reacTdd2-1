@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 
 import "./domSetup"; // must be imported before render/screen
 import React from "react";
+import { Provider } from "react-redux";
+import { store } from "../src/store.js";
 import { MemoryRouter } from "react-router";
 import { render, screen, cleanup, within, waitFor, waitForElementToBeRemoved, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -302,7 +304,9 @@ describe('CustomerSearchRoute', async () => {
     });
     render (
       <MemoryRouter initialEntries={["/"]}>
-        <App/>
+        <Provider store={store}>
+          <App/>
+        </Provider>
       </MemoryRouter>);
     const searchCustomersBtn = screen.getByText<HTMLButtonElement>('Search customers')
     await waitFor(async ()=>userEvent.click(searchCustomersBtn))

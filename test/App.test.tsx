@@ -7,6 +7,10 @@ import { MemoryRouter } from "react-router";
 import { render, screen, cleanup, waitForElementToBeRemoved, waitFor} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import { Provider, useDispatch } from "react-redux";
+import { store } from "../src/store.js";
+import { navigateRequest } from "../src/navigationSlice.ts";
+
 import {blankAppointment, blankCustomer} from '../src/sampleDataStatic.ts'
 import { type CustomerFormProps } from "../src/CustomerForm.js";
 import { type AppointmentFormLoaderProps } from "../src/AppointmentFormLoader.js";
@@ -17,7 +21,6 @@ const today = new Date(2018, 11, 1);
 const mockCustomerForm = mock.fn((
   {
     customer,
-    onSave
   }: CustomerFormProps)=>(<div data-testid='mockCustomerForm'></div>))
 const mockAppointmentFormLoader = mock.fn((
   {
@@ -58,23 +61,23 @@ const testProps = {
 
 describe('App', ()=>{
   it('initially shows the AppointmentDayViewLoader', async ()=>{
-    render(<MemoryRouter initialEntries={['/']}><App/></MemoryRouter>)
+    render(<MemoryRouter initialEntries={['/']}><Provider store={store}><App/></Provider></MemoryRouter>)
     // await waitFor(()=>{screen.getByText('App')})
     assert.ok(screen.getByText('There are no appointments scheduled for today'))
   })
   it('has a menu bar', async ()=>{
-    const {container} = render(<MemoryRouter initialEntries={['/']}><App/></MemoryRouter>)
+    const {container} = render(<MemoryRouter initialEntries={['/']}><Provider store={store}><App/></Provider></MemoryRouter>)
     assert.ok(container.getElementsByTagName('menu'))
     assert.ok(screen.getByLabelText('menu'))
   })
   it('has a button to initiate add customer and appointment action', async ()=>{
-    render(<MemoryRouter initialEntries={['/']}><App/></MemoryRouter>)
+    render(<MemoryRouter initialEntries={['/']}><Provider store={store}><App/></Provider></MemoryRouter>)
     assert.ok(screen.getByText('Add customer and appointment'))
   })
   it('displays the CustomerForm when button is clicked', async ()=>{
     let isHiddenAppointmentDayViewLoader = false
     const evt = userEvent.setup()
-    render(<MemoryRouter initialEntries={['/']}><App/></MemoryRouter>)
+    render(<MemoryRouter initialEntries={['/']}><Provider store={store}><App/></Provider></MemoryRouter>)
     const button = screen.getByText('Add customer and appointment')
     waitForElementToBeRemoved(
       ()=>screen.getByText('There are no appointments scheduled for today'))
@@ -91,37 +94,8 @@ describe('App', ()=>{
     assert.ok(isHiddenAppointmentDayViewLoader, 'AppointmentDayViewLoader should not be found')
     assert.ok(!screen.queryByText('Add customer and appointment'), 'Button should be gone too')
   })
-  it.skip('displays the AppointmentFormLoader after the CustomerForm is submitted', async ()=>{
-    const evt = userEvent.setup()
-    render(<MemoryRouter initialEntries={['/']}><App/></MemoryRouter>)
-    const button = screen.getByText('Add customer and appointment')
-    await evt.click(button)
-    await screen.findByTestId('mockCustomerForm')
-    const onSaveCustomerForm = mockCustomerForm.mock.calls[mockCustomerForm.mock.callCount()-1].arguments[0].onSave
-    const customerId = {id: 123}
-    await waitFor(()=>onSaveCustomerForm({...blankCustomer, ...customerId}))
-    const AppointmentFormLoaderElement = await screen.findByTestId('mockAppointmentFormLoader')
-    
-    assert.ok(AppointmentFormLoaderElement, 'Should render mockAppointmentFormLoader')
-    const actualArguments = JSON.stringify(
-      mockAppointmentFormLoader.mock.calls[mockAppointmentFormLoader.mock.callCount()-1]
-        .arguments[0]
-        .appointment)
-    const expectedArguments = JSON.stringify({...blankAppointment, customerId: 123})
-
-    assert.strictEqual(
-      actualArguments, 
-      expectedArguments, 
-      'Should pass blank original appointment object to CustomerForm via AppointmentFormLoader')
-
-    const onSaveAppointmentFormLoader = mockAppointmentFormLoader.mock.calls[mockAppointmentFormLoader.mock.callCount()-1]
-      .arguments[0]
-      .onSave!
-    await waitFor(()=>onSaveAppointmentFormLoader())
-    assert.ok(await screen.findByText('There are no appointments scheduled for today'), 'Should render AppointmentDayView')
-  })
   it("displays the CustomerSearchRoute when button is clicked", async () => {
-    render(<MemoryRouter initialEntries={['/']}><App/></MemoryRouter>)
+    render(<MemoryRouter initialEntries={['/']}><Provider store={store}><App/></Provider></MemoryRouter>)
     const button = screen.getByText('Search customers')
     await userEvent.click(button)
     await screen.findByTestId('mockCustomerSearchRoute')
@@ -129,7 +103,7 @@ describe('App', ()=>{
     assert.equal(mockCustomerSearchRoute.mock.callCount(), 1, 'CustomerSearchRoute expected to be called once on App render')
   })
   it("passes link element to the CustomerSearchRoute named Create appointment", async () => {
-    render(<MemoryRouter initialEntries={['/']}><App/></MemoryRouter>)
+    render(<MemoryRouter initialEntries={['/']}><Provider store={store}><App/></Provider></MemoryRouter>)
     const button = screen.getByText('Search customers')
     await userEvent.click(button)
     await waitFor(()=>screen.getByTestId('mockCustomerSearchRoute')) 
@@ -142,5 +116,15 @@ describe('App', ()=>{
     const createAppointmentLnk = screen.getByText('Create appointment');
     assert.ok(createAppointmentLnk.tagName==='A', 'Create appointment A-link not found')
     assert.strictEqual(createAppointmentLnk.getAttribute('href'), '/addAppointment?customerId=1', 'Create appointment button should link to add appointment route with customer id query parameter')
+  })
+})
+describe('App navigate', ()=>{
+  it('navigates to addCustomer', async ()=>{
+    render(<MemoryRouter initialEntries={['/']}><Provider store={store}><App/></Provider></MemoryRouter>)
+    store.dispatch(navigateRequest('/addCustomer'))
+    // await waitFor(()=>{screen.getByText('App')})
+    const div = await screen.findByTestId<HTMLDivElement>('mockCustomerForm')
+    assert.strictEqual(div.tagName, 'DIV', 'expected DIV')
+    assert.strictEqual(store.getState().navigation.navigateTo, '', 'navigation state should be reset after navigation')
   })
 })

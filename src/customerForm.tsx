@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react"
-import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import type { Customer } from "./types.js";
 import { required, list, match, anyErrors, hasError, type ValidatorName, type Validators, validateMany, type ValidationErrors } from "./customerFormValidation.js";
 import { addCustomerRequest } from "./customerSlice.js";
+import { navigateRequest } from "./navigationSlice.js";
 import type { AppDispatch, RootState } from "./store.js";
 
 const useAppSelector = useSelector.withTypes<RootState>()
@@ -24,17 +24,16 @@ export const CustomerForm = ({ customer }: CustomerFormProps) => {
     status,
     validationErrors: serverValidationErrors,
   } = useAppSelector(({ customer }) => customer);
-  const navigate = useNavigate();
   const [customerState, setCustomerState] = useState<Customer>(customer ?? { firstName: "" });
   const [validationErrors, setValidationErrors] = useState({} as ValidationErrors);
 
   useEffect(()=> {
     if (status === "SUCCESSFUL") {
-    navigate(`/addAppointment?customerId=${customerState.id}`);
+    dispatch(navigateRequest(`/addAppointment?customerId=${customerState.id}`))
     } else if (status === "VALIDATION_FAILED") {
-      setValidationErrors(serverValidationErrors!.errors );
+      setValidationErrors(serverValidationErrors! );
     }
-  }, [status, navigate])
+  }, [status])
 
   const validators = {
     firstName: required("First name is required"),

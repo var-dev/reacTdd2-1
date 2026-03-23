@@ -1,7 +1,5 @@
-import { takeLatest, all, fork } from "redux-saga/effects";
-import { addCustomer, addCustomerWatcher } from "./customerSaga.js";
-import { addCustomerRequest } from "./customerSlice.js";
-
+import { all, fork } from "redux-saga/effects";
+import { addCustomerWatcher } from "./customerSaga.js";
 
 export function* rootSaga() {
   yield all([
