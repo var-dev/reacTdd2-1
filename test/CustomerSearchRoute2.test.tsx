@@ -2,11 +2,13 @@ import { afterEach, beforeEach, describe, it, mock} from "node:test";
 import * as assert from 'node:assert/strict';
 
 import "./domSetup.ts"; // must be imported before render/screen
-import * as React from "react";
+import React, {type ReactElement} from "react";
 import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
+import { Provider } from "react-redux";
 import type { Customer } from "../src/types.js";
 import {CustomerSearchRoute} from '../src/CustomerSearchRoute.js'
+import { store, type AppStore } from "../src/store.js";
 import userEvent from "@testing-library/user-event";
 
 
@@ -61,12 +63,22 @@ const mockFetchOkFactory = (...customersVariadic: Customer[][]) => {
 
 const mockFetchCustomers = (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve([])});
 
+const renderWithRouterProvider = (path: string, store: AppStore) => (ui: ReactElement) => render(
+  <MemoryRouter initialEntries={[`${path}`]}>
+    <Provider store={store}>
+      {ui}
+    </Provider>
+  </MemoryRouter>
+)
+
 describe('CustomerSearchRoute', ()=>{
   it('renders CustomerSearch initially and retrieves customers', async ()=>{
     const mockFetch = mock.method(globalThis, 'fetch', mockFetchOkFactory(twoCustomers))
     render(
       <MemoryRouter initialEntries={["/searchCustomers?searchTerm=qwe&limit=11&lastRowIds=123,654"]}>
-        <CustomerSearchRoute renderCustomerActions={()=><></>}/>
+        <Provider store={store}>
+          <CustomerSearchRoute renderCustomerActions={() => <></>} />
+        </Provider>
       </MemoryRouter>
     );
     await waitFor(()=>{screen.getByLabelText('customer search table')})
@@ -74,12 +86,14 @@ describe('CustomerSearchRoute', ()=>{
     assert.strictEqual(count, 1, 'globalFetch mock not called 1 time')
     assert.strictEqual(screen.getByText('BNM').tagName, 'TD')
   })
-  it('fetch based on searchTerm update', async ()=>{
-    const mockFetch =  mock.method(globalThis, 'fetch', mockFetchOkFactory(twoCustomers))
+  it('fetch based on searchTerm update', async () => {
+    const mockFetch = mock.method(globalThis, 'fetch', mockFetchOkFactory(twoCustomers))
     const user = userEvent.setup()
     render(
       <MemoryRouter initialEntries={["/searchCustomers?searchTerm=qwe&limit=11&lastRowIds=123,654"]}>
-        <CustomerSearchRoute renderCustomerActions={()=><></>}/>
+        <Provider store={store}>
+          <CustomerSearchRoute renderCustomerActions={() => <></>} />
+        </Provider>
       </MemoryRouter>
     );
     const searchInput = await waitFor(()=>screen.getByLabelText<HTMLInputElement>('Search for customers'))

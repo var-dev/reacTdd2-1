@@ -1,7 +1,13 @@
 import React, {useEffect, useState, type ReactNode} from "react";
 import { useSearchParams, Link, useNavigate } from "react-router";
+import { useDispatch } from "react-redux";
 import type { Customer } from "./types.js";
 import { searchParams, commaStringPop, commaStringPush} from "./searchParams.js";
+import type { AppDispatch } from "./store.js";
+import { navigateRequest } from "./navigationSlice.js";
+
+
+const useAppDispatch = useDispatch.withTypes<AppDispatch>()
 
 type SearchButtonsProps = {
   customers: Customer[]
@@ -11,7 +17,8 @@ const SearchButtons = (
     customers,
   }: SearchButtonsProps) => 
   { 
-    const navigate = useNavigate()
+    // const navigate = useNavigate()
+    const dispatch = useAppDispatch()
     const [params, setParams] = useSearchParams()
     const pageLimit= parseInt(params.get('limit') ?? '10')
     const disabledNext=Array.isArray(customers) ? customers.length < pageLimit : true
@@ -32,7 +39,8 @@ const SearchButtons = (
     const handlePageLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
       const paramsClone = new URLSearchParams(params)
       paramsClone.set('limit', event.target.value ?? 10)
-      navigate(`/searchCustomers?${paramsClone.toString()}`)
+      // navigate(`/searchCustomers?${paramsClone.toString()}`)
+      dispatch(navigateRequest(`/searchCustomers?${paramsClone.toString()}`))
     }
     return (<menu>
     <li>

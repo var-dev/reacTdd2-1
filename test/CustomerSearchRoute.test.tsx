@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, it, mock } from "node:test";
 import assert from 'node:assert/strict';
 
 import "./domSetup"; // must be imported before render/screen
-import React from "react";
+import React, { type ReactElement }  from "react";
 import { Provider } from "react-redux";
-import { store } from "../src/store.js";
+import { AppStore, store } from "../src/store.js";
 import { MemoryRouter } from "react-router";
 import { render, screen, cleanup, within, waitFor, waitForElementToBeRemoved, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -63,13 +63,17 @@ const anotherTenCustomers: any[] =
 const testProps: CustomerSearchRouteProps = {
   renderCustomerActions: ()=><></>
 }
+const renderWithRouterProvider = (path: string, store: AppStore) => (ui: ReactElement) => render(
+  <MemoryRouter initialEntries={[`${path}`]}>
+    <Provider store={store}>
+      {ui}
+    </Provider>
+  </MemoryRouter>
+)
 describe('CustomerSearchRoute', async () => {
   it("renders a table with four headings", async () => {
     mock.method(global,'fetch', mockFetchOk)
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const table = await waitFor(()=>screen.getByLabelText<HTMLTableElement>(/customer search table/))
     const headings = within(table).getAllByRole("columnheader");
     const headingsArray = Array.from(headings).map((h) => h.textContent)
@@ -83,10 +87,7 @@ describe('CustomerSearchRoute', async () => {
   });
   it("fetches all customer data when component mounts", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     await waitFor(()=>screen.getByLabelText<HTMLTableElement>(/customer search table/))
 
     assert.ok(mockFetch.mock.callCount() === 1, `mockFetchOk is not called once, but ${mockFetch.mock.callCount()}`)
@@ -101,10 +102,7 @@ describe('CustomerSearchRoute', async () => {
   });
   it("renders all customer data in a table row", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(twoCustomers))
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const table = await waitFor(()=>screen.getByLabelText<HTMLTableElement>(/customer search table/))
     const [theadRowGroup, tbodyRowGroup] = within(table).getAllByRole<HTMLTableRowElement>("rowgroup")
     const tableRows = within(tbodyRowGroup).getAllByRole('row');
@@ -118,19 +116,13 @@ describe('CustomerSearchRoute', async () => {
   });
   it('has a Next button', async ()=>{
     mock.method(global,'fetch', mockFetchOkFactory(twoCustomers))
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const button = await waitFor(()=>screen.getByLabelText('Go to next page'))
     assert.ok(button.ariaLabel === 'Go to next page', 'Next button not found')
   })
   it('requests next page of data when next button is clicked', async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers))
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const button = await waitFor(()=>screen.getByLabelText('Go to next page'))
     await userEvent.click(button)
     const fetchCallsCounter = mockFetch.mock.callCount()
@@ -144,10 +136,7 @@ describe('CustomerSearchRoute', async () => {
   it("displays next page of data when Next button is clicked", async () => {
     const nextCustomer: Customer[] = [{ id: 99, firstName: "NextPageCustomerName"}];
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, nextCustomer))
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const button = await waitFor(()=>screen.getByLabelText('Go to next page'))
 
     assert.ok(mockFetch.mock.callCount() === 1, `Expected fetch to be called one time, but it was called ${mockFetch.mock.callCount()} times`)
@@ -172,20 +161,14 @@ describe('CustomerSearchRoute', async () => {
   })
   it("has a previous button", async () => {
     mock.method(global,'fetch', mockFetchOkFactory(oneCustomer))
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const button = await waitFor(()=>screen.getByLabelText('Go to previous page'))
 
     assert.ok(button.ariaLabel === 'Go to previous page', 'Previous button not found')
   })
   it("moves back to first page when previous button is clicked", async () => {
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, anotherTenCustomers, oneCustomer))
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const buttonNext = await waitFor(()=>screen.getByLabelText('Go to next page'))
     const buttonPrev = await waitFor(()=>screen.getByLabelText('Go to previous page'))
 
@@ -216,20 +199,14 @@ describe('CustomerSearchRoute', async () => {
   })
   it("renders a text field for a search term", async () =>{
     mock.method(global,'fetch', mockFetchOk)
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const searchbox = await waitFor(()=>screen.getByLabelText(/search for customers/i))
 
     assert.ok(searchbox.tagName==='INPUT', 'Search box not found')  
   })
   it("performs search when search term is changed", async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOk)
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const searchbox = await waitFor(()=>screen.getByLabelText(/search for customers/i))
     await userEvent.type(searchbox, "asdf")
     assert.ok(
@@ -243,10 +220,7 @@ describe('CustomerSearchRoute', async () => {
   })
   it("includes search term when moving to next page", async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, tenCustomers, tenCustomers, tenCustomers, tenCustomers, tenCustomers))
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const searchbox = await waitFor(()=>screen.getByLabelText(/search for customers/i))
     const buttonNext = await waitFor(()=>screen.getByLabelText('Go to next page'))
     await userEvent.type(searchbox, "asdf")
@@ -268,10 +242,7 @@ describe('CustomerSearchRoute', async () => {
   it("displays provided action buttons for each customer", async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(twoCustomers))
     const actionSpy = mock.fn(() => "actions");
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps } renderCustomerActions={actionSpy}/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps } renderCustomerActions={actionSpy}/>)
     const table = await waitFor(()=>screen.getByLabelText<HTMLTableElement>(/customer search table/))
     const [theadRowGroup, tbodyRowGroup] = within(table).getAllByRole<HTMLTableRowElement>("rowgroup")
     // const tableRows = within(tbodyRowGroup).getAllByRole('row');
@@ -283,10 +254,7 @@ describe('CustomerSearchRoute', async () => {
   it("passes customer to the renderCustomerActions prop", async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(twoCustomers))
     const actionSpy = mock.fn(() => "actions");
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps } renderCustomerActions={actionSpy}/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps } renderCustomerActions={actionSpy}/>)
     const table = await waitFor(()=>screen.getByLabelText<HTMLTableElement>(/customer search table/))
 
     const actionsCount = actionSpy.mock.callCount();
@@ -318,10 +286,7 @@ describe('CustomerSearchRoute', async () => {
   })
   it('disables Prev button when navigation is not possible', async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, anotherTenCustomers))
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const buttonPrev = await waitFor(()=>screen.getByLabelText<HTMLButtonElement>('Go to previous page'))
     const buttonNext = await waitFor(()=>screen.getByLabelText('Go to next page'))
     assert.ok(buttonPrev.ariaLabel === 'Go to previous page', 'Previous button not found')
@@ -332,10 +297,7 @@ describe('CustomerSearchRoute', async () => {
   })
   it('disables Next button if customers hold less than 10 entries', async ()=>{
     const mockFetch = mock.method(global,'fetch', mockFetchOkFactory(tenCustomers, twoCustomers))
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const buttonNext = await waitFor(()=>screen.getByLabelText<HTMLButtonElement>('Go to next page'))
 
     await waitFor(async ()=>{ await userEvent.click(buttonNext)})
@@ -343,28 +305,23 @@ describe('CustomerSearchRoute', async () => {
   })
   it('displays limit input field', async ()=>{
     mock.method(global, 'fetch', mockFetchOk)
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<CustomerSearchRoute {...testProps }/>)
     const limitField = await waitFor(()=>screen.getByLabelText(/records per page/i))
 
     assert.ok(limitField.tagName==='INPUT', 'Limit field not found')
   })
   it('displays limit in the query', async ()=>{
+    const user = userEvent.setup()
     const mockFetch = mock.method(global, 'fetch', mockFetchOk)
-    render (
-      <MemoryRouter initialEntries={["/searchCustomers"]}>
-        <CustomerSearchRoute {...testProps }/>
-      </MemoryRouter>);
+    renderWithRouterProvider("/searchCustomers", store)(<App/>)
     const limitField = await waitFor(()=>screen.getByLabelText(/records per page/i))
-    await userEvent.type(limitField, "{Control>}{a}{/Control}5")
+    await user.type(limitField, "{Control>}{a}{/Control}5")
     // await userEvent.type(limitField, "{Meta>}{a}{/Meta}5")
-    await userEvent.tab();
+    await user.tab();
     const count = mockFetch.mock.callCount();
     assert.ok(
       count === 2,
-      `Expected fetch to be called once, but it was called ${count} times`
+      `Expected fetch to be called twice, but it was called ${count} times`
     )
 
     const actual1 = mockFetch.mock.calls[count-1].arguments[0]
