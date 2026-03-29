@@ -8,10 +8,19 @@ import { AppStore, store } from "../src/store.js";
 import { MemoryRouter } from "react-router";
 import { render, screen, cleanup, within, waitFor, waitForElementToBeRemoved, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useEffect } from "react";
+import { useNavigate, } from "react-router";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState, AppDispatch } from "../src/store.js";
 import type { Customer } from "../src/types.js";
 import {CustomerSearchRoute, type CustomerSearchRouteProps} from '../src/CustomerSearchRoute.js'
+import { navigationSuccessful } from "../src/navigationSlice.js";
 import { App } from "../src/App.js";
 
+
+
+const useAppSelector = useSelector.withTypes<RootState>()
+const useAppDispatch = useDispatch.withTypes<AppDispatch>()
 
 const originalFetch = globalThis.fetch;
 
@@ -63,13 +72,26 @@ const anotherTenCustomers: any[] =
 const testProps: CustomerSearchRouteProps = {
   renderCustomerActions: ()=><></>
 }
-const renderWithRouterProvider = (path: string, store: AppStore) => (ui: ReactElement) => render(
-  <MemoryRouter initialEntries={[`${path}`]}>
-    <Provider store={store}>
-      {ui}
-    </Provider>
-  </MemoryRouter>
-)
+const renderWithRouterProvider = (path: string, store: AppStore) => (ui: ReactElement) => {
+  const AppFixture = ()=>{
+    const navigate = useNavigate();
+    const dispatch = useAppDispatch()
+    const { navigateTo } = useAppSelector(({ navigation }) => navigation);
+    useEffect(() => {
+      if (navigateTo[0] === "/") {
+        navigate(navigateTo);
+        dispatch(navigationSuccessful());
+    }
+  }, [navigateTo, navigate])
+    return ui
+  }
+  render(
+    <MemoryRouter initialEntries={[`${path}`]}>
+      <Provider store={store}>
+        <AppFixture/>
+      </Provider>
+    </MemoryRouter>
+)}
 describe('CustomerSearchRoute', async () => {
   it("renders a table with four headings", async () => {
     mock.method(global,'fetch', mockFetchOk)
@@ -313,7 +335,7 @@ describe('CustomerSearchRoute', async () => {
   it('displays limit in the query', async ()=>{
     const user = userEvent.setup()
     const mockFetch = mock.method(global, 'fetch', mockFetchOk)
-    renderWithRouterProvider("/searchCustomers", store)(<App/>)
+    renderWithRouterProvider("/", store)(<CustomerSearchRoute {...testProps }/>)
     const limitField = await waitFor(()=>screen.getByLabelText(/records per page/i))
     await user.type(limitField, "{Control>}{a}{/Control}5")
     // await userEvent.type(limitField, "{Meta>}{a}{/Meta}5")
