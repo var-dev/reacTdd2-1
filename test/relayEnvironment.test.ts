@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import "./domSetup.ts"; // must be imported before render/screen
 import { render, screen, cleanup, within, waitFor, waitForOptions } from "@testing-library/react";
 
-import { performFetch } from "../src/relayEnvironment";
+import { performFetch } from "../src/relayEnvironment.js";
+// import { buildEnvironment } from "../src/relayEnvironment.js";
 
 const originalFetch = globalThis.fetch;
 
@@ -19,7 +20,6 @@ afterEach(()=>{
 const mockFetchOk = (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(args) });
 const mockFetch201 = (...args: any[]) => Promise.resolve({ ok: true, status: 201 });
 const mockFetchError = (...args: any[]) => Promise.resolve({ ok: false });
-
 
 describe('performFetch', ()=>{
   it("sends HTTP request to POST /graphql", () => {
@@ -45,4 +45,33 @@ describe('performFetch', ()=>{
     const body = JSON.stringify(await json()) 
     assert.match(body, /body/, 'expected body in the response')
   })
+  it("rejects when the request fails", async () => {
+    const mockFetch = mock.method(globalThis, 'fetch', mockFetchError);
+    performFetch({}, {}).catch((error: any) => assert.match(error.message, /500/))
+    const count = mockFetch.mock.callCount()
+    assert.strictEqual(count, 1, 'mockFetch callCount not 1');
+  })
 })
+
+describe("buildEnvironment", async () => {
+  const environment = { a: 123 };
+  const network = { b: 234 };
+  const store = { c: 345 };
+
+  mock.module("../src/relayEnvironment.js", {
+    namedExports: {
+      buildEnvironment: mock.fn(() => environment),
+    },
+  });
+
+  beforeEach(async () => {
+    // Environment.mockImplementation(() => environment);
+  });
+  afterEach(() => {
+    mock.restoreAll();
+  });
+  it("returns environment", async (t) => {
+    const { buildEnvironment } = await import("../src/relayEnvironment.js");
+    assert.deepStrictEqual(buildEnvironment(), environment);
+  });
+});
