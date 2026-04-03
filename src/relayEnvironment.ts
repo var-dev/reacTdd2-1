@@ -21,7 +21,10 @@ export const performFetch = (operation: any, variables: any) =>
     .then(verifyStatusOk)
     .then((result) => result!.json());
 
+let environment = null as unknown as Environment
 export const buildEnvironment = () => new Environment({
   network: Network.create(performFetch),
   store: new Store(new RecordSource())
 });
+
+export const getEnvironment = () => environment ? environment : environment = buildEnvironment()
