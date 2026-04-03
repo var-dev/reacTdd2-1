@@ -4,7 +4,6 @@ import "./domSetup.ts"; // must be imported before render/screen
 import { render, screen, cleanup, within, waitFor, waitForOptions } from "@testing-library/react";
 
 import { performFetch } from "../src/relayEnvironment.js";
-// import { buildEnvironment } from "../src/relayEnvironment.js";
 
 const originalFetch = globalThis.fetch;
 
@@ -52,26 +51,3 @@ describe('performFetch', ()=>{
     assert.strictEqual(count, 1, 'mockFetch callCount not 1');
   })
 })
-
-describe("buildEnvironment", async () => {
-  const environment = { a: 123 };
-  const network = { b: 234 };
-  const store = { c: 345 };
-
-  mock.module("../src/relayEnvironment.js", {
-    namedExports: {
-      buildEnvironment: mock.fn(() => environment),
-    },
-  });
-
-  beforeEach(async () => {
-    // Environment.mockImplementation(() => environment);
-  });
-  afterEach(() => {
-    mock.restoreAll();
-  });
-  it("returns environment", async (t) => {
-    const { buildEnvironment } = await import("../src/relayEnvironment.js");
-    assert.deepStrictEqual(buildEnvironment(), environment);
-  });
-});
