@@ -11,7 +11,7 @@ export type CustomerWithId = {
 export type Customer = Partial<CustomerWithId>
 export type ServiceStylistRecord = typeof serviceStylists
 export type Service = keyof ServiceStylistRecord;
-export type Stylist = RealStylist | "noOne" | undefined
+export type Stylist = string
 export type RealStylist = ServiceStylistRecord[keyof ServiceStylistRecord][number]
 export type AvailableTimeSlot = {
     startsAt: number;
