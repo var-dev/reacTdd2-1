@@ -105,3 +105,4 @@ dist
 .pnp.*
 
 .DS_Store
+__generated__

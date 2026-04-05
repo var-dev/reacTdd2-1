@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { fetchQuery, graphql } from "relay-runtime";
 import { getEnvironment } from "./relayEnvironment.js";
-import type { Customer } from "./types.js";
+import type { AppointmentApi } from "./types.js";
+import type { CustomerHistoryQuery } from "./__generated__/CustomerHistoryQuery.graphql.js";
+
+type AppointmentType = NonNullable<NonNullable<CustomerHistoryQuery['response']['customer']>['appointments']>[0];
 export const query = graphql`
   query CustomerHistoryQuery($id: ID!) {
     customer(id: $id) {
@@ -18,17 +21,32 @@ export const query = graphql`
     }
   }
 `;
+const toTimeString = (startsAt:number|string) =>
+  new Date(Number(startsAt)).toString().substring(0, 21);
+const AppointmentRow = ({ appointment }: { appointment: AppointmentType }) => (
+  <tr>
+    <td>{toTimeString(appointment?.startsAt as number|string)}</td>
+    <td>{appointment?.stylist}</td>
+    <td>{appointment?.service}</td>
+    <td>{appointment?.notes}</td>
+  </tr>
+);
 
 type CustomerHistoryProps = {id: number}
 export const CustomerHistory = ({ id }: CustomerHistoryProps) => {
-  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [customer, setCustomer] = useState<CustomerHistoryQuery['response']['customer']>(null);
   useEffect(() => {
     const subscription = fetchQuery(getEnvironment(), query, { id }).subscribe({
-      next: ({customer}:any) => setCustomer(customer),
-      // next: (customer) => console.log(customer),
-});
+      next: (data: CustomerHistoryQuery['response']) => setCustomer(data.customer),
+      error: () => { },
+      complete: () => { },
+      closed: false
+    });
     return () => subscription.unsubscribe();
   }, [id]);
+  if (!customer) {
+    return <p role="alert">Loading</p>;
+  }
   return (
     <>
       <h2>
@@ -49,6 +67,16 @@ export const CustomerHistory = ({ id }: CustomerHistoryProps) => {
             <th>Notes</th>
           </tr>
         </thead>
+        <tbody>
+          {customer?.appointments?.filter(appointment => appointment != null).map(
+            (appointment) => (
+              <AppointmentRow
+                key={appointment.startsAt}
+                appointment={appointment}
+              />
+            )
+          )}
+        </tbody>
       </table>
     </>
   );

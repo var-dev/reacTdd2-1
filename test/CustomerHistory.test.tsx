@@ -110,9 +110,45 @@ describe("CustomerHistory", () => {
   it("renders a table with four column headings", async ()=>{
     const { CustomerHistory } = await import('../src/CustomerHistory.js')
     render(<CustomerHistory id={123} />);
-    const columnHeadings = screen.getAllByRole('columnheader');
+    const columnHeadings = await screen.findAllByRole('columnheader');
     const headings = Array.from(columnHeadings, (element)=> element.textContent)
     assert.deepEqual(headings, ['When','Stylist','Service','Notes'], 'expect to find four column headings')
-
   })
+  it("renders the start time of each appointment in the correct format", async () => {
+    const { CustomerHistory } = await import('../src/CustomerHistory.js')
+    render (<CustomerHistory id={123} />);
+    const element = await screen.findAllByText<HTMLTableCellElement>(/Feb 16 2019/i)
+    const actual = Array.from(element, (el)=> el.textContent)
+  //   "Sat Feb 16 2019 09:00",
+  //   "Sat Feb 16 2019 10:00",
+    assert.deepEqual(actual, ["Sat Feb 16 2019 09:00", "Sat Feb 16 2019 10:00"],'expect two dates')
+  });
+  it("renders the stylist", async () => {
+    const { CustomerHistory } = await import('../src/CustomerHistory.js')
+    render (<CustomerHistory id={123} />);
+    const element = await screen.findAllByText<HTMLTableCellElement>(/\bJo\b|Stevie/i)
+    const actual = Array.from(element, (el)=> el.textContent)
+    assert.deepEqual(actual, ["Jo", "Stevie"],'expect two stylists')
+  });
+  it("renders the service", async () => {
+    const { CustomerHistory } = await import('../src/CustomerHistory.js')
+    render (<CustomerHistory id={123} />);
+    const element = await screen.findAllByText<HTMLTableCellElement>(/Cut/i)
+    const actual = Array.from(element, (el)=> el.textContent)
+    assert.deepEqual(actual, ["Cut", "Cut & color"],'expect two services')
+  });
+  it("renders the note", async () => {
+    const { CustomerHistory } = await import('../src/CustomerHistory.js')
+    render (<CustomerHistory id={123} />);
+    const element = await screen.findAllByText<HTMLTableCellElement>(/\bnote\b/i)
+    const actual = Array.from(element, (el)=> el.textContent)
+    assert.deepEqual(actual, ["Note one", "Note two"],'expect two notes')
+  });
+  it("displays a loading message", async () => {
+    const { CustomerHistory } = await import('../src/CustomerHistory.js')
+    render (<CustomerHistory id={123} />);
+    const element = await screen.findAllByText<HTMLElement>(/Loading/i)
+    const [actual] = Array.from(element, (el)=> el.textContent)
+    assert.strictEqual(actual, 'Loading', 'expect to find a loading message')
+  });
 });
