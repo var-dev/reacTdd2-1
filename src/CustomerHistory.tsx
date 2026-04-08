@@ -1,26 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { fetchQuery, graphql } from "relay-runtime";
+import { fetchQuery } from "relay-runtime";
 import { getEnvironment } from "./relayEnvironment.js";
 import type { AppointmentApi } from "./types.js";
 import type { CustomerHistoryQuery } from "./__generated__/CustomerHistoryQuery.graphql.js";
+import CustomerHistoryQueryDocument from "./__generated__/CustomerHistoryQuery.graphql.js";
 
 type AppointmentType = NonNullable<NonNullable<CustomerHistoryQuery['response']['customer']>['appointments']>[0];
-export const query = graphql`
-  query CustomerHistoryQuery($id: ID!) {
-    customer(id: $id) {
-      id
-      firstName
-      lastName
-      phoneNumber
-      appointments {
-        startsAt
-        stylist
-        service
-        notes
-      }
-    }
-  }
-`;
+
 const toTimeString = (startsAt:number|string) =>
   new Date(Number(startsAt)).toString().substring(0, 21);
 const AppointmentRow = ({ appointment }: { appointment: AppointmentType }) => (
@@ -37,14 +23,13 @@ export const CustomerHistory = ({ id }: CustomerHistoryProps) => {
   const [customer, setCustomer] = useState<CustomerHistoryQuery['response']['customer']>(null);
   const [status, setStatus] = useState("loading");
   useEffect(() => {
-    const subscription = fetchQuery(getEnvironment(), query, { id }).subscribe({
+    const subscription = fetchQuery(getEnvironment(), CustomerHistoryQueryDocument, { id }).subscribe({
       next: (data: CustomerHistoryQuery['response']) => {
         setCustomer(data.customer);
         setStatus("loaded");
       },
       error: () => {
         setStatus("failed")
-        console.log('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
       },
       complete: () => { },
       closed: false

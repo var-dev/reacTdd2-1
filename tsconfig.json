@@ -9,6 +9,8 @@
     // See also https://aka.ms/tsconfig/module
     "module": "NodeNext",
     "moduleResolution": "nodenext",
+    // "module": "CommonJS",
+    // "moduleResolution": "node10",
     "target": "esnext",
     // For nodejs:
     "lib": ["ESNext", "DOM"],

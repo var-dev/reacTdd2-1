@@ -1,4 +1,6 @@
 import { Environment, Network, RecordSource, Store } from "relay-runtime";
+import type { FetchFunction } from "relay-runtime";
+
 
 const verifyStatusOk = (result:Response) => {
   if (!result.ok) {
@@ -7,19 +9,24 @@ const verifyStatusOk = (result:Response) => {
     return result;
   }
 };
-export const performFetch = (operation: any, variables: any) =>
+export const performFetch: FetchFunction = (request, variables) =>
   globalThis
     .fetch("/graphql", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        query: operation.text,
+        query: request.text,
         variables,
       }),
     })
     .then(verifyStatusOk)
     .then((result) => result!.json());
+    
+export const RelayEnvironment = new Environment({
+  network: Network.create(performFetch),
+  store: new Store(new RecordSource())
+});
 
 let environment = null as unknown as Environment
 export const buildEnvironment = () => new Environment({
