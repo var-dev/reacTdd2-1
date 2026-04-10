@@ -2,6 +2,7 @@ import { after, afterEach, beforeEach, describe, it, mock } from "node:test";
 import assert from 'node:assert/strict';
 import "./domSetup"; // must be imported before render/screen
 import React from 'react'
+import { MemoryRouter } from "react-router";
 import { render, screen, cleanup, within, waitFor, act, waitForElementToBeRemoved } from "@testing-library/react";
 
 const originalFetch = globalThis.fetch;
@@ -32,8 +33,11 @@ describe("CustomerHistory", () => {
   });
 
   it("displays an error message", async () => {
-    const { CustomerHistory } = await import('../src/CustomerHistoryAmplify.js')
-    render (<CustomerHistory id={123} />);
+    const { CustomerHistoryRoute } = await import('../src/CustomerHistoryRoute.js')
+    render (
+      <MemoryRouter initialEntries={["/?customer=123"]}>
+        <CustomerHistoryRoute />
+      </MemoryRouter>);
     await waitForElementToBeRemoved( ()=>screen.getByText(/Loading/i))
     const element = await screen.findAllByText<HTMLElement>(/Sorry/i)
     const [actual] = Array.from(element, (el)=> el.textContent)

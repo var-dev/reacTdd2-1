@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { amplifyClient } from "./amplifyClient.js";
 import type { AppointmentApi } from "./types.js";
 
-type CustomerHistoryCustomer = {
+type Customer = {
   firstName?: string | null;
   lastName?: string | null;
   phoneNumber?: string | null;
@@ -10,25 +10,9 @@ type CustomerHistoryCustomer = {
 };
 
 type CustomerHistoryData = {
-  customer?: CustomerHistoryCustomer | null;
+  customer?: Customer | null;
 };
 
-const customerHistoryQuery = /* GraphQL */ `
-  query CustomerHistoryQuery($id: ID!) {
-    customer(id: $id) {
-      id
-      firstName
-      lastName
-      phoneNumber
-      appointments {
-        startsAt
-        stylist
-        service
-        notes
-      }
-    }
-  }
-`;
 
 const toTimeString = (startsAt: number | string | undefined) =>
   startsAt === undefined ? "" : new Date(Number(startsAt)).toString().substring(0, 21);
@@ -42,61 +26,13 @@ const AppointmentRow = ({ appointment }: { appointment: AppointmentApi }) => (
   </tr>
 );
 
-type CustomerHistoryProps = {id: number}
-export const CustomerHistory = ({ id }: CustomerHistoryProps) => {
-  const [customer, setCustomer] = useState<CustomerHistoryCustomer | null>(null);
-  const [status, setStatus] = useState<"loading" | "loaded" | "failed">("loading");
+type CustomerHistoryProps = { customer: Customer}
+export const CustomerHistory = ({ customer}: CustomerHistoryProps) => {
 
-  useEffect(() => {
-    let isCancelled = false;
-    setStatus("loading");
-
-    const fetchCustomer = async () => {
-      try {
-        const response = await amplifyClient.graphql({
-          query: customerHistoryQuery,
-          variables: { id: String(id) }
-        });
-
-        if (isCancelled) {
-          return;
-        }
-
-        if ("errors" in response && response.errors && response.errors.length > 0) {
-          setStatus("failed");
-          return;
-        }
-
-        const data = ("data" in response ? response.data : null) as CustomerHistoryData | null;
-        setCustomer(data?.customer ?? null);
-        setStatus("loaded");
-      } catch {
-        if (!isCancelled) {
-          setStatus("failed");
-        }
-      }
-    };
-
-    void fetchCustomer();
-    return () => {
-      isCancelled = true;
-    };
-  }, [id]);
-
-  if (status === "loading") {
-    return <p role="alert">Loading</p>;
-  }
-  if (status === "failed") {
-    return (
-      <p role="alert">
-        Sorry, an error occurred while pulling data from the server.
-      </p>
-    );
-  }
   return (
     <>
       <h2>
-        {customer?.firstName} {customer?.lastName} 
+        {("firstName" in customer) ? customer.firstName : 'not found'} {("lastName" in customer) ? customer.lastName : 'not found'} 
       </h2>
       <p>
         {customer?.phoneNumber}
