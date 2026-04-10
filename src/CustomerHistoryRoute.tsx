@@ -5,7 +5,7 @@ import { amplifyClient } from "./amplifyClient.js";
 
 import type { AppointmentApi } from "./types.js";
 
-type CustomerHistoryCustomer = {
+type CustomerHistory = {
   firstName?: string | null;
   lastName?: string | null;
   phoneNumber?: string | null;
@@ -13,7 +13,7 @@ type CustomerHistoryCustomer = {
 };
 
 type CustomerHistoryData = {
-  customer?: CustomerHistoryCustomer | null;
+  customer?: CustomerHistory | null;
 };
 
 const customerHistoryQuery = /* GraphQL */ `
@@ -41,7 +41,7 @@ export type AppointmentFormRouteProps = {
 export const CustomerHistoryRoute = () => {
   const [params, _] = useSearchParams()
   const customerId = (params.get("customer") ?? '').length>0 ? parseInt(params.get("customer")!)  : NaN
-  const [customer, setCustomer] = useState<CustomerHistoryCustomer | null>(null);
+  const [customer, setCustomer] = useState<CustomerHistory | null>(null);
   const [status, setStatus] = useState<"loading" | "loaded" | "failed">("loading");
   useEffect(() => {
     let isCancelled = false;

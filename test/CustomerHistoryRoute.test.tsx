@@ -41,7 +41,10 @@ const customer = {
   appointments
 };
 
-const mockGraphql = mock.fn(() => Promise.resolve({data: { customer }}));
+// const mockGraphql = mock.fn(() => Promise.resolve({data: { customer }}));
+const mockGraphql = mock.fn(() => new Promise(resolve =>{
+  setTimeout(() => resolve({data: { customer }}), 100)  
+}))
 const mockGraphqlErr = mock.fn(() => Promise.reject(new Error("failed")));
 const mockModule = mock.module("../src/amplifyClient.js", {
   namedExports: {
@@ -94,6 +97,24 @@ describe("CustomerHistoryRoute", () => {
       assert.strictEqual(count, 1, 'expect graphql called')
       const actual = mockGraphql.mock.calls[count-1].arguments as any[]
       assert.deepEqual(actual[0].variables, { id: '1023' }, 'expect id 1023 passed to graphql')
+    })
+  });
+  it("cancels the render on unmount", async () => {
+    const { CustomerHistoryRoute } = await import('../src/CustomerHistoryRoute.js')
+    const result = render (
+      <MemoryRouter initialEntries={["/?customer=1023"]}>
+        <CustomerHistoryRoute />
+      </MemoryRouter>);
+    result.unmount()
+    const element = await waitFor(()=>screen.queryByText<HTMLTableCellElement>(/\bnote\b/i))
+    assert.strictEqual(element, null, 'expect render cancelled before data')
+    await waitFor(async ()=>{
+      const count = mockGraphql.mock.callCount();
+      assert.strictEqual(count, 1, 'expect graphql called')
+      const actual = mockGraphql.mock.calls[count-1].arguments as any[]
+      assert.deepEqual(actual[0].variables, { id: '1023' }, 'expect id 1023 passed to graphql')
+      const mockResult = await mockGraphql.mock.calls[count-1].result
+      assert.deepEqual((mockResult as any).data.customer, customer, 'expect graphql return customer')
     })
   });
 });
