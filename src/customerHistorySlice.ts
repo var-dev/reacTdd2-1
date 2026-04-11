@@ -1,14 +1,17 @@
 import { createSlice, createAction, type PayloadAction } from '@reduxjs/toolkit';
 import type { AppointmentApi } from "./types.js";
-
+import type { PrepareAction } from '@reduxjs/toolkit';
 export type CustomerHistory = {
   firstName?: string | null;
   lastName?: string | null;
   phoneNumber?: string | null;
   appointments?: Array<AppointmentApi | null> | null;
 };
-
-export const getCustomerHistoryRequest = createAction<CustomerHistory>('customerHistory/getCustomerHistoryRequest');
+type CustomerId = number
+export const getCustomerHistoryRequest = createAction<PrepareAction<CustomerId>>(
+  'customerHistory/getCustomerHistoryRequest', 
+  (customerId:CustomerId)=>({payload: customerId})
+);
 
 export type CustomerHistoryState = {
   status?: 'REQUESTING' | 'SUCCESSFUL' | 'FAILED' ;

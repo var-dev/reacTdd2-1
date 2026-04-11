@@ -41,7 +41,6 @@ const customer = {
   appointments
 };
 
-// const mockGraphql = mock.fn(() => Promise.resolve({data: { customer }}));
 const mockGraphql = mock.fn(() => new Promise(resolve =>{
   setTimeout(() => resolve({data: { customer }}), 100)  
 }))
