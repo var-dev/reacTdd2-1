@@ -34,7 +34,7 @@ const customerHistory = {
 };
 
 const mockGraphql = mock.fn(() => new Promise(resolve =>{
-  setTimeout(() => resolve({data: { customer: customerHistory }}), 100)  
+  setTimeout(() => resolve({data: customerHistory }), 100)  
 }))
 const mockGraphqlErr = mock.fn(() => Promise.reject(new Error("failed")));
 const mockModule = mock.module("../src/amplifyClient.js", {

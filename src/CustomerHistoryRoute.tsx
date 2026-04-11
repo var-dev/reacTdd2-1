@@ -63,8 +63,8 @@ export const CustomerHistoryRoute = () => {
           return;
         }
 
-        const data = ("data" in response ? response.data : null) as CustomerHistoryData | null;
-        setCustomer(data?.customer ?? null);
+        const data = ("data" in response ? response.data : null) as CustomerHistory | null;
+        setCustomer(data ?? null);
         setStatus("loaded");
       } catch {
         if (!isCancelled) {

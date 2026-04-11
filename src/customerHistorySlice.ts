@@ -27,7 +27,7 @@ const customerHistorySlice = createSlice({
     getCustomerHistoryRequesting: (state: CustomerHistoryState) => {
       state.status = 'REQUESTING';
     },
-    getCustomerHistorySuccessful: (state: CustomerHistoryState & CustomerHistory, action: PayloadAction<CustomerHistory >) => {
+    getCustomerHistorySuccessful: (state: CustomerHistoryState & CustomerHistory, action: PayloadAction<CustomerHistory>) => {
       Object.assign(state, action.payload)
       state.status = 'SUCCESSFUL';
       state.error = false;

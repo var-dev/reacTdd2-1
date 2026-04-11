@@ -19,25 +19,25 @@ export const CustomerHistoryRoute = () => {
   const [params, _] = useSearchParams()
   const customerId = (params.get("customer") ?? '').length>0 ? parseInt(params.get("customer")!)  : NaN
   const dispatch = useAppDispatch()
-  const customer = useAppSelector(({customerHistory})=>customerHistory)
+  const customerHistory = useAppSelector(({customerHistory})=>customerHistory)
     useEffect(()=>{
       dispatch(getCustomerHistoryRequest(customerId))
-    }, [])
+    }, [ ])
 
-  if (customer.status === "REQUESTING") {
+  if (customerHistory.status === "REQUESTING") {
     return <p role="alert">Loading</p>;
   }
-  if (customer.status === "FAILED") {
+  if (customerHistory.status === "FAILED") {
     return (
       <p role="alert">
         Sorry, an error occurred while pulling data from the server.
       </p>
     );
   }
-  if (!customer.firstName || !customer.lastName) {
+  if (!customerHistory.firstName && !customerHistory.lastName) {
     return <p role="alert">Customer not found</p>;
   }
   return (
-    <CustomerHistory customer={customer}/>
+    <CustomerHistory customer={customerHistory}/>
   );
 };

@@ -4,9 +4,9 @@ import "./domSetup"; // must be imported before render/screen
 import React, { ReactElement} from "react";
 import { MemoryRouter } from "react-router";
 import { render, screen, cleanup, within, waitFor, act } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 
 import type { Customer, AppointmentApi } from "../src/types.js";
+import { Provider } from "react-redux";
 
 const originalFetch = globalThis.fetch;
 
@@ -42,7 +42,7 @@ const customer = {
 };
 
 const mockGraphql = mock.fn(() => new Promise(resolve =>{
-  setTimeout(() => resolve({data: customer}), 100)  
+  setTimeout(() => resolve({data:customer}), 100)  
 }))
 const mockGraphqlErr = mock.fn(() => Promise.reject(new Error("failed")));
 const mockModule = mock.module("../src/amplifyClient.js", {
@@ -60,11 +60,14 @@ describe("CustomerHistoryRoute", () => {
     mockGraphql.mock.resetCalls();
   })
   it("calls amplify.graphql", async () => {
-    const { CustomerHistoryRoute } = await import('../src/CustomerHistoryRoute.js')
+    const {store} = await import('../src/store.js')
+    const { CustomerHistoryRoute } = await import('../src/CustomerHistoryRouteRedux.js')
     render (
-      <MemoryRouter initialEntries={["/?customer=123"]}>
-        <CustomerHistoryRoute />
-      </MemoryRouter>);
+      <Provider store={store}>
+        <MemoryRouter initialEntries={["/?customer=123"]}>
+          <CustomerHistoryRoute />
+        </MemoryRouter>)
+      </Provider>);
     await waitFor(async ()=>{
       const count = mockGraphql.mock.callCount();
       assert.strictEqual(count, 1, 'expect graphql called')
@@ -73,21 +76,27 @@ describe("CustomerHistoryRoute", () => {
     })
   });
   it("displays a loading message", async () => {
-    const { CustomerHistoryRoute } = await import('../src/CustomerHistoryRoute.js')
+    const {store} = await import('../src/store.js')
+    const { CustomerHistoryRoute } = await import('../src/CustomerHistoryRouteRedux.js')
     render (
-      <MemoryRouter initialEntries={["/?customer=123"]}>
-        <CustomerHistoryRoute />
-      </MemoryRouter>);
+      <Provider store={store}>
+        <MemoryRouter initialEntries={["/?customer=123"]}>
+          <CustomerHistoryRoute />
+        </MemoryRouter>)
+      </Provider>);
     const element = await screen.findAllByText<HTMLElement>(/Loading/i)
     const [actual] = Array.from(element, (el)=> el.textContent)
     assert.strictEqual(actual, 'Loading', 'expect to find a loading message')
   });
   it("renders CustomerHistoryRoute", async () => {
-    const { CustomerHistoryRoute } = await import('../src/CustomerHistoryRoute.js')
+    const {store} = await import('../src/store.js')
+    const { CustomerHistoryRoute } = await import('../src/CustomerHistoryRouteRedux.js')
     render (
-      <MemoryRouter initialEntries={["/?customer=1023"]}>
-        <CustomerHistoryRoute />
-      </MemoryRouter>);
+      <Provider store={store}>
+        <MemoryRouter initialEntries={["/?customer=1023"]}>
+          <CustomerHistoryRoute />
+        </MemoryRouter>)
+      </Provider>);
     const element = await screen.findAllByText<HTMLTableCellElement>(/\bnote\b/i)
     const actual = Array.from(element, (el)=> el.textContent)
     assert.deepEqual(actual, ["Note one", "Note two"],'expect two notes')
@@ -96,14 +105,19 @@ describe("CustomerHistoryRoute", () => {
       assert.strictEqual(count, 1, 'expect graphql called')
       const actual = mockGraphql.mock.calls[count-1].arguments as any[]
       assert.deepEqual(actual[0].variables, { id: '1023' }, 'expect id 1023 passed to graphql')
+      const result = await mockGraphql.mock.calls[count-1].result
+      assert.deepEqual((result as any).data, customer, 'expect graphql return customer')
     })
   });
   it("cancels the render on unmount", async () => {
-    const { CustomerHistoryRoute } = await import('../src/CustomerHistoryRoute.js')
+    const {store} = await import('../src/store.js')
+    const { CustomerHistoryRoute } = await import('../src/CustomerHistoryRouteRedux.js')
     const result = render (
-      <MemoryRouter initialEntries={["/?customer=1023"]}>
-        <CustomerHistoryRoute />
-      </MemoryRouter>);
+      <Provider store={store}>
+        <MemoryRouter initialEntries={["/?customer=1023"]}>
+          <CustomerHistoryRoute />
+        </MemoryRouter>)
+      </Provider>);
     result.unmount()
     const element = await waitFor(()=>screen.queryByText<HTMLTableCellElement>(/\bnote\b/i))
     assert.strictEqual(element, null, 'expect render cancelled before data')
