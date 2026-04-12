@@ -42,7 +42,7 @@ const customer = {
 };
 
 const mockGraphql = mock.fn(() => new Promise(resolve =>{
-  setTimeout(() => resolve({data: customer}), 100)  
+  setTimeout(() => resolve({data: {customer}}), 100)  
 }))
 const mockGraphqlErr = mock.fn(() => Promise.reject(new Error("failed")));
 const mockModule = mock.module("../src/amplifyClient.js", {
@@ -113,7 +113,7 @@ describe("CustomerHistoryRoute", () => {
       const actual = mockGraphql.mock.calls[count-1].arguments as any[]
       assert.deepEqual(actual[0].variables, { id: '1023' }, 'expect id 1023 passed to graphql')
       const mockResult = await mockGraphql.mock.calls[count-1].result
-      assert.deepEqual((mockResult as any).data, customer, 'expect graphql return customer')
+      assert.deepEqual((mockResult as any).data.customer, customer, 'expect graphql return customer')
     })
   });
 });

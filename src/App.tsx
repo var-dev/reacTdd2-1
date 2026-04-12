@@ -9,6 +9,8 @@ import { blankAppointment, blankCustomer } from "./sampleDataStatic.js";
 import { CustomerSearchRoute } from "./CustomerSearchRoute.js";
 import { AppointmentFormRoute } from "./AppointmentFormRoute.js";
 import { navigateRequest, navigationSuccessful } from "./navigationSlice.js";
+import { CustomerHistoryRoute } from "./CustomerHistoryRouteRedux.js";
+// import { CustomerHistoryRoute } from "./CustomerHistoryRoute.js";
 
 type View = 'dayView' | 'addCustomer' | 'addAppointment' | 'searchCustomers'
 
@@ -47,14 +49,20 @@ export const App = () => {
   const transitionToDayView = () => {dispatch(navigateRequest('/'))}
   // const transitionToDayView = () => navigate("/");
 
-  const searchActions = (customer: Customer) => (
+  const searchActions = (customer: Customer) => (<>
     <Link
       role="button"
       to={`/addAppointment?customerId=${customer.id}`}
     >
       Create appointment
     </Link>
-  );
+    <Link
+      role="button"
+      to={`/viewHistory?customer=${customer.id}`}
+    >
+      View history
+    </Link>
+  </>);
 
   return (
     <Routes>
@@ -81,6 +89,12 @@ export const App = () => {
           <CustomerSearchRoute
             renderCustomerActions={searchActions}
           />
+        }
+      />
+      <Route
+        path="/viewHistory"
+        element={
+          <CustomerHistoryRoute/>
         }
       />
       <Route path="/" element={<MainScreen />} />

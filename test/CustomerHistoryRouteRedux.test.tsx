@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import "./domSetup"; // must be imported before render/screen
 import React, { ReactElement} from "react";
 import { MemoryRouter } from "react-router";
-import { render, screen, cleanup, within, waitFor, act } from "@testing-library/react";
+import { render, screen, cleanup, within, waitFor, act, waitForElementToBeRemoved } from "@testing-library/react";
 
 import type { Customer, AppointmentApi } from "../src/types.js";
 import { Provider } from "react-redux";
@@ -42,7 +42,7 @@ const customer = {
 };
 
 const mockGraphql = mock.fn(() => new Promise(resolve =>{
-  setTimeout(() => resolve({data:customer}), 100)  
+  setTimeout(() => resolve({data:{customer}}), 100)  
 }))
 const mockGraphqlErr = mock.fn(() => Promise.reject(new Error("failed")));
 const mockModule = mock.module("../src/amplifyClient.js", {
@@ -97,16 +97,18 @@ describe("CustomerHistoryRoute", () => {
           <CustomerHistoryRoute />
         </MemoryRouter>)
       </Provider>);
-    const element = await screen.findAllByText<HTMLTableCellElement>(/\bnote\b/i)
-    const actual = Array.from(element, (el)=> el.textContent)
-    assert.deepEqual(actual, ["Note one", "Note two"],'expect two notes')
     await waitFor(async ()=>{
       const count = mockGraphql.mock.callCount();
       assert.strictEqual(count, 1, 'expect graphql called')
       const actual = mockGraphql.mock.calls[count-1].arguments as any[]
       assert.deepEqual(actual[0].variables, { id: '1023' }, 'expect id 1023 passed to graphql')
       const result = await mockGraphql.mock.calls[count-1].result
-      assert.deepEqual((result as any).data, customer, 'expect graphql return customer')
+      assert.deepEqual((result as any).data.customer, customer, 'expect graphql return customer')
+    })
+    await waitFor(()=>{
+      const element = screen.queryAllByText<HTMLTableCellElement>(/\bnote\b/i)
+      const actual2 = Array.from(element, (el)=> el.textContent)
+      assert.deepEqual(actual2, ["Note one", "Note two"],'expect two notes')
     })
   });
   it("cancels the render on unmount", async () => {
@@ -127,7 +129,7 @@ describe("CustomerHistoryRoute", () => {
       const actual = mockGraphql.mock.calls[count-1].arguments as any[]
       assert.deepEqual(actual[0].variables, { id: '1023' }, 'expect id 1023 passed to graphql')
       const mockResult = await mockGraphql.mock.calls[count-1].result
-      assert.deepEqual((mockResult as any).data, customer, 'expect graphql return customer')
+      assert.deepEqual((mockResult as any).data.customer, customer, 'expect graphql return customer')
     })
   });
 });

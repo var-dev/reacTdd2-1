@@ -134,8 +134,8 @@ describe('getCustomerHistory generator test', async ()=>{
   })
   
   it('handles getCustomerHistorySaga generator 3 yield', ()=>{
-    const mockResponse:GraphQLResult<CustomerHistory> = {
-      data: customerHistory
+    const mockResponse:GraphQLResult<{customer:CustomerHistory}> = {
+      data: {customer: customerHistory}
     };
     const y = genS.next(mockResponse);
     assert.strictEqual((y.value as any).type, 'PUT', 'expect PUT for getCustomerHistorySuccessful')

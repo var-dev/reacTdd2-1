@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { fetchQuery } from "relay-runtime";
 import { getEnvironment } from "./relayEnvironment.js";
 import type { AppointmentApi } from "./types.js";
-import type { CustomerHistoryQuery } from "./__generated__/CustomerHistoryQuery.graphql.js";
-import CustomerHistoryQueryDocument from "./__generated__/CustomerHistoryQuery.graphql.js";
+import type { CustomerHistoryQuery } from "./CustomerHistoryQuery.graphql.js";
+import CustomerHistoryQueryDocument from "./CustomerHistoryQuery.graphql.js";
 
 type AppointmentType = NonNullable<NonNullable<CustomerHistoryQuery['response']['customer']>['appointments']>[0];
 
@@ -12,7 +12,7 @@ const toTimeString = (startsAt:number|string) =>
 const AppointmentRow = ({ appointment }: { appointment: AppointmentType }) => (
   <tr>
     <td>{toTimeString(appointment?.startsAt as number|string)}</td>
-    <td>{appointment?.stylist}</td>
+    <td>{appointment?.stylist}</td> 
     <td>{appointment?.service}</td>
     <td>{appointment?.notes}</td>
   </tr>

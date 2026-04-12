@@ -23,7 +23,6 @@ export const CustomerHistoryRoute = () => {
     useEffect(()=>{
       dispatch(getCustomerHistoryRequest(customerId))
     }, [ ])
-
   if (customerHistory.status === "REQUESTING") {
     return <p role="alert">Loading</p>;
   }

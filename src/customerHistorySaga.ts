@@ -3,7 +3,7 @@ import { getCustomerHistoryRequest, getCustomerHistoryRequesting, getCustomerHis
 import type { Customer } from "./types.js";
 import type { ValidationErrors } from "./customerFormValidation.js";
 import type { CustomerState } from "./customerSlice.js";
-import type { GraphQLResult } from "aws-amplify/api";
+import type { GraphQLResult, GraphQLQuery } from "aws-amplify/api";
 import { amplifyClient } from "./amplifyClient.js";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
@@ -26,7 +26,7 @@ const customerHistoryQuery = /* GraphQL */ `
   }
 `;
 
-const fetchCustomerHistory = (customerId: string | number)=> amplifyClient.graphql({
+const fetchCustomerHistory = (customerId: string | number)=> amplifyClient.graphql<GraphQLQuery<{customer:CustomerHistory}>>({
           query: customerHistoryQuery,
           variables: { id: String(customerId) }
         });
@@ -37,9 +37,9 @@ export function* getCustomerHistoryWatcher(){
 
 export function* getCustomerHistorySaga(action: PayloadAction<CustomerId>) {
   yield put(getCustomerHistoryRequesting());
-  const response:GraphQLResult<CustomerHistory> = yield call(fetchCustomerHistory, action.payload) ;
-  if("data" in response && response.data){
-    yield put(getCustomerHistorySuccessful(response.data));
+  const response:GraphQLResult<GraphQLQuery<{customer:CustomerHistory}>> = yield call(fetchCustomerHistory, action.payload) ;
+  if("data" in response && response.data.customer){
+    yield put(getCustomerHistorySuccessful(response.data.customer));
   } else if("errors" in response) {
     yield put(getCustomerHistoryFailed())
   } else {

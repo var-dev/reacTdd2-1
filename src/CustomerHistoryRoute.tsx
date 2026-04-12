@@ -4,6 +4,7 @@ import { CustomerHistory } from "./CustomerHistoryAmplify.js";
 import { amplifyClient } from "./amplifyClient.js";
 
 import type { AppointmentApi } from "./types.js";
+import type { GraphQLQuery } from "aws-amplify/api";
 
 type CustomerHistory = {
   firstName?: string | null;
@@ -49,10 +50,12 @@ export const CustomerHistoryRoute = () => {
 
     const fetchCustomer = async () => {
       try {
-        const response = await amplifyClient.graphql({
+        const response = await amplifyClient.graphql<GraphQLQuery<CustomerHistoryData>>({
           query: customerHistoryQuery,
-          variables: { id: String(customerId) }
-        });
+          variables: { id: String(customerId) },
+          authMode: "none",
+
+        } as const );
 
         if (isCancelled) {
           return;
@@ -63,7 +66,7 @@ export const CustomerHistoryRoute = () => {
           return;
         }
 
-        const data = ("data" in response ? response.data : null) as CustomerHistory | null;
+        const data = ("data" in response ? response.data.customer : null);
         setCustomer(data ?? null);
         setStatus("loaded");
       } catch {

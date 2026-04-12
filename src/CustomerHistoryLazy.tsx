@@ -1,7 +1,7 @@
 import React, { type FC } from "react";
 import { useLazyLoadQuery } from "react-relay";
-import type { CustomerHistoryQuery, CustomerHistoryQuery$data } from "./__generated__/CustomerHistoryQuery.graphql.js";
-import CustomerHistoryQueryDocument from "./__generated__/CustomerHistoryQuery.graphql.js";
+import type { CustomerHistoryQuery, CustomerHistoryQuery$data } from "./CustomerHistoryQuery.graphql.js";
+import CustomerHistoryQueryDocument from "./CustomerHistoryQuery.graphql.js";
 
 export type Customer = NonNullable<CustomerHistoryQuery$data['customer']>
 export type Appointment = NonNullable<Customer['appointments']>[number]
