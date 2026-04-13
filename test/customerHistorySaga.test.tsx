@@ -6,7 +6,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { configureStore, UnknownAction, Middleware } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
 import { Provider, useDispatch } from "react-redux";
-import type { GraphQLResult } from "aws-amplify/api";
+import type { GraphQLResult, GraphQLQuery } from "aws-amplify/api";
 import { getCustomerHistoryRequest, getCustomerHistoryRequesting, getCustomerHistorySuccessful, getCustomerHistoryFailed } from "../src/customerHistorySlice.js";
 import { CustomerWithId, AppointmentApi } from "../src/types.js";
 import customerHistoryReducer, { type CustomerHistory } from "../src/customerHistorySlice.js";
@@ -34,7 +34,7 @@ const customerHistory = {
 };
 
 const mockGraphql = mock.fn(() => new Promise(resolve =>{
-  setTimeout(() => resolve({data: customerHistory }), 100)  
+  setTimeout(() => resolve({data: {customer:customerHistory} }), 100)  
 }))
 const mockGraphqlErr = mock.fn(() => Promise.reject(new Error("failed")));
 const mockModule = mock.module("../src/amplifyClient.js", {
@@ -134,8 +134,8 @@ describe('getCustomerHistory generator test', async ()=>{
   })
   
   it('handles getCustomerHistorySaga generator 3 yield', ()=>{
-    const mockResponse:GraphQLResult<{customer:CustomerHistory}> = {
-      data: {customer: customerHistory}
+    const mockResponse:GraphQLResult<GraphQLQuery<{ customer: CustomerHistory; }>> = {
+      data: {customer: customerHistory} as GraphQLQuery<{ customer: CustomerHistory; }>
     };
     const y = genS.next(mockResponse);
     assert.strictEqual((y.value as any).type, 'PUT', 'expect PUT for getCustomerHistorySuccessful')

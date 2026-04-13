@@ -83,8 +83,9 @@ describe('CustomerSearchRoute', ()=>{
     );
     await waitFor(()=>{screen.getByLabelText('customer search table')})
     const count = mockFetch.mock.callCount()
-    assert.strictEqual(count, 1, 'globalFetch mock not called 1 time')
-    assert.strictEqual(screen.getByText('BNM').tagName, 'TD')
+    assert.strictEqual(count, 1, 'globalFetch mock called 1 time')
+    assert.deepStrictEqual(await(await mockFetch.mock.calls[0].result)?.json(),twoCustomers,'expect resolve twoCustomers')
+    assert.strictEqual((await screen.findByText('BNM')).tagName, 'TD')
   })
   it('fetch based on searchTerm update', async () => {
     const mockFetch = mock.method(globalThis, 'fetch', mockFetchOkFactory(twoCustomers))
@@ -105,5 +106,17 @@ describe('CustomerSearchRoute', ()=>{
     const calls = mockFetch.mock.calls
     assert.strictEqual(calls[1].arguments[0], '/customers?after=654&limit=11', 'not /customers?after=654&limit=11')
     assert.strictEqual(calls[2].arguments[0], '/customers?after=654&searchTerm=a&limit=11', 'not /customers?after=654&searchTerm=a&limit=11')
+  })
+  it('handles fetch errors', async () => {
+    mock.method(globalThis, 'fetch', mockFetchError)
+    render(
+      <MemoryRouter initialEntries={["/searchCustomers?searchTerm=qwe&limit=11&lastRowIds=123,654"]}>
+        <Provider store={store}>
+          <CustomerSearchRoute renderCustomerActions={() => <></>} />
+        </Provider>
+      </MemoryRouter>
+    );
+    const errorElement = await screen.findByText('Server error')
+    assert.strictEqual(errorElement.tagName, 'P')
   })
 })

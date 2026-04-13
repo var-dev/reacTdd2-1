@@ -89,6 +89,7 @@ export const CustomerSearchRoute = ({
   }:CustomerSearchRouteProps )=>{
   
   const [customers, setCustomers] = useState<Customer[] | undefined>(undefined);
+  const [status, setStatus] = useState<'idle' | 'pending' | 'failure' >('idle');
   const [params, setParams] = useSearchParams();
   const handleSearchTextChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
     params.set('searchTerm', event.target.value)
@@ -97,18 +98,22 @@ export const CustomerSearchRoute = ({
   const fetchData = async () => {
     const [, after] = commaStringPop(params.get('lastRowIds'))
     const query = searchParams({after, searchTerm: params.get('searchTerm') ?? '', limit: params.get('limit') ?? '' });
-    const result = await globalThis.fetch(`/customers${query}`, {
+    globalThis.fetch(`/customers${query}`, {
       method: "GET",
       credentials: "same-origin",
       headers: {
         "Content-Type": "application/json"
       },
-    });
-    setCustomers(await result.json());
+    })
+    .then(res => res.ok ? res : Promise.reject(res))
+    .then(res=>res.json())
+    .then(res=>{setCustomers(res)})
+    .catch(res=>{setStatus('failure')})
   };
   useEffect(() => {
     fetchData();
   }, [params]);
+  if(status === 'failure') { return <p>Server error</p> }
   return (
     <>
       <input 

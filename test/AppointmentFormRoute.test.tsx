@@ -36,29 +36,31 @@ const mockFetchAppointmentForm = (...args: any[]) => Promise.resolve({ ok: true,
 
 
 describe('AppointmentFormRoute', async ()=>{
-  it('renders without crashing', async ()=>{
+  it('renders without crashing', async () => {
 
-    mock.method(globalThis,'fetch', mockFetchAppointmentForm)
-    const mockAppointmentForm = mock.fn((...props:any[])=>(<div data-testid="appointmentForm"></div>))
-    const mModule = mock.module('../src/AppointmentForm.tsx',{
-      namedExports:{
+    mock.method(globalThis, 'fetch', mockFetchAppointmentForm)
+    const mockAppointmentForm = mock.fn((...props: any[]) => (<div data-testid="appointmentForm"></div>))
+    const mModule = mock.module('../src/AppointmentForm.tsx', {
+      namedExports: {
         AppointmentForm: mockAppointmentForm
       }
     })
-    const {AppointmentFormRoute} = await import('../src/AppointmentFormRoute.js')
+    const { AppointmentFormRoute } = await import('../src/AppointmentFormRoute.js')
     mModule.restore()
     render(
       <MemoryRouter initialEntries={["/addAppointment?customerId=123"]}>
-        <AppointmentFormRoute today={new Date(1970)} onSave={()=>{}}/>
+        <AppointmentFormRoute today={new Date(1970)} onSave={() => { }} />
       </MemoryRouter>
     );
-    await waitFor(()=>{screen.getByTestId('appointmentForm')})
+    await waitFor(() => {
+      screen.getByTestId('appointmentForm')
 
-    const count = mockAppointmentForm.mock.callCount()
-    assert.strictEqual(count, 2, 'AppointmentForm not called two times')
-    const actual = mockAppointmentForm.mock.calls[count-1].arguments[0]
-    const expected = 123
-    assert.strictEqual(actual.appointment.customerId, expected, 'AppointmentForm called with wrong args')
-    assert.strictEqual(typeof actual.onSave, 'function', 'AppointmentForm onSave not a function')
+      const count = mockAppointmentForm.mock.callCount()
+      assert.strictEqual(count, 2, 'AppointmentForm not called two times')
+      const actual = mockAppointmentForm.mock.calls[count - 1].arguments[0]
+      const expected = 123
+      assert.strictEqual(actual.appointment.customerId, expected, 'AppointmentForm called with wrong args')
+      assert.strictEqual(typeof actual.onSave, 'function', 'AppointmentForm onSave not a function')
+    })
   })
 })

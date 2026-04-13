@@ -34,25 +34,26 @@ const testProps: AppointmentFormLoaderProps = {
 }
 const mockFetchAppointmentForm = (...args: any[]) => Promise.resolve({ ok: true, json: ()=>Promise.resolve(availableTimeSlots)});
 
-describe('#3: AppointmentFormLoader. Node native AppointmentForm mock', ()=>{
- 
-  it('#3: Native mock-checks props for AppointmentForm', async ()=>{
-    mock.method(globalThis,'fetch', mockFetchAppointmentForm)
-    const mockAppointmentForm = mock.fn((...props:any[])=>(<div data-testid="appointmentForm"></div>))
-    const mModule = mock.module('../src/AppointmentForm.tsx',{
-      namedExports:{
+describe('#3: AppointmentFormLoader. Node native AppointmentForm mock', () => {
+
+  it('#3: Native mock-checks props for AppointmentForm', async () => {
+    mock.method(globalThis, 'fetch', mockFetchAppointmentForm)
+    const mockAppointmentForm = mock.fn((...props: any[]) => (<div data-testid="appointmentForm"></div>))
+    const mModule = mock.module('../src/AppointmentForm.tsx', {
+      namedExports: {
         AppointmentForm: mockAppointmentForm
       }
     })
-    const {AppointmentFormLoader} = await import('../src/AppointmentFormLoader.js')
-    render(<AppointmentFormLoader {...testProps}/>)
-    await waitFor(()=>{screen.getByTestId('appointmentForm')})
-    mModule.restore()
+    const { AppointmentFormLoader } = await import('../src/AppointmentFormLoader.js')
+    render(<AppointmentFormLoader {...testProps} />)
+    await waitFor(() => {
+      screen.getByTestId('appointmentForm')
+      mModule.restore()
+      assert.strictEqual(mockAppointmentForm.mock.calls.length, 2, `mockAppointmentForm should be called twice because of re-render on useEffect-useState`)
 
-    assert.strictEqual(mockAppointmentForm.mock.calls.length, 2, `mockAppointmentForm should be called twice because of re-render on useEffect-useState`)
-
-    const actualResult = JSON.stringify(mockAppointmentForm.mock.calls[1].arguments)
-    const expectedResult = '[{"today":"2018-12-01T16:30:00.000Z","availableTimeSlots":[{"startsAt":1543680000000,"stylists":["Jo","Pat"]},{"startsAt":1543681800000,"stylists":["Jo","Jo"]}]},null]'
-     assert.match(actualResult, /1543680000000/, `mockAppointmentForm actual - expected\n${actualResult}\n${expectedResult}`)
+      const actualResult = JSON.stringify(mockAppointmentForm.mock.calls[1].arguments)
+      const expectedResult = '[{"today":"2018-12-01T16:30:00.000Z","availableTimeSlots":[{"startsAt":1543680000000,"stylists":["Jo","Pat"]},{"startsAt":1543681800000,"stylists":["Jo","Jo"]}]},null]'
+      assert.match(actualResult, /1543680000000/, `mockAppointmentForm actual - expected\n${actualResult}\n${expectedResult}`)
+    })
   })
 })
